@@ -1,0 +1,202 @@
+* {
+  margin: 0;
+  box-sizing: border-box;
+  font-family: sans-serif;
+}
+
+
+html, body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+
+body {
+  background-color: #55a0da;
+}
+
+:root {
+  --blue: #1D4D9Bff;
+  --jet: #313232ff;
+  --silver-sand: #BFC1C6ff;
+  --black: #000000ff;
+  --white: #FCFEFFff;
+}
+
+.header {
+  background-color: #1D4D9Bff;
+  height: 80px;
+  position: fixed;
+  width: 100%;
+  top: 0;
+  left: 0;
+  z-index: 10;
+}
+
+.logo {
+  text-decoration: none;
+  color: white;
+  font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+}
+
+
+
+.nav {
+  display: flex;
+  justify-content: space-between;
+
+  max-width: 992px;
+  margin: 0 auto;
+}
+
+.nav-menu-link {
+  color: white;
+  text-decoration: none;
+}
+
+.logo {
+  font-size: 30px;
+  padding: 0 40px;
+  line-height: 80px;
+}
+
+.nav-menu {
+  display: flex;
+  margin-right: 40px;
+  list-style: none;
+}
+
+.nav-menu-item {
+  font-size: 18px;
+  margin: 0 10px;
+  line-height: 80px;
+  text-transform: uppercase;
+  width: max-content;
+}
+
+.nav-menu-link {
+  padding: 8px 12px;
+  border-radius: 3px;
+}
+
+.nav-menu-link:hover,
+.nav-menu-link_active {
+  background-color: #313232ff;
+  transition: 0.5s;
+}
+
+
+.toggle {
+  display: block;
+  position: relative;
+  z-index: 1;
+  user-select: none;
+  appearance: none;
+  border: none;
+  outline: none;
+  background: none;
+  cursor: pointer;
+  display: none;
+}
+
+.pos {
+
+  line-height: 80px;
+  margin-top: 20px;
+
+}
+
+.toggle span {
+  display: block;
+  width: 33px;
+  height: 4px;
+  margin-bottom: 5px;
+  position: relative;
+  background-color: white;
+  border-radius: 6px;
+  z-index: 1;
+  transform-origin: 0 0;
+  transition: 0.4s;
+
+}
+
+.toggle.is-active span:nth-child(1) {
+  transform: translate(0px, -2px) rotate(45deg);
+}
+
+.toggle.is-active span:nth-child(2) {
+  opacity: 0;
+  transform: translateX(15px);
+}
+
+.toggle.is-active span:nth-child(3) {
+  transform: translate(-3px, 3px) rotate(-45deg);
+}
+
+
+
+@media (max-width: 768px) {
+
+  body {
+    padding-top: 70px;
+  }
+
+  .header {
+    height: 60px;
+  }
+
+  .logo {
+    font-size: 25px;
+    padding: 0 20px;
+    line-height: 60px;
+    margin-left: 20px;
+  }
+
+
+  .nav-menu {
+    flex-direction: column;
+    align-items: center;
+    margin: 0;
+    background-color: #2c3e50;
+    position: fixed;
+    top: 60px;
+    width: 100%;
+    padding: 20px 0;
+
+    height: calc(100% - 60px);
+    overflow-y: auto;
+
+    left: 100%;
+    transition: left 0.3s;
+  }
+
+  .nav-menu-item {
+    line-height: 70px;
+  }
+
+  .nav-menu-link:hover,
+  .nav-menu-link_active {
+    background: none;
+    color: #83c5f7;
+  }
+
+  .toggle {
+    display: block;
+  }
+
+  .nav-menu_visible {
+    left: 0;
+  }
+
+  .pos {
+    line-height: 60px;
+    margin-right: 50px;
+    margin-bottom: 15px;
+  }
+
+  ul li:hover {
+    background-color: aliceblue;
+    border-radius: 15px;
+  }
+
+}

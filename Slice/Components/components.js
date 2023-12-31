@@ -1,0 +1,20 @@
+const components = {
+  "Button": "Visual",
+  "Card": "Visual",
+  "CodeValidator": "Visual",
+  "complexNavbar": "Visual",
+  "imageCarousel": "Visual",
+  "Input": "Visual",
+  "Loading": "Visual",
+  "Navbar": "Visual",
+  "Tester": "Visual",
+  "Tester2": "Visual",
+  "ToastAlert": "Visual",
+  "FetchManager": "Service",
+  "ToastProvider": "Provider",
+  "Controller": "Structural",
+  "Debugger": "Structural",
+  "Logger": "Structural",
+  "StylesManager": "Structural",
+  "Translator": "Structural"
+}; export default components;

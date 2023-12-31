@@ -1,0 +1,22 @@
+{
+
+    "logger":{
+        "enabled":true,
+        "showLogs":{
+            "console":{
+                "error":true,
+                "warning":true,
+                "info":true
+            },
+            "toast":{
+                "error":true,
+                "warning":true,
+                "info":true
+            }
+        }
+    },
+    "debugger":{
+        "enabled":true
+    }
+
+}
