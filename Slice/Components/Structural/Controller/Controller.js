@@ -5,6 +5,7 @@ export default class Controller {
         this.componentCategories = new Map(Object.entries(components));
         this.templates = new Map();
         this.classes = new Map();
+        this.requestedStyles = new Set();
         this.activeComponents = new Map();
         this.idCounter = 0;
 
@@ -61,11 +62,21 @@ export default class Controller {
         return this.componentCategories.get(componentSliceId);
     }
 
-    async fetchHtml(componentName){
+    async fetchText(componentName, fileType){
 
         const componentCategory = this.getComponentCategory(componentName);
-        const templatePath = `Slice/${slice.paths.components}/${componentCategory}/${componentName}/${componentName}.html`;
-        const response = await fetch(templatePath);
+
+        let path;
+
+        if(fileType === "css"){
+            path = `Slice/${slice.paths.components}/${componentCategory}/${componentName}/${componentName}.css`;
+        }
+
+        if(fileType === "html"){
+            path = `Slice/${slice.paths.components}/${componentCategory}/${componentName}/${componentName}.html`;
+        }
+
+        const response = await fetch(path);
         const html = await response.text();
         return html;
         
