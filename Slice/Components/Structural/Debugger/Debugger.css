@@ -1,0 +1,57 @@
+#debugger-container {
+    display: none;
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    padding: 15px;
+    border: 1px solid #2b2a4c;
+    background-color: #ede2de;
+    z-index: 1000;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+}
+
+#debugger-container.active {
+    display: block;
+}
+
+#close-debugger {
+    cursor: pointer;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 14px;
+    color: #b31313;
+}
+
+h3 {
+    color: #2b2a4c;
+    margin-bottom: 10px;
+}
+
+#component-details table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+#component-details th, #component-details td {
+    border: 1px solid #2b2a4c;
+    padding: 12px;
+    text-align: left;
+}
+
+#component-details th {
+    background-color: #ede2de;
+    color: #2b2a4c;
+}
+
+#component-details td {
+    background-color: #fff;
+    color: #555;
+}
+
+/* Estilo para las filas impares, solo para mejorar la legibilidad */
+#component-details tr:nth-child(odd) {
+    background-color: #f9f9f9;
+}
