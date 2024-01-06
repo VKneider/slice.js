@@ -59,7 +59,7 @@ export default class Slice {
         // Load template if not loaded previously and component category is Visual
         if (!this.controller.templates.has(componentName) && isVisual ) {
             try {
-                const html = await this.controller.fetchHtml(componentName);
+                const html = await this.controller.fetchText(componentName, "html");
                 const template = document.createElement("template");
                 template.innerHTML = html;
                 this.controller.templates.set(componentName, template);
@@ -80,6 +80,18 @@ export default class Slice {
             } catch (error) {
                 console.log(error)
                 this.logger.logError("Slice", `Error loading class ${modulePath}`, error);
+            }
+        }
+
+        //Load css if not loaded previously and component category is Visual
+        if (!this.controller.requestedStyles.has(componentName) && isVisual) {
+            try {
+                const css = await this.controller.fetchText(componentName, "css");
+                this.stylesManager.registerComponentStyles(componentName, css);
+                this.logger.logInfo("Slice", `CSS ${componentName} loaded`)
+            } catch (error) {
+                console.log(error)
+                this.logger.logError("Slice", `Error loading css ${componentName}`, error);
             }
         }
 
