@@ -11,6 +11,8 @@ const components = {
   "Tester2": "Visual",
   "ToastAlert": "Visual",
   "FetchManager": "Service",
+  "IndexedDbManager": "Service",
+  "LocalStorageManager": "Service",
   "ToastProvider": "Provider",
   "Controller": "Structural",
   "Debugger": "Structural",
