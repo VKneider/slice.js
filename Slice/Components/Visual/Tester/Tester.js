@@ -3,17 +3,14 @@ export default class Tester extends HTMLElement {
   constructor(props) {
     super(); 
     slice.attachTemplate(this)
-   
-
+  
     for (const prop in props) {
       this.setAttribute(prop, props[prop])
     }
-     
     
   }
 
-  
-  
+
   static observedAttributes = ['subject', 'description'];
 
    attributeChangedCallback(attributeName, oldValue, newValue){
