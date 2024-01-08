@@ -17,6 +17,9 @@
     },
     "debugger":{
         "enabled":true
+    },
+    "stylesManager":{
+        "defaultTheme":"Slice"
     }
 
 }
