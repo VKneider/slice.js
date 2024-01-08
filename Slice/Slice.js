@@ -153,7 +153,7 @@ async function init() {
        document.body.appendChild(window.slice.debugger);
     }
 
-
+    await window.slice.stylesManager.setTheme("Slice");
 
 }
 
