@@ -18,7 +18,7 @@ export default class StylesManager {
     }
 
     setTheme(themeName){
-      this.themeManager.setTheme(themeName);
+      this.themeManager.applyTheme(themeName);
     }
 
     //add a method that will add css as text to the componentStyles element
