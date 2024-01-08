@@ -76,6 +76,10 @@ export default class Controller {
             path = `Slice/${slice.paths.components}/${componentCategory}/${componentName}/${componentName}.html`;
         }
 
+        if(fileType === "theme"){
+            path = `Slice/${slice.paths.themes}/${componentName}.css`;
+        }
+
         const response = await fetch(path);
         const html = await response.text();
         return html;
