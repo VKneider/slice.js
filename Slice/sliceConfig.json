@@ -1,6 +1,7 @@
 {
     "debugger":{
-        "enabled":true
+        "enabled":true,
+        "click":"right"
     },
     "stylesManager":{
         "defaultTheme":"Slice"

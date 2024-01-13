@@ -5,6 +5,8 @@ export default class Debugger extends HTMLElement {
     constructor(slice) {
         super();
         this.enabled = sliceConfig.debugger.enabled;
+        this.toggleClick = sliceConfig.debugger.click
+        this.toggle = "click"
     }
 
     async enableDebugMode() {
@@ -27,7 +29,13 @@ export default class Debugger extends HTMLElement {
     }
 
     attachDebugMode(component) {
-        component.addEventListener("click", (event) => this.handleDebugClick(event, component));
+        if(this.toggleClick === "right"){
+            this.toggle = "contextmenu"
+        }
+        else {
+            this.toggle = "click"
+        }
+        component.addEventListener(this.toggle, (event) => this.handleDebugClick(event, component));
     }
 
     // VISUAL
