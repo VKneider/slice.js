@@ -1,4 +1,3 @@
-
 export default class Input extends HTMLElement {
     constructor() {
         super();
@@ -36,10 +35,12 @@ export default class Input extends HTMLElement {
         });
     }
 
-    clear() {
-        this.shadowRoot.getElementById("input").value = "";
+  clear() {
+    if (this.input.value !== "") {
+      this.input.value = "";
+      this.placeholder.className = "slice_input_placeholder";
     }
-
+  }
 }
 
-customElements.define("my-input", Input);
+customElements.define("slice-input", Input);

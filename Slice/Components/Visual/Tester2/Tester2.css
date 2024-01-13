@@ -1,0 +1,34 @@
+.container {
+    width: 90%;
+    margin: 50px auto;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+.slice-tester2 {
+    border: 2px solid #3498db;
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 15px;
+    width: 200px;
+    background-color: #fff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease-in-out;
+}
+
+.slice-tester2:hover {
+    transform: scale(1.05);
+}
+
+.slice_tester2_subject {
+    background-color: #3498db;
+    color: #fff;
+    padding: 10px;
+    font-weight: bold;
+}
+
+.slice_tester2_description {
+    background-color: #ecf0f1;
+    text-align: center;
+}

@@ -28,7 +28,7 @@ export default class Tester2 extends HTMLElement {
 
           case 'children':
             
-            let newTester = await slice.build("Tester", {id: "testers", sliceId: "tester3",  subject: "Este es el subject de un componente Tester", description: "Este es el description de un componente Tester"})
+            let newTester = await slice.build("Tester", {id: "testerHijo", sliceId: "testerHijo",  subject: "Este es el subject del hijo de un componente Tester2", description: "Este es el description de un componente Tester"})
             this.appendChild(newTester);
             break;
         }
