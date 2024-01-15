@@ -23,6 +23,7 @@
   background-color: var(--secundary-background-color);
 }
 .slice_input {
+  max-width: 100%;
   margin-top: 20px;
   position: relative;
   border: none;
@@ -43,9 +44,36 @@
 }
 .input_required {
   border: 1px solid var(--danger-color);
+  color: var(--danger-color);
   opacity: 1;
 }
 .placeholder_required {
   color: var(--danger-color);
   opacity: 1;
+}
+.message {
+  color: var(--danger-color);
+  font-size: small;
+}
+@keyframes shake {
+  0% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px) rotate(0.5deg);
+  }
+  50% {
+    transform: translateX(5px) rotate(-0.5deg);
+  }
+  75% {
+    transform: translateX(-3px) rotate(0.3deg);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.error {
+  color: red; /* o cualquier otro estilo que desees aplicar a la clase error */
+  animation: shake 0.5s infinite; /* Establece la animación y su duración */
 }
