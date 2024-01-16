@@ -1,5 +1,11 @@
 {
-
+    "debugger":{
+        "enabled":true,
+        "click":"right"
+    },
+    "stylesManager":{
+        "defaultTheme":"Slice"
+    },
     "logger":{
         "enabled":true,
         "showLogs":{
@@ -14,12 +20,5 @@
                 "info":true
             }
         }
-    },
-    "debugger":{
-        "enabled":true
-    },
-    "stylesManager":{
-        "defaultTheme":"Slice"
     }
-
 }
