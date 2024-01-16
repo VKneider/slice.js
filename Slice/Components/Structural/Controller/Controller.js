@@ -86,5 +86,20 @@ export default class Controller {
         
     }
 
+    setComponentAttributes(component, props) {
+        Object.entries(props).forEach(([key, value]) => {
+          if (component.constructor.observedAttributes.includes(key)) {
+            const attributeValue = typeof value === 'object' ? JSON.stringify(value) : value;
+            component.setAttribute(key, attributeValue);
+          }
+        });
+      }
+
+    destroyComponent(component){
+        const sliceId = component.sliceId;
+        this.activeComponents.delete(sliceId);
+        component.remove();
+    }
+
 
 }
