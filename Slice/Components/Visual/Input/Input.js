@@ -13,9 +13,7 @@ export default class Input extends HTMLElement {
       this.regexConditions(props.regex);
     }
 
-    for (const prop in props) {
-      this.setAttribute(prop, props[prop]);
-    }
+    slice.controller.setComponentAttributes(this, props);
   }
 
   static observedAttributes = [
