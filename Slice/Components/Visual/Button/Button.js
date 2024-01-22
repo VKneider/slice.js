@@ -1,42 +1,43 @@
 export default class Button extends HTMLElement {
-  constructor() {
+  constructor(props) {
     super();
-    slice.controller
-      .loadTemplate("./Slice/templates/Button.html")
-      .then((template) => {
-        this.shadow = this.attachShadow({ mode: "open" });
-        this.shadowRoot.appendChild(template.content.cloneNode(true));
-        let btn = this.shadowRoot.getElementById("btn");
+    slice.attachTemplate(this);
+    this.value = this.querySelector(".slice_button_value");
+    this.button = this.querySelector(".slice_button");
+    this.function = props.function;
+    console.log(this.function);
 
-        if (this.props != undefined) {
-          if (this.props.id != undefined) {
-            this.id = this.props.id;
-          }
+    // this.button.addEventListener("click", () => {
+    //   console.log("Button clicked!");
+    //   this.handleButtonClick();
+    // });
 
-          if (this.props.style != undefined) {
-            this.setCss();
-          }
-          if (this.props.value != undefined) {
-            btn.innerHTML = this.props.value;
-          }
-        }
+    this.button.addEventListener("click", () => this.handleButtonClick());
 
-        slice.controller.registerComponent(this);
-      });
+    for (const prop in props) {
+      this.setAttribute(prop, props[prop]);
+    }
   }
 
-  connectedCallback() {}
+  static observedAttributes = ["value"];
 
-  setCss() {
-    let style = document.createElement("style");
-    let keys = Object.keys(this.props.style);
-    style.innerHTML += `.button{`;
-    for (let i = 0; i < keys.length; i++) {
-      style.innerHTML += `${keys[i]}:${this.props.style[keys[i]]};\n`;
+  attributeChangedCallback(attributeName, oldValue, newValue) {
+    if (Button.observedAttributes.includes(attributeName)) {
+      switch (attributeName) {
+        case "value":
+          this.value.textContent = newValue;
+          break;
+      }
     }
-    style.innerHTML += `}`;
-    let css = this.shadowRoot.getElementById("css");
-    css.appendChild(style);
+  }
+
+  handleButtonClick() {
+    console.log("Function:", this.function);
+    if (this.function && typeof window[this.function] === "function") {
+      window[this.function]();
+    } else {
+      console.error("Function not provided or not a valid function");
+    }
   }
 }
-window.customElements.define("my-button", Button);
+window.customElements.define("slice-button", Button);

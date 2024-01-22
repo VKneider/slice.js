@@ -64,12 +64,22 @@ const confirmPassword = await slice.build("Input", {
   },
 });
 
+const button = await slice.build("Button", {
+  value: "Slice",
+  function: "testSliceButton", // Just the function name without calling it
+});
+
+function testSliceButton() {
+  console.log("slice button works!");
+}
+
 const form = document.getElementById("form");
 
 form.appendChild(name1);
 form.appendChild(lastname);
 form.appendChild(password);
 form.appendChild(confirmPassword);
+form.appendChild(button);
 
 const botonName = document.getElementById("botonName");
 const botonClear = document.getElementById("botonClear");
