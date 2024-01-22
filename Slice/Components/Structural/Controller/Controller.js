@@ -86,14 +86,15 @@ export default class Controller {
         
     }
 
-    setComponentAttributes(component, props) {
-        Object.entries(props).forEach(([key, value]) => {
-          if (component.constructor.observedAttributes.includes(key)) {
-            const attributeValue = typeof value === 'object' ? JSON.stringify(value) : value;
-            component.setAttribute(key, attributeValue);
-          }
-        });
+    setComponentProps(component, props) {
+       Object.assign(component, props);
       }
+
+    removePropsFromComponent(component, props) {
+        for (const prop in props) {
+            delete component[prop];
+        }
+    }
 
     destroyComponent(component){
         const sliceId = component.sliceId;
