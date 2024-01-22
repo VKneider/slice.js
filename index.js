@@ -49,8 +49,8 @@ const confirmPassword = await slice.build("Input", {
   type: "password",
   required: true,
   secret: true,
-  regex: {
-    // explicit: "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[\\W_]).{8,}$",
+  conditions: {
+    // regex: "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[\\W_]).{8,}$",
     // minLength: 8,
     // maxLength: 10,
     // minMinusc: 1,

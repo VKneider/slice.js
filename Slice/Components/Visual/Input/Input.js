@@ -2,15 +2,15 @@ export default class Input extends HTMLElement {
   constructor(props) {
     super();
     slice.attachTemplate(this);
-    this.placeholder = this.querySelector(".slice_input_placeholder");
-    this.slice_input = this.querySelector(".slice_input");
-    this.input = this.querySelector(".input_area");
-    this.hasRegex = false;
-    this.regex;
+    this._placeholder = this.querySelector(".slice_input_placeholder");
+    this._inputContainer = this.querySelector(".slice_input");
+    this._input = this.querySelector(".input_area");
+    this.hasConditions = false;
+    this.conditions;
 
-    if (props.regex) {
-      this.hasRegex = true;
-      this.regexConditions(props.regex);
+    if (props.conditions) {
+      this.hasConditions = true;
+      this.setConditions(props.conditions);
     }
 
     slice.controller.setComponentAttributes(this, props);
@@ -28,31 +28,31 @@ export default class Input extends HTMLElement {
     if (Input.observedAttributes.includes(attributeName)) {
       switch (attributeName) {
         case "placeholder":
-          this.placeholder.textContent = newValue;
+          this._placeholder.textContent = newValue;
 
-          this.input.addEventListener("input", () => {
-            if (this.input.value !== "") {
-              this.placeholder.classList.add("slice_input_value");
+          this._input.addEventListener("input", () => {
+            if (this._input.value !== "") {
+              this._placeholder.classList.add("slice_input_value");
             } else {
-              this.placeholder.classList.remove("slice_input_value");
+              this._placeholder.classList.remove("slice_input_value");
             }
           });
 
           break;
 
         case "value":
-          this.input.value = newValue;
-          if (this.input.value !== "") {
-            this.placeholder.classList.add("slice_input_value");
+          this._input.value = newValue;
+          if (this._input.value !== "") {
+            this._placeholder.classList.add("slice_input_value");
           } else {
-            this.placeholder.classList.add("slice_input_placeholder");
+            this._placeholder.classList.add("slice_input_placeholder");
           }
           break;
 
         case "required":
           if (newValue === "true") {
-            this.input.addEventListener("input", () => {
-              if (this.input.value === "") {
+            this._input.addEventListener("input", () => {
+              if (this._input.value === "") {
                 this.triggerError();
               } else {
                 this.triggerSuccess();
@@ -62,11 +62,11 @@ export default class Input extends HTMLElement {
           break;
 
         case "type":
-          this.input.type = newValue;
+          this._input.type = newValue;
           break;
 
         case "secret":
-          if (newValue === "true" && this.input.type === "password") {
+          if (newValue === "true" && this._input.type === "password") {
             const revealButton = document.createElement("div");
             revealButton.classList.add("eye");
 
@@ -77,25 +77,25 @@ export default class Input extends HTMLElement {
             revealButton.appendChild(reveal);
 
             revealButton.addEventListener("click", () => {
-              if (this.input.type === "password") {
-                this.input.type = "text";
+              if (this._input.type === "password") {
+                this._input.type = "text";
                 reveal.textContent = "Ocultar";
               } else {
-                this.input.type = "password";
+                this._input.type = "password";
                 reveal.textContent = "Mostrar";
               }
             });
 
-            this.slice_input.appendChild(revealButton);
+            this._inputContainer.appendChild(revealButton);
           }
           break;
       }
     }
   }
 
-  regexConditions(conditions) {
+  setConditions(conditions) {
     const {
-      explicit = "",
+      regex = "",
       minLength = 0,
       maxLength = "",
       minMinusc = 0,
@@ -110,8 +110,8 @@ export default class Input extends HTMLElement {
 
     let regexPattern = "";
 
-    if (explicit !== "") {
-      regexPattern = explicit;
+    if (regex !== "") {
+      regexPattern = regex;
     } else {
       regexPattern =
         `^(?=.*[a-z]{${minMinusc},${maxMinusc}})` +
@@ -121,44 +121,44 @@ export default class Input extends HTMLElement {
         `.{${minLength},${maxLength}}$`;
     }
 
-    this.regex = new RegExp(regexPattern);
+    this.conditions = new RegExp(regexPattern);
   }
 
   triggerSuccess() {
-    this.placeholder.classList.remove("placeholder_required");
-    this.input.classList.remove("input_required");
+    this._placeholder.classList.remove("placeholder_required");
+    this._input.classList.remove("input_required");
   }
 
   triggerError() {
-    this.slice_input.classList.add("error");
-    this.placeholder.classList.add("placeholder_required");
-    this.input.classList.add("input_required");
+    this._inputContainer.classList.add("error");
+    this._placeholder.classList.add("placeholder_required");
+    this._input.classList.add("input_required");
     setTimeout(() => {
-      this.slice_input.classList.remove("error");
+      this._inputContainer.classList.remove("error");
     }, 500);
   }
 
   getValue() {
-    if (this.hasRegex && !this.regex.test(this.input.value)) {
+    if (this.hasConditions && !this.conditions.test(this._input.value)) {
       this.triggerError();
-      return `This is not a valid ${this.input.type}`;
+      return `This is not a valid ${this._input.type}`;
     }
 
-    return this.input.value;
+    return this._input.value;
   }
   setValue(string) {
-    this.input.value = string;
+    this._input.value = string;
   }
   getPlacegolder() {
-    return this.input.placeholder;
+    return this._input.placeholder;
   }
   setPlaceholder(string) {
-    this.input.placeholder = string;
+    this._input.placeholder = string;
   }
   clear() {
-    if (this.input.value !== "") {
-      this.input.value = "";
-      this.placeholder.className = "slice_input_placeholder";
+    if (this._input.value !== "") {
+      this._input.value = "";
+      this._placeholder.className = "slice_input_placeholder";
     }
   }
 }
