@@ -88,12 +88,13 @@ export default class Controller {
 
     setComponentProps(component, props) {
        Object.assign(component, props);
+       component.visualProps=Object.keys(props);
       }
 
-    removePropsFromComponent(component, props) {
-        for (const prop in props) {
-            delete component[prop];
-        }
+    removeVisualPropsFromComponent(component, props){
+        props.forEach(prop => {
+            delete component.visualProps[prop];
+        });
     }
 
     destroyComponent(component){

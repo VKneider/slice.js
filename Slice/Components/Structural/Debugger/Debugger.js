@@ -75,9 +75,9 @@ export default class Debugger extends HTMLElement {
         };
 
         // Agregar los observedAttributes y sus valores al objeto componentDetails
-        const observedAttributes = component.constructor.observedAttributes || [];
+        const observedAttributes = component.visualProps;
         observedAttributes.forEach(attr => {
-            componentDetails.ObservedAttributes[attr] = component.getAttribute(attr);
+            componentDetails.ObservedAttributes[attr] = component[attr]
         });
 
         // Mostrar observedAttributes y sus valores
