@@ -92,9 +92,8 @@ export default class Controller {
       }
 
     removeVisualPropsFromComponent(component, props){
-        props.forEach(prop => {
-            delete component.visualProps[prop];
-        });
+        const filteredProps = props.filter(prop => !component.visualProps.includes(prop));
+        component.visualProps = filteredProps;
     }
 
     destroyComponent(component){
