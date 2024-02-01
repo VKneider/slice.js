@@ -87,8 +87,10 @@ export default class Controller {
     }
 
     setComponentProps(component, props) {
-       Object.assign(component, props);
-       component.visualProps=Object.keys(props);
+        for (const prop in props) {
+            component[`_${prop}`] = null;
+            component[prop] = props[prop];
+        }
       }
 
     removeVisualPropsFromComponent(component, props){

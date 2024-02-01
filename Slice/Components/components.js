@@ -13,10 +13,10 @@ const components = {
   "FetchManager": "Service",
   "IndexedDbManager": "Service",
   "LocalStorageManager": "Service",
+  "Translator": "Service",
   "ToastProvider": "Provider",
   "Controller": "Structural",
   "Debugger": "Structural",
   "Logger": "Structural",
-  "StylesManager": "Structural",
-  "Translator": "Structural"
+  "StylesManager": "Structural"
 }; export default components;

@@ -34,6 +34,7 @@ const name1 = await slice.build("Input", {
   id: "nombre",
   placeholder: "Name",
   required: true,
+  sliceId:"myInput"
 });
 const lastname = await slice.build("Input", {
   placeholder: "Last Name",
@@ -64,14 +65,27 @@ const confirmPassword = await slice.build("Input", {
   },
 });
 
-const button = await slice.build("Button", {
-  value: "Slice",
-  function: "testSliceButton", // Just the function name without calling it
-});
+
+const translator = await slice.build("Translator", {});
+console.log(translator)
 
 function testSliceButton() {
-  console.log("slice button works!");
+
+  if(translator.currentLanguage === "es"){
+  translator.changeLanguage("en");
+  } else {
+  translator.changeLanguage("es");
+  }
+
+  
 }
+
+const button = await slice.build("Button", {
+  value: "Slice",
+  "onClickCallback": testSliceButton, // Just the function name without calling it
+});
+
+
 
 const form = document.getElementById("form");
 
@@ -99,3 +113,4 @@ botonClear.addEventListener("click", () => {
   // lastname.clear();
   // password.clear();
 });
+

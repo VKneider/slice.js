@@ -98,22 +98,32 @@ export default class Slice {
 
         //Create instance
         try {
+            let componentIds = {};
+            if(props.id) componentIds.id = props.id;
+            if(props.sliceId) componentIds.sliceId = props.sliceId;
+
+            delete props.id;
+            delete props.sliceId;
+            
             const ComponentClass = this.controller.classes.get(componentName);
             const componentInstance = new ComponentClass(props);
 
-            if(props.id) componentInstance.id = props.id;
-            if(props.sliceId) componentInstance.sliceId = props.sliceId;
+            if(componentIds.id) componentInstance.id = componentIds.id;
+            if(componentIds.sliceId) componentInstance.sliceId = componentIds.sliceId;
 
             this.stylesManager.handleInstanceStyles(componentInstance,props);
 
             if(!this.controller.registerComponent(componentInstance)) {
-                this.logger.logError("Slice", `Error registering instance ${componentName}`);
+                this.logger.logError("Slice", `Error registering instance ${componentName} ${componentInstance.sliceId}`);
                 return null;
             }
 
-            if(this.debugger.enabled){
+            if(this.debugger.enabled && compontentCategory === "Visual"){
                 this.debugger.attachDebugMode(componentInstance);
             }
+
+            //if the component has a method called init, call it
+            if(componentInstance.init ) await componentInstance.init();
 
             this.logger.logInfo("Slice", `Instance ${componentInstance.sliceId} created`)
             return componentInstance;

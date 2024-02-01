@@ -3,8 +3,8 @@ import fs from 'fs';
 //read the Components folder and create a JSON with two arrays: Visual and Structural. Each array contains the name of the components in the folders visual and structural respectively
 const visualComponents = fs.readdirSync('./Components/Visual');
 const structuralComponents = fs.readdirSync('./Components/Structural');
-const services = fs.readdirSync('./Components/Services');
-const providers = fs.readdirSync('./Components/Providers');
+const services = fs.readdirSync('./Components/Service');
+const providers = fs.readdirSync('./Components/Provider');
 
 const componentMap = new Map();
 

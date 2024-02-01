@@ -1,30 +1,60 @@
 export default class Input extends HTMLElement {
   constructor(props) {
     super();
-    slice.controller.setComponentProps(this, props);
     slice.attachTemplate(this);
-    this._placeholder = this.querySelector(".slice_input_placeholder");
-    this._inputContainer = this.querySelector(".slice_input");
-    this._input = this.querySelector(".input_area");
+    this.$placeholder = this.querySelector(".slice_input_placeholder");
+    this.$inputContainer = this.querySelector(".slice_input");
+    this.$input = this.querySelector(".input_area");
 
-    //slice.controller.removeVisualPropsFromComponent(this, ['placeholder'])
-    this.init();
+    slice.controller.setComponentProps(this, props);
+    this.debuggerProps = ['value', 'placeholder', 'type',  'required', 'conditions']
+    
   }
 
-  async init() {
+  get placeholder() {
+    return this._placeholder;
+  }
+
+  set placeholder(value) {
+    this._placeholder = value;
+    this.$placeholder.textContent = value;
+      if (this.value !== undefined) {
+        this.$input.value = this.value;
+        this.$placeholder.classList.add("slice_input_value");
+      }
+  }
+
+  get value() {
+    return this.$input.value;
+  }
+
+  set value(value) {
+    this._value = value;
+    this.$input.value = value;
+  }
+
+  get type() {
+    return this._type;
+  }
+
+  set type(value) {
+    this._type = value;
+    this.$input.type = value;
+  }
+
+
+  init() {
     if (this.conditions) {
       this.setConditions(this.conditions);
     }
-    this._placeholder.textContent = this.placeholder;
-    if (this.value !== undefined) {
-      this._input.value = this.value;
-      this._placeholder.classList.add("slice_input_value");
-    }
-    this._input.type = this.type;
-    this._input.addEventListener("input", () => {
+    
+
+    this.$input.addEventListener("input", () => {
       this.update();
     });
-    if (this.secret && this._input.type === "password") {
+
+
+    if (this.secret && this.$input.type === "password") {
       const revealButton = document.createElement("div");
       revealButton.classList.add("eye");
       const reveal = document.createElement("label");
@@ -32,66 +62,62 @@ export default class Input extends HTMLElement {
       reveal.classList.add("label");
       revealButton.appendChild(reveal);
       revealButton.addEventListener("click", () => {
-        if (this._input.type === "password") {
-          this._input.type = "text";
+        if (this.$input.type === "password") {
+          this.$input.type = "text";
           reveal.textContent = "Ocultar";
         } else {
-          this._input.type = "password";
+          this.$input.type = "password";
           reveal.textContent = "Mostrar";
         }
       });
-      this._inputContainer.appendChild(revealButton);
+      this.$inputContainer.appendChild(revealButton);
     }
   }
 
   update() {
-    if (this.value !== "" || !undefined) {
-      if (this._input.value !== "") {
-        this._placeholder.classList.add("slice_input_value");
+    if (this.$input.value !== "" || !undefined) {
+      if (this.$input.value !== "") {
+        this.$placeholder.classList.add("slice_input_value");
         this.triggerSuccess();
       } else {
-        this._placeholder.classList.remove("slice_input_value");
+        this.$placeholder.classList.remove("slice_input_value");
         if (this.required) {
           this.triggerError();
         }
       }
     }
   }
-  getValue() {
-    if (this.conditions && !this.conditions.test(this._input.value)) {
-      this.triggerError();
-      return `This is not a valid ${this._input.type}`;
-    }
 
-    return this._input.value;
+  validateValue(){
+    if (this.conditions && !this.conditions.test(this.$input.value)) {
+      this.triggerError();
+      return false
+    }
+    this.triggerSuccess();
+    return true;
+
   }
-  setValue(string) {
-    this._input.value = string;
-  }
-  getPlacegolder() {
-    return this._input.placeholder;
-  }
-  setPlaceholder(string) {
-    this._input.placeholder = string;
-  }
+
   clear() {
-    if (this._input.value !== "") {
-      this._input.value = "";
-      this._placeholder.className = "slice_input_placeholder";
+    if (this.$input.value !== "") {
+      this.$input.value = "";
+      this.$placeholder.className = "slice_input_placeholder";
     }
   }
+
+
 
   triggerSuccess() {
-    this._placeholder.classList.remove("placeholder_required");
-    this._input.classList.remove("input_required");
+    this.$placeholder.classList.remove("placeholder_required");
+    this.$input.classList.remove("input_required");
   }
 
   triggerError() {
-    this._inputContainer.classList.add("error");
-    this._placeholder.classList.add("placeholder_required");
-    this._input.classList.add("input_required");
+    this.$inputContainer.classList.add("error");
+    this.$placeholder.classList.add("placeholder_required");
+    this.$input.classList.add("input_required");
     setTimeout(() => {
-      this._inputContainer.classList.remove("error");
+      this.$inputContainer.classList.remove("error");
     }, 500);
   }
 
@@ -119,7 +145,7 @@ export default class Input extends HTMLElement {
         `^(?=.*[a-z]{${minMinusc},${maxMinusc}})` +
         `(?=.*[A-Z]{${minMayusc},${maxMayusc}})` +
         `(?=.*\\d{${minNumber},${maxNumber}})` +
-        `(?=.*[\\W_]{${minSymbol},${maxSymbol}})` +
+        `(?=.*[\\W$]{${minSymbol},${maxSymbol}})` +
         `.{${minLength},${maxLength}}$`;
     }
 
