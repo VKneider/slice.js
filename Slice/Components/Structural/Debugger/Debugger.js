@@ -77,7 +77,7 @@ export default class Debugger extends HTMLElement {
       ObservedAttributes: {},
     };
 
-    const realComponentProps = component.props;
+    const realComponentProps = component.debuggerProps;
 
     realComponentProps.forEach((attr) => {
       //verify if the attr doesnt exist in the component, assign the value of _attr

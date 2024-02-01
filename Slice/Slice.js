@@ -118,7 +118,7 @@ export default class Slice {
                 return null;
             }
 
-            if(this.debugger.enabled){
+            if(this.debugger.enabled && compontentCategory === "Visual"){
                 this.debugger.attachDebugMode(componentInstance);
             }
 

@@ -7,7 +7,8 @@ export default class Input extends HTMLElement {
     this.$input = this.querySelector(".input_area");
 
     slice.controller.setComponentProps(this, props);
-    this.props = ['value', 'placeholder', 'type', 'secret', 'required', 'conditions']
+    this.debuggerProps = ['value', 'placeholder', 'type',  'required', 'conditions']
+    
   }
 
   get placeholder() {
@@ -73,14 +74,13 @@ export default class Input extends HTMLElement {
     }
   }
 
-
   update() {
-    if (this.value !== "" || !undefined) {
+    if (this.$input.value !== "" || !undefined) {
       if (this.$input.value !== "") {
-        this.$placeholder.classList.add("slice$input$value");
+        this.$placeholder.classList.add("slice_input_value");
         this.triggerSuccess();
       } else {
-        this.$placeholder.classList.remove("slice$input$value");
+        this.$placeholder.classList.remove("slice_input_value");
         if (this.required) {
           this.triggerError();
         }
@@ -88,16 +88,15 @@ export default class Input extends HTMLElement {
     }
   }
 
-  getValue() {
+  validateValue(){
     if (this.conditions && !this.conditions.test(this.$input.value)) {
       this.triggerError();
-      return `This is not a valid ${this.$input.type}`;
+      return false
     }
+    this.triggerSuccess();
+    return true;
 
-    return this.$input.value;
   }
-
-
 
   clear() {
     if (this.$input.value !== "") {
