@@ -7,8 +7,13 @@ export default class Input extends HTMLElement {
     this.$input = this.querySelector(".input_area");
 
     slice.controller.setComponentProps(this, props);
-    this.debuggerProps = ['value', 'placeholder', 'type',  'required', 'conditions']
-    
+    this.debuggerProps = [
+      "value",
+      "placeholder",
+      "type",
+      "required",
+      "conditions",
+    ];
   }
 
   get placeholder() {
@@ -18,10 +23,6 @@ export default class Input extends HTMLElement {
   set placeholder(value) {
     this._placeholder = value;
     this.$placeholder.textContent = value;
-      if (this.value !== undefined) {
-        this.$input.value = this.value;
-        this.$placeholder.classList.add("slice_input_value");
-      }
   }
 
   get value() {
@@ -31,6 +32,7 @@ export default class Input extends HTMLElement {
   set value(value) {
     this._value = value;
     this.$input.value = value;
+    this.$placeholder.classList.add("slice_input_value");
   }
 
   get type() {
@@ -42,17 +44,14 @@ export default class Input extends HTMLElement {
     this.$input.type = value;
   }
 
-
   init() {
     if (this.conditions) {
       this.setConditions(this.conditions);
     }
-    
 
     this.$input.addEventListener("input", () => {
       this.update();
     });
-
 
     if (this.secret && this.$input.type === "password") {
       const revealButton = document.createElement("div");
@@ -88,14 +87,13 @@ export default class Input extends HTMLElement {
     }
   }
 
-  validateValue(){
+  validateValue() {
     if (this.conditions && !this.conditions.test(this.$input.value)) {
       this.triggerError();
-      return false
+      return false;
     }
     this.triggerSuccess();
     return true;
-
   }
 
   clear() {
@@ -104,8 +102,6 @@ export default class Input extends HTMLElement {
       this.$placeholder.className = "slice_input_placeholder";
     }
   }
-
-
 
   triggerSuccess() {
     this.$placeholder.classList.remove("placeholder_required");
