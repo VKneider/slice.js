@@ -42,6 +42,11 @@ export default class Input extends HTMLElement {
   set type(value) {
     this._type = value;
     this.$input.type = value;
+    if (value === "color") {
+      this.$input.classList.add("color_input");
+      this.$placeholder.remove();
+      this.$input.style.backgroundColor = this.value || "#FFFFFF";
+    }
   }
 
   init() {
@@ -84,6 +89,9 @@ export default class Input extends HTMLElement {
           this.triggerError();
         }
       }
+    }
+    if (this._type === "color") {
+      this.$input.style.backgroundColor = this.value || "#FFFFFF";
     }
   }
 

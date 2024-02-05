@@ -65,6 +65,10 @@ const confirmPassword = await slice.build("Input", {
     // maxSymbol: 10,
   },
 });
+const colorInput = await slice.build("Input", {
+  placeholder: "Color",
+  type: "color",
+});
 
 const translator = await slice.build("Translator", {});
 console.log(translator);
@@ -75,6 +79,7 @@ function testSliceButton() {
   } else {
     translator.changeLanguage("es");
   }
+  console.log(colorInput.value);
 }
 
 const button = await slice.build("Button", {
@@ -88,6 +93,7 @@ form.appendChild(name1);
 form.appendChild(lastname);
 form.appendChild(password);
 form.appendChild(confirmPassword);
+form.appendChild(colorInput);
 form.appendChild(button);
 
 const botonName = document.getElementById("botonName");

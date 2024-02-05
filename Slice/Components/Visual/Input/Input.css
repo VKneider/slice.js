@@ -51,6 +51,11 @@
   color: var(--danger-color);
   opacity: 1;
 }
+.color_input {
+  border-radius: 100%;
+  height: 50px;
+  width: 50px;
+}
 .message {
   color: var(--danger-color);
   font-size: small;
