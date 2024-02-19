@@ -34,7 +34,6 @@ const name1 = await slice.build("Input", {
   placeholder: "Name",
   required: true,
   sliceId: "myInput",
-  disabled: true,
 });
 const lastname = await slice.build("Input", {
   placeholder: "Last Name",
@@ -51,6 +50,7 @@ const confirmPassword = await slice.build("Input", {
   type: "password",
   required: true,
   secret: true,
+  disabled: true,
   conditions: {
     // regex: "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[\\W_]).{8,}$",
     // minLength: 8,

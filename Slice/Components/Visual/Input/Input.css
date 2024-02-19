@@ -3,67 +3,54 @@
 }
 .eye {
   color: var(--primary-color);
-  transform: translateY(-100%);
   position: absolute;
+  user-select: none;
   cursor: pointer;
   padding: 10px;
   right: 0;
+  top: 0;
 }
 .input_area {
   color: var(--font-primary-color);
   width: 100%;
   background: none;
   outline: none;
-  border-radius: 5px;
-  padding-top: 10px;
-  padding-bottom: 10px;
-  padding-left: 10px;
-  border: 1px solid var(--primary-color-rgb);
-  background-color: var(--primary-background-color);
+  border: none;
 }
 .slice_input {
-  margin-right: 25px;
-  margin-top: 25px;
-  margin-bottom: 25px;
-  font-family: var(--font-family);
+  padding: 10px;
   max-width: 100%;
-  position: relative;
-  border: none;
   border-radius: 5px;
+  font-family: var(--font-family);
+  border: 1px solid var(--primary-color-rgb);
+  background-color: var(--primary-background-color);
+  margin-bottom: 25px;
+  margin-top: 25px;
+  position: relative;
 }
 .slice_input_placeholder {
   color: var(--primary-color);
-  padding: 10px;
   position: absolute;
   transition: all 0.5s;
-  pointer-events: none;
+  user-select: none;
 }
 .slice_input_value {
   scale: 0.8;
-  transform: translateY(-100%);
+  transform: translateY(-200%);
   transition: all 0.5s;
 }
 .input_required {
   border: 1px solid var(--danger-color);
   color: var(--danger-color);
-  opacity: 1;
 }
 .placeholder_required {
   color: var(--danger-color);
-  opacity: 1;
 }
 .disabled {
   border-color: var(--disabled-color);
   background-color: var(--primary-color-shade);
   color: var(--disabled-color);
   cursor: not-allowed;
-}
-.placeholder_disabled {
-  color: var(--disabled-color);
-  padding: 10px;
-  position: absolute;
-  transition: all 0.5s;
-  pointer-events: none;
 }
 .color_input {
   border-radius: 100%;

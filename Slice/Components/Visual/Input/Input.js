@@ -61,11 +61,10 @@ export default class Input extends HTMLElement {
   }
 
   set disabled(boolean) {
-    this._type = boolean;
+    this._disabled = boolean;
     this.$input.disabled = boolean;
-    this.$input.classList.add("disabled");
-    this.$placeholder.classList.remove("slice_input_placeholder");
-    this.$placeholder.classList.add("placeholder_disabled");
+    this.$inputContainer.classList.add("disabled");
+    this.$placeholder.classList.add("disabled");
   }
 
   get secret() {
@@ -75,14 +74,10 @@ export default class Input extends HTMLElement {
   set secret(boolean) {
     this._secret = boolean;
     this.$input.type = "password";
-    // if (this._secret && this.$input.type === "password") {
-    const revealButton = document.createElement("div");
-    revealButton.classList.add("eye");
-    const reveal = document.createElement("label");
+    const reveal = document.createElement("div");
+    reveal.classList.add("eye");
     reveal.textContent = "Mostrar";
-    reveal.classList.add("label");
-    revealButton.appendChild(reveal);
-    revealButton.addEventListener("click", () => {
+    reveal.addEventListener("click", () => {
       if (this.$input.type === "password") {
         this.$input.type = "text";
         reveal.textContent = "Ocultar";
@@ -91,8 +86,7 @@ export default class Input extends HTMLElement {
         reveal.textContent = "Mostrar";
       }
     });
-    this.$inputContainer.appendChild(revealButton);
-    // }
+    this.$inputContainer.appendChild(reveal);
   }
 
   get conditions() {
@@ -148,9 +142,6 @@ export default class Input extends HTMLElement {
         }
       }
     }
-    if (this._type === "color") {
-      this.$input.style.backgroundColor = this.$input.value || "#FFFFFF";
-    }
   }
 
   validateValue() {
@@ -171,13 +162,13 @@ export default class Input extends HTMLElement {
 
   triggerSuccess() {
     this.$placeholder.classList.remove("placeholder_required");
-    this.$input.classList.remove("input_required");
+    this.$inputContainer.classList.remove("input_required");
   }
 
   triggerError() {
     this.$inputContainer.classList.add("error");
+    this.$inputContainer.classList.add("input_required");
     this.$placeholder.classList.add("placeholder_required");
-    this.$input.classList.add("input_required");
     setTimeout(() => {
       this.$inputContainer.classList.remove("error");
     }, 500);
