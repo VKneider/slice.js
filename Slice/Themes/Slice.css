@@ -1,15 +1,14 @@
 @import url("https://fonts.googleapis.com/css2?family=Montserrat&family=Poppins&family=Roboto&display=swap");
 
-* {
-  font-family: "Roboto", sans-serif;
-}
-
 :root {
+  --font-family: "Roboto", sans-serif;
+  --font-primary-color: #000;
+
   --primary-color: rgba(67, 83, 52);
   --primary-color-border: rgba(67, 83, 52);
   --primary-background-color: rgba(158, 179, 132);
   --secundary-background-color: rgba(250, 241, 228);
-  --secondary-color: rgba(250, 241, 228)
+  --secondary-color: rgba(250, 241, 228);
 
-  --danger-color: #b31313;
+  --danger-color: #ff0000;
 }

@@ -1,8 +1,5 @@
-.body {
-  background-color: var(--primary-background-color);
-}
-.label {
-  pointer-events: none;
+#form {
+  background-color: var(--secundary-background-color);
 }
 .eye {
   color: var(--primary-color);
@@ -13,29 +10,33 @@
   right: 0;
 }
 .input_area {
-  color: var(--primary-color);
+  color: var(--font-primary-color);
   width: 100%;
   background: none;
   outline: none;
   border-radius: 5px;
-  padding: 10px;
-  border: 1px solid var(--primary-color-border);
-  background-color: var(--secundary-background-color);
+  padding-top: 10px;
+  padding-bottom: 10px;
+  padding-left: 10px;
+  border: 1px solid var(--primary-color-rgb);
+  background-color: var(--primary-background-color);
 }
 .slice_input {
+  margin-right: 25px;
+  margin-top: 25px;
+  margin-bottom: 25px;
+  font-family: var(--font-family);
   max-width: 100%;
-  margin-top: 20px;
   position: relative;
   border: none;
   border-radius: 5px;
 }
 .slice_input_placeholder {
-  pointer-events: none;
-  padding: 10px;
-  opacity: 0.5;
   color: var(--primary-color);
+  padding: 10px;
   position: absolute;
   transition: all 0.5s;
+  pointer-events: none;
 }
 .slice_input_value {
   scale: 0.8;
@@ -50,6 +51,19 @@
 .placeholder_required {
   color: var(--danger-color);
   opacity: 1;
+}
+.disabled {
+  border-color: var(--disabled-color);
+  background-color: var(--primary-color-shade);
+  color: var(--disabled-color);
+  cursor: not-allowed;
+}
+.placeholder_disabled {
+  color: var(--disabled-color);
+  padding: 10px;
+  position: absolute;
+  transition: all 0.5s;
+  pointer-events: none;
 }
 .color_input {
   border-radius: 100%;

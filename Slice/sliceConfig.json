@@ -1,24 +1,24 @@
 {
-    "debugger":{
-        "enabled":true,
-        "click":"right"
-    },
-    "stylesManager":{
-        "defaultTheme":"Slice"
-    },
-    "logger":{
-        "enabled":true,
-        "showLogs":{
-            "console":{
-                "error":true,
-                "warning":true,
-                "info":true
-            },
-            "toast":{
-                "error":true,
-                "warning":true,
-                "info":true
-            }
-        }
+  "debugger": {
+    "enabled": true,
+    "click": "right"
+  },
+  "stylesManager": {
+    "defaultTheme": "Light"
+  },
+  "logger": {
+    "enabled": true,
+    "showLogs": {
+      "console": {
+        "error": true,
+        "warning": true,
+        "info": true
+      },
+      "toast": {
+        "error": true,
+        "warning": true,
+        "info": true
+      }
     }
+  }
 }

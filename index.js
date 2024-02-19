@@ -1,9 +1,8 @@
 const boton = document.getElementById("boton");
 
 let theme = "Light";
-await slice.stylesManager.setTheme("Light");
-boton.innerHTML = "Cambiar al tema Dark";
 
+boton.innerHTML = "Cambiar al tema Dark";
 boton.addEventListener("click", async () => {
   if (theme === "Slice") {
     await slice.stylesManager.setTheme("Light");
@@ -35,6 +34,7 @@ const name1 = await slice.build("Input", {
   placeholder: "Name",
   required: true,
   sliceId: "myInput",
+  disabled: true,
 });
 const lastname = await slice.build("Input", {
   placeholder: "Last Name",
@@ -65,10 +65,6 @@ const confirmPassword = await slice.build("Input", {
     // maxSymbol: 10,
   },
 });
-const colorInput = await slice.build("Input", {
-  placeholder: "Color",
-  type: "color",
-});
 
 const translator = await slice.build("Translator", {});
 console.log(translator);
@@ -79,8 +75,16 @@ function testSliceButton() {
   } else {
     translator.changeLanguage("es");
   }
-  console.log(colorInput.value);
 }
+
+const dateInput = await slice.build("Input", {
+  placeholder: "Birthday",
+  type: "date",
+});
+const ageInput = await slice.build("Input", {
+  placeholder: "Age",
+  type: "number",
+});
 
 const button = await slice.build("Button", {
   value: "Slice",
@@ -93,7 +97,8 @@ form.appendChild(name1);
 form.appendChild(lastname);
 form.appendChild(password);
 form.appendChild(confirmPassword);
-form.appendChild(colorInput);
+form.appendChild(dateInput);
+form.appendChild(ageInput);
 form.appendChild(button);
 
 const botonName = document.getElementById("botonName");

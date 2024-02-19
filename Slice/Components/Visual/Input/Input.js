@@ -42,40 +42,98 @@ export default class Input extends HTMLElement {
   set type(value) {
     this._type = value;
     this.$input.type = value;
-    if (value === "color") {
-      this.$input.classList.add("color_input");
-      this.$placeholder.remove();
-      this.$input.style.backgroundColor = this.value || "#FFFFFF";
+    if (value === "date") {
+      this.$placeholder.classList.add("slice_input_value");
     }
   }
 
-  init() {
-    if (this.conditions) {
-      this.setConditions(this.conditions);
+  get required() {
+    return this._required;
+  }
+
+  set required(boolean) {
+    this._required = boolean;
+    this.$input.required = boolean;
+  }
+
+  get disabled() {
+    return this._disabled;
+  }
+
+  set disabled(boolean) {
+    this._type = boolean;
+    this.$input.disabled = boolean;
+    this.$input.classList.add("disabled");
+    this.$placeholder.classList.remove("slice_input_placeholder");
+    this.$placeholder.classList.add("placeholder_disabled");
+  }
+
+  get secret() {
+    return this._secret;
+  }
+
+  set secret(boolean) {
+    this._secret = boolean;
+    this.$input.type = "password";
+    // if (this._secret && this.$input.type === "password") {
+    const revealButton = document.createElement("div");
+    revealButton.classList.add("eye");
+    const reveal = document.createElement("label");
+    reveal.textContent = "Mostrar";
+    reveal.classList.add("label");
+    revealButton.appendChild(reveal);
+    revealButton.addEventListener("click", () => {
+      if (this.$input.type === "password") {
+        this.$input.type = "text";
+        reveal.textContent = "Ocultar";
+      } else {
+        this.$input.type = "password";
+        reveal.textContent = "Mostrar";
+      }
+    });
+    this.$inputContainer.appendChild(revealButton);
+    // }
+  }
+
+  get conditions() {
+    return this._conditions;
+  }
+
+  set conditions(value) {
+    const {
+      regex = "",
+      minLength = 0,
+      maxLength = "",
+      minMinusc = 0,
+      maxMinusc = "",
+      minMayusc = 0,
+      maxMayusc = "",
+      minNumber = 0,
+      maxNumber = "",
+      minSymbol = 0,
+      maxSymbol = "",
+    } = value;
+
+    let regexPattern = "";
+
+    if (regex !== "") {
+      regexPattern = regex;
+    } else {
+      regexPattern =
+        `^(?=.*[a-z]{${minMinusc},${maxMinusc}})` +
+        `(?=.*[A-Z]{${minMayusc},${maxMayusc}})` +
+        `(?=.*\\d{${minNumber},${maxNumber}})` +
+        `(?=.*[\\W$]{${minSymbol},${maxSymbol}})` +
+        `.{${minLength},${maxLength}}$`;
     }
 
+    this._conditions = new RegExp(regexPattern);
+  }
+
+  init() {
     this.$input.addEventListener("input", () => {
       this.update();
     });
-
-    if (this.secret && this.$input.type === "password") {
-      const revealButton = document.createElement("div");
-      revealButton.classList.add("eye");
-      const reveal = document.createElement("label");
-      reveal.textContent = "Mostrar";
-      reveal.classList.add("label");
-      revealButton.appendChild(reveal);
-      revealButton.addEventListener("click", () => {
-        if (this.$input.type === "password") {
-          this.$input.type = "text";
-          reveal.textContent = "Ocultar";
-        } else {
-          this.$input.type = "password";
-          reveal.textContent = "Mostrar";
-        }
-      });
-      this.$inputContainer.appendChild(revealButton);
-    }
   }
 
   update() {
@@ -91,12 +149,12 @@ export default class Input extends HTMLElement {
       }
     }
     if (this._type === "color") {
-      this.$input.style.backgroundColor = this.value || "#FFFFFF";
+      this.$input.style.backgroundColor = this.$input.value || "#FFFFFF";
     }
   }
 
   validateValue() {
-    if (this.conditions && !this.conditions.test(this.$input.value)) {
+    if (this._conditions && !this._conditions.test(this.$input.value)) {
       this.triggerError();
       return false;
     }
@@ -123,37 +181,6 @@ export default class Input extends HTMLElement {
     setTimeout(() => {
       this.$inputContainer.classList.remove("error");
     }, 500);
-  }
-
-  setConditions(conditions) {
-    const {
-      regex = "",
-      minLength = 0,
-      maxLength = "",
-      minMinusc = 0,
-      maxMinusc = "",
-      minMayusc = 0,
-      maxMayusc = "",
-      minNumber = 0,
-      maxNumber = "",
-      minSymbol = 0,
-      maxSymbol = "",
-    } = conditions;
-
-    let regexPattern = "";
-
-    if (regex !== "") {
-      regexPattern = regex;
-    } else {
-      regexPattern =
-        `^(?=.*[a-z]{${minMinusc},${maxMinusc}})` +
-        `(?=.*[A-Z]{${minMayusc},${maxMayusc}})` +
-        `(?=.*\\d{${minNumber},${maxNumber}})` +
-        `(?=.*[\\W$]{${minSymbol},${maxSymbol}})` +
-        `.{${minLength},${maxLength}}$`;
-    }
-
-    this.conditions = new RegExp(regexPattern);
   }
 }
 
