@@ -2,6 +2,8 @@ import Logger from "./Components/Structural/Logger/Logger.js";
 import Controller from "./Components/Structural/Controller/Controller.js";
 import StylesManager from "./Components/Structural/StylesManager/StylesManager.js";
 import Debugger from "./Components/Structural/Debugger/Debugger.js";
+import sliceConfig from "./sliceConfig.json" assert { type: "json" };
+
 
 export default class Slice {
 
@@ -163,7 +165,7 @@ async function init() {
        document.body.appendChild(window.slice.debugger);
     }
 
-    await window.slice.stylesManager.setTheme("Slice");
+    await window.slice.stylesManager.setTheme(sliceConfig.stylesManager.defaultTheme);
 
 }
 
