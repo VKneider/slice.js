@@ -2,29 +2,22 @@ export default class Button extends HTMLElement {
   constructor(props) {
     super();
     slice.attachTemplate(this);
-    this.value = this.querySelector(".slice_button_value");
-    this.button = this.querySelector(".slice_button");
+    this.$value = this.querySelector(".slice_button_value");
+    this.$button = this.querySelector(".slice_button");
     this.onClickCallback = props.onClickCallback;
+    this.$button.addEventListener("click", () => this.onClickCallback());
 
-    console.log(this.onClickCallback)
-
-    this.button.addEventListener("click", () => this.onClickCallback());
-
-    for (const prop in props) {
-      this.setAttribute(prop, props[prop]);
-    }
+    slice.controller.setComponentProps(this, props);
+    this.debuggerProps = ["value", "onClickCallback"];
   }
 
-  static observedAttributes = ["value"];
+  get value() {
+    return this._value;
+  }
 
-  attributeChangedCallback(attributeName, oldValue, newValue) {
-    if (Button.observedAttributes.includes(attributeName)) {
-      switch (attributeName) {
-        case "value":
-          this.value.textContent = newValue;
-          break;
-      }
-    }
+  set value(value) {
+    this._value = value;
+    this.$value.textContent = value;
   }
 
   handleButtonClick() {
