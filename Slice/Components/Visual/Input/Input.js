@@ -40,6 +40,14 @@ export default class Input extends HTMLElement {
   }
 
   set type(value) {
+    const allowedTypes = ["text", "password", "email", "number", "date"];
+
+    if (!allowedTypes.includes(value)) {
+      throw new Error(`This type is not allowed: ${value}`);
+    }
+
+    console.log("This is", value);
+
     this._type = value;
     this.$input.type = value;
     if (value === "date") {
@@ -125,6 +133,9 @@ export default class Input extends HTMLElement {
   }
 
   init() {
+    if (!this.type) {
+      this.type = "text";
+    }
     this.$input.addEventListener("input", () => {
       this.update();
     });

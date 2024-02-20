@@ -37,7 +37,6 @@ const name1 = await slice.build("Input", {
 });
 const lastname = await slice.build("Input", {
   placeholder: "Last Name",
-  value: "Graterol",
 });
 const password = await slice.build("Input", {
   placeholder: "Password",
@@ -53,16 +52,16 @@ const confirmPassword = await slice.build("Input", {
   disabled: true,
   conditions: {
     // regex: "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[\\W_]).{8,}$",
-    // minLength: 8,
-    // maxLength: 10,
-    // minMinusc: 1,
-    // maxMinusc: 4,
-    // minMayusc: 1,
-    // maxMayusc: 6,
-    // minNumber: 1,
-    // maxNumber: 6,
-    // minSymbol: 1,
-    // maxSymbol: 10,
+    minLength: 8,
+    maxLength: 10,
+    minMinusc: 1,
+    maxMinusc: 4,
+    minMayusc: 1,
+    maxMayusc: 6,
+    minNumber: 1,
+    maxNumber: 6,
+    minSymbol: 1,
+    maxSymbol: 10,
   },
 });
 
@@ -108,7 +107,7 @@ botonName.addEventListener("click", () => {
   console.log(confirmPassword.getValue());
 });
 botonClear.addEventListener("click", () => {
-  if (password.getValue() !== confirmPassword.getValue()) {
+  if (password.value !== confirmPassword.value) {
     password.triggerError();
     confirmPassword.triggerError();
   } else {
