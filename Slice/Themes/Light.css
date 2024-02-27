@@ -11,6 +11,9 @@
   --primary-color-contrast: #fff;
   --primary-color-shade: #ddd;
 
+  --secondary-color: #63ccfd;
+  --secondary-color-rgb: rgb(99, 204, 253);
+
   --danger-color: #ff0000;
   --disabled-color: #7f7f7f;
 }
