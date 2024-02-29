@@ -90,6 +90,9 @@ const button = await slice.build("Button", {
   onClickCallback: testSliceButton, // Just the function name without calling it
 });
 
+const checkbox = await slice.build("Checkbox");
+const sliceSwitch = await slice.build("Switch");
+
 const form = document.getElementById("form");
 
 form.appendChild(name1);
@@ -98,6 +101,10 @@ form.appendChild(password);
 form.appendChild(confirmPassword);
 form.appendChild(dateInput);
 form.appendChild(ageInput);
+
+form.appendChild(checkbox);
+form.appendChild(sliceSwitch);
+
 form.appendChild(button);
 
 const botonName = document.getElementById("botonName");

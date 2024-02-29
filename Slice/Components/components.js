@@ -1,4 +1,6 @@
 const components = {
+  "Button":"Visual",
+  "Input":"Visual",
   "Checkbox": "Visual",
   "Select": "Visual",
   "Switch": "Visual",
