@@ -105,6 +105,12 @@ form.appendChild(ageInput);
 form.appendChild(checkbox);
 form.appendChild(sliceSwitch);
 
+const select = await slice.build("Select", {
+  options: ["hola", "hello", "hallo", "hi"],
+});
+
+form.appendChild(select);
+
 form.appendChild(button);
 
 const botonName = document.getElementById("botonName");

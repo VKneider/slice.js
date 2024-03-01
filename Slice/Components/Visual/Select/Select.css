@@ -1,0 +1,18 @@
+.slice_select_container {
+  padding: 10px;
+  max-width: 100%;
+  border-radius: 5px;
+  font-family: var(--font-family);
+  border: 1px solid var(--primary-color-rgb);
+  background-color: var(--primary-background-color);
+  margin-bottom: 25px;
+  margin-top: 25px;
+  position: relative;
+}
+.slice_select {
+  color: var(--font-primary-color);
+  width: 100%;
+  background: none;
+  outline: none;
+  border: none;
+}
