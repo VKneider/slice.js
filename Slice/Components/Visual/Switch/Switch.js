@@ -2,14 +2,17 @@ export default class Switch extends HTMLElement {
   constructor(props) {
     super();
     slice.attachTemplate(this);
+    this.$switch = this.querySelector(".slice_switch");
+    this.$checkbox = this.querySelector("input");
 
     slice.controller.setComponentProps(this, props);
-    this.debuggerProps = ["checked", "disabled"];
-
-
+    this.debuggerProps = ["checked", "disabled", "label"];
   }
 
   init() {
+    if (this._checked === undefined) {
+      this.checked = false;
+    }
     this.querySelector("input").addEventListener("change", (e) => {
       this.checked = e.target.checked;
     });
@@ -21,7 +24,19 @@ export default class Switch extends HTMLElement {
 
   set checked(value) {
     this._checked = value;
-    this.querySelector("input").checked = value;
+    this.$checkbox.checked = value;
+  }
+
+  get label() {
+    return this._label;
+  }
+
+  set label(value) {
+    this._label = value;
+    const label = document.createElement("label");
+    label.classList.add("switch_label");
+    label.textContent = value;
+    this.$switch.appendChild(label);
   }
 
   get disabled() {
@@ -33,10 +48,6 @@ export default class Switch extends HTMLElement {
     this.querySelector("input").disabled = value;
     this.classList.toggle("non-clickable", value);
   }
-
-
-
 }
 
 customElements.define("slice-switch", Switch);
-

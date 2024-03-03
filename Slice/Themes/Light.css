@@ -3,17 +3,31 @@
 :root {
   --font-family: "Roboto", sans-serif;
   --font-primary-color: #000;
-
+  /** primary **/
   --primary-color: #0066ff;
   --primary-color-rgb: rgb(0, 102, 255);
   --primary-background-color: #fff;
-  --secundary-background-color: #ddd;
   --primary-color-contrast: #fff;
   --primary-color-shade: #ddd;
-
+  /** secondary **/
   --secondary-color: #63ccfd;
   --secondary-color-rgb: rgb(99, 204, 253);
-
+  --secondary-background-color: #ddd;
+  --secondary-color-contrast: #fff;
+  /** tertiary **/
+  --tertiary-background-color: #d0d0d0;
+  /** success **/
+  --success-color: #00ff40;
+  --success-contrast: #fff;
+  /** warning **/
+  --warning-color: #ffff40;
+  --warning-contrast: #000;
+  /** danger **/
   --danger-color: #ff0000;
+  --danger-contrast: #fff;
+  /** medium **/
+  --medium-color: #92949c;
+  --medium--contrast: #000;
+
   --disabled-color: #7f7f7f;
 }
