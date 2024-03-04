@@ -1,6 +1,3 @@
-#form {
-  background-color: var(--secundary-background-color);
-}
 .eye {
   color: var(--primary-color);
   position: absolute;
@@ -60,6 +57,10 @@
 .message {
   color: var(--danger-color);
   font-size: small;
+}
+.non-clickable {
+  pointer-events: none;
+  cursor: not-allowed;
 }
 @keyframes shake {
   0% {

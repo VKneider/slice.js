@@ -99,7 +99,9 @@ form.appendChild(confirmPassword);
 form.appendChild(dateInput);
 form.appendChild(ageInput);
 
-const checkbox = await slice.build("Checkbox");
+const checkbox = await slice.build("Checkbox", {
+  label: "Check",
+});
 
 const sliceSwitch = await slice.build("Switch", {
   label: "Switch",

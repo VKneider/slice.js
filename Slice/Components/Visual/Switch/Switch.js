@@ -45,8 +45,8 @@ export default class Switch extends HTMLElement {
 
   set disabled(value) {
     this._disabled = value;
-    this.querySelector("input").disabled = value;
-    this.classList.toggle("non-clickable", value);
+    this.$checkbox.disabled = value;
+    this.querySelector(".slider").classList.add("disabled");
   }
 }
 
