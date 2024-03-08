@@ -128,6 +128,13 @@ form.appendChild(select);
 
 form.appendChild(button);
 
+const button2 = await slice.build("Button", {
+  value: "Color",
+  customColor: "red",
+});
+
+form.appendChild(button2);
+
 const botonName = document.getElementById("botonName");
 const botonClear = document.getElementById("botonClear");
 

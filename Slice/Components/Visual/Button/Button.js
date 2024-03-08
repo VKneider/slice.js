@@ -8,7 +8,7 @@ export default class Button extends HTMLElement {
     this.$button.addEventListener("click", () => this.onClickCallback());
 
     slice.controller.setComponentProps(this, props);
-    this.debuggerProps = ["value", "onClickCallback"];
+    this.debuggerProps = ["value", "onClickCallback", "customColor"];
   }
 
   get value() {
@@ -18,6 +18,15 @@ export default class Button extends HTMLElement {
   set value(value) {
     this._value = value;
     this.$value.textContent = value;
+  }
+
+  get customColor() {
+    return this._customColor;
+  }
+
+  set customColor(value) {
+    this._customColor = value;
+    this.$button.style = `--primary-color: ${value};`;
   }
 
   handleButtonClick() {
