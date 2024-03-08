@@ -46,3 +46,7 @@
   visibility: visible;
   opacity: 1;
 }
+.active {
+  /* color: var(--primary-color); */
+  background-color: var(--secondary-background-color);
+}

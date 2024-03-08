@@ -1,4 +1,4 @@
-:root {
+.slice_switch {
   --button-width: calc(var(--button-height) * 2);
   --button-height: 1.8em;
   --toggle-diameter: calc(var(--button-width) / 3);

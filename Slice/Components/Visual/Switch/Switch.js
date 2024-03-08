@@ -39,6 +39,15 @@ export default class Switch extends HTMLElement {
     this.$switch.appendChild(label);
   }
 
+  get customColor() {
+    return this._customColor;
+  }
+
+  set customColor(value) {
+    this._customColor = value;
+    this.$switch.style = `--success-color: ${value};`;
+  }
+
   get disabled() {
     return this._disabled;
   }

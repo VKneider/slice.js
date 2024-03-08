@@ -102,8 +102,16 @@ form.appendChild(ageInput);
 const checkbox = await slice.build("Checkbox", {
   label: "Check",
 });
+const checkbox2 = await slice.build("Checkbox", {
+  label: "Check",
+  customColor: "#008080",
+});
 
 const sliceSwitch = await slice.build("Switch", {
+  label: "Switch",
+  customColor: "black",
+});
+const sliceSwitch2 = await slice.build("Switch", {
   label: "Switch",
 });
 
@@ -113,7 +121,9 @@ const select = await slice.build("Select", {
 });
 
 form.appendChild(checkbox);
+form.appendChild(checkbox2);
 form.appendChild(sliceSwitch);
+form.appendChild(sliceSwitch2);
 form.appendChild(select);
 
 form.appendChild(button);

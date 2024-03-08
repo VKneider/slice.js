@@ -36,6 +36,15 @@ export default class Checkbox extends HTMLElement {
     this.$checkbox.appendChild(label);
   }
 
+  get customColor() {
+    return this._customColor;
+  }
+
+  set customColor(value) {
+    this._customColor = value;
+    this.$checkbox.style = `--success-color: ${value};`;
+  }
+
   get disabled() {
     return this._disabled;
   }
