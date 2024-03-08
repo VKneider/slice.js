@@ -108,7 +108,8 @@ const sliceSwitch = await slice.build("Switch", {
 });
 
 const select = await slice.build("Select", {
-  options: ["hola", "hello", "hallo", "hi"],
+  options: ["Hola", "Hello", "Hallo", "Hi"],
+  label: "Elige una opcion",
 });
 
 form.appendChild(checkbox);

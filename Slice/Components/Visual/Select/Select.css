@@ -1,13 +1,16 @@
-.slice_select_container {
-  padding: 10px;
-  max-width: 100%;
-  border-radius: 5px;
+.slice_dropdown {
   font-family: var(--font-family);
-  border: 1px solid var(--primary-color-rgb);
-  background-color: var(--primary-background-color);
+  max-width: 100%;
   margin-bottom: 25px;
   margin-top: 25px;
   position: relative;
+}
+.slice_select_container {
+  display: flex;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid var(--primary-color-rgb);
+  background-color: var(--primary-background-color);
 }
 .slice_select {
   color: var(--font-primary-color);
@@ -15,4 +18,31 @@
   background: none;
   outline: none;
   border: none;
+}
+.slice_menu {
+  list-style: none;
+  font-family: var(--font-family);
+  visibility: hidden;
+  overflow: hidden;
+  position: absolute;
+  opacity: 0;
+  transition: 0s, opacity 0.3s;
+  top: 120%;
+  width: 100%;
+  z-index: 1;
+  background-color: var(--primary-background-color);
+  border-radius: 5px;
+  box-shadow: 0 0 10px 0 #00000050;
+  div {
+    cursor: pointer;
+    padding: 10px;
+    &:hover {
+      color: var(--primary-color);
+      background-color: var(--secondary-background-color);
+    }
+  }
+}
+.menu_open {
+  visibility: visible;
+  opacity: 1;
 }
