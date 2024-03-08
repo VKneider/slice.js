@@ -6,12 +6,21 @@ export default class Switch extends HTMLElement {
     this.$checkbox = this.querySelector("input");
 
     slice.controller.setComponentProps(this, props);
-    this.debuggerProps = ["checked", "disabled", "label"];
+    this.debuggerProps = [
+      "checked",
+      "disabled",
+      "label",
+      "customColor",
+      "position",
+    ];
   }
 
   init() {
     if (this._checked === undefined) {
       this.checked = false;
+    }
+    if (this.position === undefined) {
+      this.position = "right";
     }
     this.querySelector("input").addEventListener("change", (e) => {
       this.checked = e.target.checked;
@@ -45,7 +54,26 @@ export default class Switch extends HTMLElement {
 
   set customColor(value) {
     this._customColor = value;
-    this.$switch.style = `--success-color: ${value};`;
+    this.style = `--success-color: ${value};`;
+  }
+
+  get position() {
+    return this._position;
+  }
+
+  set position(value) {
+    if (value === "left") {
+      this.$switch.style = ` flex-direction: row-reverse;`;
+    }
+    if (value === "right") {
+      this.$switch.style = `flex-direction: row;`;
+    }
+    if (value === "top") {
+      this.$switch.style = `flex-direction: column-reverse;`;
+    }
+    if (value === "bottom") {
+      this.$switch.style = `flex-direction: column;`;
+    }
   }
 
   get disabled() {

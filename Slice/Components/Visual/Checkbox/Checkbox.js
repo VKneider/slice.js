@@ -6,7 +6,7 @@ export default class Checkbox extends HTMLElement {
     this.$checkmark = this.querySelector(".checkmark");
 
     slice.controller.setComponentProps(this, props);
-    this.debuggerProps = ["checked", "disabled"];
+    this.debuggerProps = ["checked", "disabled", "customColor", "position"];
   }
 
   init() {
@@ -42,7 +42,26 @@ export default class Checkbox extends HTMLElement {
 
   set customColor(value) {
     this._customColor = value;
-    this.$checkbox.style = `--success-color: ${value};`;
+    this.style = `--success-color: ${value};`;
+  }
+
+  get position() {
+    return this._position;
+  }
+
+  set position(value) {
+    if (value === "left") {
+      this.$checkbox.style = ` flex-direction: row-reverse;`;
+    }
+    if (value === "right") {
+      this.$checkbox.style = `flex-direction: row;`;
+    }
+    if (value === "top") {
+      this.$checkbox.style = `flex-direction: column-reverse;`;
+    }
+    if (value === "bottom") {
+      this.$checkbox.style = `flex-direction: column;`;
+    }
   }
 
   get disabled() {

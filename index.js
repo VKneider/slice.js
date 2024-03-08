@@ -105,6 +105,7 @@ const checkbox = await slice.build("Checkbox", {
 const checkbox2 = await slice.build("Checkbox", {
   label: "Check",
   customColor: "#008080",
+  position: "left",
 });
 
 const sliceSwitch = await slice.build("Switch", {
@@ -113,6 +114,7 @@ const sliceSwitch = await slice.build("Switch", {
 });
 const sliceSwitch2 = await slice.build("Switch", {
   label: "Switch",
+  position: "bottom",
 });
 
 const select = await slice.build("Select", {

@@ -9,14 +9,19 @@
   --toggle-wider: 1.8em;
 }
 
+.slice_switch_container {
+  width: fit-content;
+}
+
 .slice_switch {
   display: flex;
+  flex-direction: row;
   align-items: center;
   user-select: none;
 }
 
 .switch_label {
-  margin-left: 5px;
+  margin: 5px;
   font-family: var(--font-family);
   color: var(--font-primary-color);
 }
