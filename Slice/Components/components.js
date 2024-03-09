@@ -1,4 +1,5 @@
 const components = {
+  "Tester":"Visual",
   "Button":"Visual",
   "Input":"Visual",
   "Checkbox": "Visual",
