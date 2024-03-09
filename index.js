@@ -87,6 +87,7 @@ const ageInput = await slice.build("Input", {
 
 const button = await slice.build("Button", {
   value: "Slice",
+  // customColor: "#5c4d66",
   onClickCallback: testSliceButton, // Just the function name without calling it
 });
 
