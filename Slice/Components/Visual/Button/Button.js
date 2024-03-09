@@ -5,7 +5,9 @@ export default class Button extends HTMLElement {
     this.$value = this.querySelector(".slice_button_value");
     this.$button = this.querySelector(".slice_button");
     this.onClickCallback = props.onClickCallback;
-    this.$button.addEventListener("click", () => this.onClickCallback());
+    if (this.onClickCallback) {
+      this.$button.addEventListener("click", () => this.onClickCallback());
+    }
 
     slice.controller.setComponentProps(this, props);
     this.debuggerProps = ["value", "onClickCallback", "customColor"];
