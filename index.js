@@ -119,7 +119,12 @@ const sliceSwitch2 = await slice.build("Switch", {
 });
 
 const select = await slice.build("Select", {
-  options: ["Hola", "Hello", "Hallo", "Hi"],
+  options: [
+    { value: "Hola" },
+    { value: "Hello" },
+    { value: "Hallo" },
+    { value: "Hi" },
+  ],
   label: "Elige una opcion",
 });
 

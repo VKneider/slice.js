@@ -26,9 +26,9 @@ export default class Select extends HTMLElement {
     this._options = values;
     values.forEach((option) => {
       const opt = document.createElement("div");
-      opt.textContent = option;
+      opt.textContent = option.value;
       opt.addEventListener("click", () => {
-        this.label = option;
+        this.label = option.value;
         this.$menu.classList.remove("menu_open");
         if (this.$menu.querySelector(".active")) {
           this.$menu.querySelector(".active").classList.remove("active");
