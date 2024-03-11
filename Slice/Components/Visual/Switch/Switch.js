@@ -4,6 +4,10 @@ export default class Switch extends HTMLElement {
     slice.attachTemplate(this);
     this.$switch = this.querySelector(".slice_switch");
     this.$checkbox = this.querySelector("input");
+    this.toggle = props.toggle;
+    if (this.toggle) {
+      this.$checkbox.addEventListener("click", () => this.toggle());
+    }
 
     slice.controller.setComponentProps(this, props);
     this.debuggerProps = [

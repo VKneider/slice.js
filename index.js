@@ -109,9 +109,23 @@ const checkbox2 = await slice.build("Checkbox", {
   position: "left",
 });
 
+async function testSliceSwitch() {
+  // console.log(sliceSwitch.checked);
+  if (theme === "Dark") {
+    await slice.stylesManager.setTheme("Light");
+    theme = "Light";
+    boton.innerHTML = "Cambiar al tema Dark";
+  } else if (theme === "Light") {
+    await slice.stylesManager.setTheme("Dark");
+    theme = "Dark";
+    boton.innerHTML = "Cambiar al tema Slice";
+  }
+}
+
 const sliceSwitch = await slice.build("Switch", {
   label: "Switch",
   customColor: "black",
+  toggle: testSliceSwitch,
 });
 const sliceSwitch2 = await slice.build("Switch", {
   label: "Switch",
