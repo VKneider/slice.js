@@ -87,8 +87,13 @@ const ageInput = await slice.build("Input", {
 
 const button = await slice.build("Button", {
   value: "Slice",
-  // customColor: "#5c4d66",
-  onClickCallback: testSliceButton, // Just the function name without calling it
+  onClickCallback: () => {
+    select.value = [
+      { value: "Hola", id: 0 },
+      { value: "Hello", id: 1 },
+      { value: "Hi", id: 3 },
+    ];
+  },
 });
 
 const form = document.getElementById("form");
@@ -141,8 +146,46 @@ const select = await slice.build("Select", {
   ],
   visibleProp: "value",
   label: "Elige una opcion",
-  //multiple: true,
+  multiple: true,
 });
+
+function arraysSonIguales(arrayA, arrayB) {
+  if (arrayA.length !== arrayB.length) {
+    return false;
+  }
+
+  for (let i = 0; i < arrayA.length; i++) {
+    if (!objetosSonIguales(arrayA[i], arrayB[i])) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function objetosSonIguales(objetoA, objetoB) {
+  const keysA = Object.keys(objetoA);
+  const keysB = Object.keys(objetoB);
+
+  if (keysA.length !== keysB.length) {
+    return false;
+  }
+
+  for (const key of keysA) {
+    const valueA = objetoA[key];
+    const valueB = objetoB[key];
+
+    if (typeof valueA === "object" && typeof valueB === "object") {
+      if (!objetosSonIguales(valueA, valueB)) {
+        return false;
+      }
+    } else if (valueA !== valueB) {
+      return false;
+    }
+  }
+
+  return true;
+}
 
 form.appendChild(checkbox);
 form.appendChild(checkbox2);

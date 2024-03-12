@@ -34,8 +34,7 @@ export default class Select extends HTMLElement {
   }
 
   removeOptionFromValue(option) {
-    const optionIndex = this._value.indexOf(option);
-
+    const optionIndex = this.isObjectInArray(option, this._value).index;
     if (optionIndex !== -1) {
       this._value.splice(optionIndex, 1);
       // Actualizar la representación visual en el elemento select
@@ -49,11 +48,11 @@ export default class Select extends HTMLElement {
 
   updateSelectLabel() {
     // Limpiar el contenido actual del elemento select
-    this.$select.textContent = "";
+    this.$select.value = "";
 
     // Volver a agregar los valores seleccionados
     if (this._value.length > 0) {
-      this.$select.textContent = this._value
+      this.$select.value = this._value
         .map((option) => option[this.visibleProp])
         .join(", ");
       this.$label.classList.add("slice_select_value");
@@ -63,13 +62,12 @@ export default class Select extends HTMLElement {
   }
 
   addSelectedOption(option) {
-    if (this._value.length === 0) {
-      this.$select.textContent += `${option[this.visibleProp]}`;
-    } else {
-      this.$select.textContent += `, ${option[this.visibleProp]}`;
-    }
     this._value.push(option);
+    this.updateSelectLabel();
     this.$label.classList.add("slice_select_value");
+    if (!this.multiple) {
+      this.$menu.classList.remove("menu_open");
+    }
   }
 
   set options(values) {
@@ -81,14 +79,19 @@ export default class Select extends HTMLElement {
         if (this.$menu.querySelector(".active") && !this.multiple) {
           this.$menu.querySelector(".active").classList.remove("active");
         }
-        if (this._value.includes(option)) {
+
+        if (this._value.length === 1 && !this.multiple) {
+          this.removeOptionFromValue(this._value[0]);
+          return this.addSelectedOption(option);
+        }
+
+        if (this.isObjectInArray(option, this._value).found) {
           this.removeOptionFromValue(option);
           opt.classList.remove("active");
         } else {
           this.addSelectedOption(option);
           opt.classList.add("active");
         }
-        this.$menu.classList.remove("menu_open");
       });
       this.$menu.appendChild(opt);
     });
@@ -101,9 +104,29 @@ export default class Select extends HTMLElement {
     return this._value;
   }
 
-  set value(value) {
-    this.$select.textContent = value[this.visibleProp];
+  set value(valueParam) {
+    this._value = [];
+
+    if (valueParam.length > 0 && !this.multiple) {
+      return console.error(
+        "Select is not multiple, you can only select one option"
+      );
+    }
+
+    const validOptions = valueParam.every(
+      (option) => this.isObjectInArray(option, this._options).found
+    );
+
+    if (!validOptions) {
+      console.error(
+        "Error: Al menos una de las opciones proporcionadas no está en this.options."
+      );
+      return;
+    }
+
+    // Agregar las opciones a _value
     this.$label.classList.add("slice_select_value");
+    valueParam.forEach((option) => this.addSelectedOption(option));
   }
 
   get label() {
@@ -128,6 +151,38 @@ export default class Select extends HTMLElement {
 
   set disabled(value) {
     this._disabled = value;
+  }
+
+  isObjectInArray(objeto, arreglo) {
+    for (let i = 0; i < arreglo.length; i++) {
+      if (this.sameObject(arreglo[i], objeto)) {
+        return { found: true, index: i };
+      }
+    }
+    return { found: false, index: -1 };
+  }
+  sameObject(objetoA, objetoB) {
+    const keysA = Object.keys(objetoA);
+    const keysB = Object.keys(objetoB);
+
+    if (keysA.length !== keysB.length) {
+      return false;
+    }
+
+    for (const key of keysA) {
+      const valueA = objetoA[key];
+      const valueB = objetoB[key];
+
+      if (typeof valueA === "object" && typeof valueB === "object") {
+        if (!this.sameObject(valueA, valueB)) {
+          return false;
+        }
+      } else if (valueA !== valueB) {
+        return false;
+      }
+    }
+
+    return true;
   }
 }
 

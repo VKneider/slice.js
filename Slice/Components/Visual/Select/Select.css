@@ -6,6 +6,7 @@
   position: relative;
 }
 .slice_select_container {
+  cursor: pointer;
   display: flex;
   padding: 10px;
   border-radius: 5px;
@@ -15,7 +16,7 @@
   align-items: center;
 }
 .slice_select {
-  cursor: pointer;
+  pointer-events: none;
   color: var(--font-primary-color);
   width: 100%;
   background: none;
