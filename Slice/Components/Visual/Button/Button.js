@@ -4,8 +4,8 @@ export default class Button extends HTMLElement {
     slice.attachTemplate(this);
     this.$value = this.querySelector(".slice_button_value");
     this.$button = this.querySelector(".slice_button");
-    this.onClickCallback = props.onClickCallback;
-    if (this.onClickCallback) {
+    if (props.onClickCallback) {
+      this.onClickCallback = props.onClickCallback;
       this.$button.addEventListener("click", () => this.onClickCallback());
     }
 

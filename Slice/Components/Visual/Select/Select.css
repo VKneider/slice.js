@@ -22,6 +22,17 @@
   outline: none;
   border: none;
 }
+.slice_select_label {
+  color: var(--primary-color);
+  position: absolute;
+  transition: all 0.5s;
+  user-select: none;
+}
+.slice_select_value {
+  scale: 0.8;
+  transform: translateY(-200%);
+  transition: all 0.5s;
+}
 .slice_menu {
   list-style: none;
   font-family: var(--font-family);

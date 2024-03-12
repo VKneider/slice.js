@@ -134,12 +134,14 @@ const sliceSwitch2 = await slice.build("Switch", {
 
 const select = await slice.build("Select", {
   options: [
-    { value: "Hola" },
-    { value: "Hello" },
-    { value: "Hallo" },
-    { value: "Hi" },
+    { value: "Hola", id: 0 },
+    { value: "Hello", id: 1 },
+    { value: "Hallo", id: 2 },
+    { value: "Hi", id: 3 },
   ],
+  visibleProp: "value",
   label: "Elige una opcion",
+  //multiple: true,
 });
 
 form.appendChild(checkbox);
@@ -153,6 +155,9 @@ form.appendChild(button);
 const button2 = await slice.build("Button", {
   value: "Color",
   customColor: "red",
+  onClickCallback: () => {
+    console.log(select.value);
+  },
 });
 
 form.appendChild(button2);
