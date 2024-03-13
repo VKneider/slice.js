@@ -14,5 +14,6 @@ const components = {
   "Controller": "Structural",
   "Debugger": "Structural",
   "Logger": "Structural",
-  "StylesManager": "Structural"
+  "StylesManager": "Structural",
+  "Icon": "Visual"
 }; export default components;

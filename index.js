@@ -223,3 +223,26 @@ botonClear.addEventListener("click", () => {
   // lastname.clear();
   // password.clear();
 });
+
+const icon = await slice.build("Icon", {
+  name: "github",
+  size: "large",
+  color: "red",
+});
+
+const icon2 = await slice.build("Icon", {
+  name: "anchor",
+  size: "50px",
+  color: "blue",
+});
+
+const icon3 = await slice.build("Icon", {
+  name: "github",
+  size: "100px",
+  color: "green",
+});
+
+document.body.appendChild(icon);
+document.body.appendChild(icon2);
+document.body.appendChild(icon3);
+
