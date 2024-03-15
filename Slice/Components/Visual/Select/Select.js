@@ -17,6 +17,10 @@ export default class Select extends HTMLElement {
       this.visibleProp = props.visibleProp;
     }
     this._value = [];
+
+    if (props.onOptionSelect) {
+      this.onOptionSelect = props.onOptionSelect;
+    }
     slice.controller.setComponentProps(this, props);
     this.debuggerProps = [
       "options",
@@ -82,7 +86,9 @@ export default class Select extends HTMLElement {
 
         if (this._value.length === 1 && !this.multiple) {
           this.removeOptionFromValue(this._value[0]);
-          return this.addSelectedOption(option);
+           this.addSelectedOption(option);
+           if (this.onOptionSelect) this.onOptionSelect();
+          return ;
         }
 
         if (this.isObjectInArray(option, this._value).found) {
@@ -92,6 +98,7 @@ export default class Select extends HTMLElement {
           this.addSelectedOption(option);
           opt.classList.add("active");
         }
+        if (this.onOptionSelect) this.onOptionSelect();
       });
       this.$menu.appendChild(opt);
     });
@@ -107,7 +114,8 @@ export default class Select extends HTMLElement {
   set value(valueParam) {
     this._value = [];
 
-    if (valueParam.length > 0 && !this.multiple) {
+    console.log(valueParam);
+    if (valueParam.length > 1 && !this.multiple) {
       return console.error(
         "Select is not multiple, you can only select one option"
       );

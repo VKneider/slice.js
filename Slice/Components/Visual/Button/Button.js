@@ -7,6 +7,7 @@ export default class Button extends HTMLElement {
     if (props.onClickCallback) {
       this.onClickCallback = props.onClickCallback;
       this.$button.addEventListener("click", () => this.onClickCallback());
+      //revisar esta verga por si habria q deletear o no
     }
 
     slice.controller.setComponentProps(this, props);

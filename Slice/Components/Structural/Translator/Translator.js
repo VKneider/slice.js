@@ -1,22 +1,10 @@
+import messages from "./messages.json" assert { type: "json" };
+
 export default class Translator {
 
     constructor() {
-            this.messages={
-                "en":{
-        
-                    "myInput":{
-                        "placeholder":"Type here"
-                    }
-        
-                },
-                "es":{
-                   
-                    "myInput":{
-                        "placeholder":"Escribe aquí"
-                    }
-                }
-            }
-        this.currentLanguage = 'en'; 
+            this.messages=messages;
+            this.currentLanguage = 'en'; 
         }
   
     
@@ -49,6 +37,10 @@ export default class Translator {
             console.log(error)
         }
         
+      }
+
+      setMessages(messagesObject){
+        this.messages=messagesObject;
       }
 
   }

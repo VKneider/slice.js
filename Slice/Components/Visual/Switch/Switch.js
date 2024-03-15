@@ -46,10 +46,14 @@ export default class Switch extends HTMLElement {
 
   set label(value) {
     this._label = value;
-    const label = document.createElement("label");
-    label.classList.add("switch_label");
-    label.textContent = value;
-    this.$switch.appendChild(label);
+    if (this.querySelector(".switch_label")) {
+      this.querySelector(".switch_label").textContent = value;
+    } else {
+      const label = document.createElement("label");
+      label.classList.add("switch_label");
+      label.textContent = value;
+      this.$switch.appendChild(label);
+    }
   }
 
   get customColor() {

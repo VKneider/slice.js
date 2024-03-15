@@ -65,15 +65,14 @@ const confirmPassword = await slice.build("Input", {
   },
 });
 
-const translator = await slice.build("Translator", {});
-console.log(translator);
-
 function testSliceButton() {
-  if (translator.currentLanguage === "es") {
-    translator.changeLanguage("en");
+  if (slice.translator.currentLanguage === "es") {
+    slice.translator.changeLanguage("en");
   } else {
-    translator.changeLanguage("es");
+    slice.translator.changeLanguage("es");
   }
+
+  sliceSwitch.label = slice.translator.currentLanguage;
 }
 
 const dateInput = await slice.build("Input", {
@@ -87,6 +86,7 @@ const ageInput = await slice.build("Input", {
 
 const button = await slice.build("Button", {
   value: "Slice",
+  sliceId: "gio",
   onClickCallback: () => {
     select.value = [
       { value: "Hola", id: 0 },
@@ -107,10 +107,11 @@ form.appendChild(ageInput);
 
 const checkbox = await slice.build("Checkbox", {
   label: "Check",
+  position: "top",
+  customColor: "yellow",
 });
 const checkbox2 = await slice.build("Checkbox", {
   label: "Check",
-  customColor: "#008080",
   position: "left",
 });
 
@@ -128,9 +129,9 @@ async function testSliceSwitch() {
 }
 
 const sliceSwitch = await slice.build("Switch", {
-  label: "Switch",
+  label: slice.translator.currentLanguage,
   customColor: "black",
-  toggle: testSliceSwitch,
+  toggle: testSliceButton,
 });
 const sliceSwitch2 = await slice.build("Switch", {
   label: "Switch",
@@ -149,49 +150,27 @@ const select = await slice.build("Select", {
   multiple: true,
 });
 
-function arraysSonIguales(arrayA, arrayB) {
-  if (arrayA.length !== arrayB.length) {
-    return false;
-  }
-
-  for (let i = 0; i < arrayA.length; i++) {
-    if (!objetosSonIguales(arrayA[i], arrayB[i])) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-function objetosSonIguales(objetoA, objetoB) {
-  const keysA = Object.keys(objetoA);
-  const keysB = Object.keys(objetoB);
-
-  if (keysA.length !== keysB.length) {
-    return false;
-  }
-
-  for (const key of keysA) {
-    const valueA = objetoA[key];
-    const valueB = objetoB[key];
-
-    if (typeof valueA === "object" && typeof valueB === "object") {
-      if (!objetosSonIguales(valueA, valueB)) {
-        return false;
-      }
-    } else if (valueA !== valueB) {
-      return false;
-    }
-  }
-
-  return true;
-}
+const select2 = await slice.build("Select", {
+  options: [
+    { value: "Hola", id: 0 },
+    { value: "Hello", id: 1 },
+    { value: "Hallo", id: 2 },
+    { value: "Hi", id: 3 },
+  ],
+  visibleProp: "id",
+  label: "Elige una opcion",
+  multiple: false,
+  onOptionSelect: function xd() {
+    select.value = [select2.value];
+  },
+});
 
 form.appendChild(checkbox);
 form.appendChild(checkbox2);
 form.appendChild(sliceSwitch);
 form.appendChild(sliceSwitch2);
 form.appendChild(select);
+form.appendChild(select2);
 
 form.appendChild(button);
 
@@ -211,6 +190,7 @@ const botonClear = document.getElementById("botonClear");
 botonName.addEventListener("click", () => {
   console.log(confirmPassword.getValue());
 });
+
 botonClear.addEventListener("click", () => {
   if (password.value !== confirmPassword.value) {
     password.triggerError();
@@ -225,9 +205,9 @@ botonClear.addEventListener("click", () => {
 });
 
 const icon = await slice.build("Icon", {
-  name: "github",
-  size: "large",
-  color: "red",
+  name: "twitter",
+  size: "200px",
+  color: "yellow",
 });
 
 const icon2 = await slice.build("Icon", {
@@ -245,4 +225,3 @@ const icon3 = await slice.build("Icon", {
 document.body.appendChild(icon);
 document.body.appendChild(icon2);
 document.body.appendChild(icon3);
-

@@ -1,0 +1,18 @@
+{
+  "en": {
+    "myInput": {
+      "placeholder": "Type here"
+    },
+    "gio": {
+      "value": "INGLES"
+    }
+  },
+  "es": {
+    "myInput": {
+      "placeholder": "Escribe aquí"
+    },
+    "gio": {
+      "value": "ESPAÑOL"
+    }
+  }
+}

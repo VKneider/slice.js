@@ -30,10 +30,14 @@ export default class Checkbox extends HTMLElement {
 
   set label(value) {
     this._label = value;
-    const label = document.createElement("label");
-    label.classList.add("checkbox_label");
-    label.textContent = value;
-    this.$checkbox.appendChild(label);
+    if (this.querySelector(".checkbox_label")) {
+      this.querySelector(".checkbox_label").textContent = value;
+    } else {
+      const label = document.createElement("label");
+      label.classList.add("checkbox_label");
+      label.textContent = value;
+      this.$checkbox.appendChild(label);
+    }
   }
 
   get customColor() {

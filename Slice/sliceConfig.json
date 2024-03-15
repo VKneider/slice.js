@@ -20,5 +20,12 @@
         "info": true
       }
     }
+  },
+  "translator":{
+    "enabled":true
+  },
+  "paths":{
+    "components":"./Components",
+    "themes":"./Themes"
   }
 }

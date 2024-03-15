@@ -46,8 +46,6 @@ export default class Input extends HTMLElement {
       throw new Error(`This type is not allowed: ${value}`);
     }
 
-    console.log("This is", value);
-
     this._type = value;
     this.$input.type = value;
     if (value === "date") {
