@@ -178,7 +178,11 @@ const button2 = await slice.build("Button", {
   value: "Color",
   customColor: "red",
   onClickCallback: () => {
-    console.log(select.value);
+    if(slice.translator.currentLanguage === "es"){
+      slice.translator.changeLanguage("en");
+    }else{
+      slice.translator.changeLanguage("es");
+    }
   },
 });
 

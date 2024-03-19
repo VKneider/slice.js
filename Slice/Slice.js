@@ -1,7 +1,6 @@
 import Logger from "./Components/Structural/Logger/Logger.js";
 import Controller from "./Components/Structural/Controller/Controller.js";
 import StylesManager from "./Components/Structural/StylesManager/StylesManager.js";
-import Debugger from "./Components/Structural/Debugger/Debugger.js";
 import sliceConfig from "./sliceConfig.json" assert { type: "json" };
 
 export default class Slice {
@@ -11,14 +10,15 @@ export default class Slice {
     this.stylesManager = new StylesManager();
     this.paths = sliceConfig.paths;
 
-    this.getClass = async function getClass(module) {
-      try {
-        const { default: myClass } = await import(module);
-        return await myClass;
-      } catch (error) {
-        this.logger.logError("Slice", `Error loading class ${module}`, error);
-      }
-    };
+  }
+
+  async getClass(module) {
+    try {
+      const { default: myClass } = await import(module);
+      return await myClass;
+    } catch (error) {
+      this.logger.logError("Slice", `Error loading class ${module}`, error);
+    }
   }
 
   async build(componentName, props = {}) {
@@ -136,7 +136,7 @@ export default class Slice {
         return null;
       }
 
-      if (this.debugger.enabled && compontentCategory === "Visual") {
+      if (sliceConfig.debugger.enabled && compontentCategory === "Visual") {
         this.debugger.attachDebugMode(componentInstance);
       }
 
@@ -173,25 +173,29 @@ export default class Slice {
 
 async function init() {
   window.slice = new Slice();
-  window.slice.debugger = new Debugger();
 
-  if (window.slice.debugger.enabled) {
+  if (sliceConfig.debugger.enabled) {
+    const DebuggerModule = await window.slice.getClass(
+      `${sliceConfig.paths.components}/Structural/Debugger/Debugger.js`
+    );
+    window.slice.debugger = new DebuggerModule();
     await window.slice.debugger.enableDebugMode();
     document.body.appendChild(window.slice.debugger);
   }
 
   if (sliceConfig.translator.enabled) {
-    const { default:translatorModule } = await import(
-      `${sliceConfig.paths.components}/Structural/Translator/Translator.js`
+    const TranslatorModule = await window.slice.getClass(
+      `${sliceConfig.paths.components}/Service/Translator/Translator.js`
     );
-    window.slice.translator = new translatorModule();
+    window.slice.translator = new TranslatorModule();
     window.slice.logger.logInfo("Slice", "Translator succesfuly enabled");
-
   }
+
 
   await window.slice.stylesManager.setTheme(
     sliceConfig.stylesManager.defaultTheme
   );
 }
 
-init();
+await init();
+

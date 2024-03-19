@@ -7,12 +7,12 @@ export default class Logger {
         this.logs = [];
         this.logEnabled = sliceConfig.logger.enabled;
         this.showLogsConfig = sliceConfig.logger.showLogs;
-        
+
         this.showLog = function showLog(log) {
             if (!this.showLogsConfig) return;
-        
+
             const logType = log.logType;
-            
+
             Object.keys(this.showLogsConfig).forEach(logConfig => {
                 if (this.showLogsConfig[logConfig][logType] === true) {
                     switch (logConfig) {
@@ -38,7 +38,7 @@ export default class Logger {
                 }
             });
         }
-        
+
 
     }
 
@@ -47,14 +47,14 @@ export default class Logger {
         let componentName;
 
         try {
-           componentName = slice.controller.activeComponents.get(componentSliceId).constructor.name
+            componentName = slice.controller.activeComponents.get(componentSliceId).constructor.name
         } catch (error) {
-           componentName = componentSliceId;
+            componentName = componentSliceId;
         }
 
-        
+
         let componentCategory = slice.controller.getComponentCategory(componentName);
-        if(componentSliceId === "Slice") componentCategory = "Structural"
+        if (componentSliceId === "Slice") componentCategory = "Structural"
         const log = new Log(logType, componentCategory, componentSliceId, message, error);
         this.logs.push(log);
         this.showLog(log);
@@ -82,11 +82,11 @@ export default class Logger {
         this.logs = [];
     }
 
-    getLogsByType(type) {
+    getLogsByLogType(type) {
         return this.logs.filter(log => log.logType === type);
     }
 
-    getLogsByCategory(componentCategory) {
+    getLogsByComponentCategory(componentCategory) {
         return this.logs.filter(log => log.componentCategory === componentCategory);
     }
 
@@ -94,7 +94,7 @@ export default class Logger {
         return this.logs.filter(log => log.componentSliceId === componentSliceId);
     }
 
-   
+
 
 
 }

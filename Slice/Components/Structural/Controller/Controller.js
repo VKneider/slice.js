@@ -93,11 +93,6 @@ export default class Controller {
         }
       }
 
-    removeVisualPropsFromComponent(component, props){
-        const filteredProps = props.filter(prop => !component.visualProps.includes(prop));
-        component.visualProps = filteredProps;
-    }
-
     destroyComponent(component){
         const sliceId = component.sliceId;
         this.activeComponents.delete(sliceId);

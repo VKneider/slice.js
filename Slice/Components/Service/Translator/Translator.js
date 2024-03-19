@@ -5,6 +5,12 @@ export default class Translator {
     constructor() {
             this.messages=messages;
             this.currentLanguage = 'en'; 
+            
+            if(slice.translator){
+              throw new Error("Translator already initialized")
+            }else{
+              slice.translator = this;
+            }
         }
   
     
@@ -42,6 +48,8 @@ export default class Translator {
       setMessages(messagesObject){
         this.messages=messagesObject;
       }
+
+      
 
   }
 

@@ -13,6 +13,7 @@ export default class Input extends HTMLElement {
       "type",
       "required",
       "conditions",
+      "disabled"
     ];
   }
 

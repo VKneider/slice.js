@@ -9,7 +9,7 @@ const components = {
   FetchManager: "Service",
   IndexedDbManager: "Service",
   LocalStorageManager: "Service",
-  Translator: "Structural",
+  Translator: "Service",
   TestProvider: "Provider",
   Controller: "Structural",
   Debugger: "Structural",
