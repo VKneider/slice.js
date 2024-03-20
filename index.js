@@ -144,8 +144,12 @@ const select = await slice.build("Select", {
     { value: "Hello", id: 1 },
     { value: "Hallo", id: 2 },
     { value: "Hi", id: 3 },
+    { value: "Hola", id: 4 },
+    { value: "Hello", id: 5 },
+    { value: "Hallo", id: 6 },
+    { value: "Hi", id: 7 },
   ],
-  visibleProp: "value",
+  visibleProp: "id",
   label: "Elige una opcion",
   multiple: true,
 });

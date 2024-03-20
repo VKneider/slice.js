@@ -58,8 +58,18 @@
   }
 }
 .menu_open {
+  overflow-y: scroll;
+  min-height: min-content;
+  max-height: 30vh;
   visibility: visible;
   opacity: 1;
+}
+.menu_open::-webkit-scrollbar {
+  width: 7px;
+}
+.menu_open::-webkit-scrollbar-thumb {
+  background: var(--primary-color);
+  border-radius: 5px;
 }
 .active {
   /* color: var(--primary-color); */
