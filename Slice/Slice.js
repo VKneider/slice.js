@@ -158,10 +158,6 @@ export default class Slice {
     }
   }
 
-  setPaths(paths) {
-    this.paths = paths;
-  }
-
   setTheme(themeName) {
     this.stylesManager.setTheme(themeName);
   }
