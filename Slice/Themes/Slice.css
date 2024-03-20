@@ -3,12 +3,31 @@
 :root {
   --font-family: "Roboto", sans-serif;
   --font-primary-color: #000;
+  /** primary **/
+  --primary-color: #8e44ad; /* Morado oscuro */
+  --primary-color-rgb: rgb(142, 68, 173);
+  --primary-background-color: #fff;
+  --primary-color-contrast: #fff;
+  --primary-color-shade: #ddd;
+  /** secondary **/
+  --secondary-color: #9b59b6; /* Morado */
+  --secondary-color-rgb: rgb(155, 89, 182);
+  --secondary-background-color: #ddd;
+  --secondary-color-contrast: #fff;
+  /** tertiary **/
+  --tertiary-background-color: #3498db; /* Azul */
+  /** success **/
+  --success-color: #27ae60; /* Verde */
+  --success-contrast: #fff;
+  /** warning **/
+  --warning-color: #f39c12; /* Naranja */
+  --warning-contrast: #000;
+  /** danger **/
+  --danger-color: #e74c3c; /* Rojo */
+  --danger-contrast: #fff;
+  /** medium **/
+  --medium-color: #bdc3c7; /* Plata */
+  --medium--contrast: #000;
 
-  --primary-color: rgba(67, 83, 52);
-  --primary-color-border: rgba(67, 83, 52);
-  --primary-background-color: rgba(158, 179, 132);
-  --secundary-background-color: rgba(250, 241, 228);
-  --secondary-color: rgba(250, 241, 228);
-
-  --danger-color: #ff0000;
+  --disabled-color: #7f7f7f;
 }

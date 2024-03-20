@@ -180,10 +180,8 @@ async function init() {
   }
 
   if (sliceConfig.translator.enabled) {
-    const TranslatorModule = await window.slice.getClass(
-      `${sliceConfig.paths.components}/Service/Translator/Translator.js`
-    );
-    window.slice.translator = new TranslatorModule();
+    const translator = await window.slice.build("Translator");
+    window.slice.translator = translator;
     window.slice.logger.logInfo("Slice", "Translator succesfuly enabled");
   }
 

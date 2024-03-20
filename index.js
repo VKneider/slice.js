@@ -1,24 +1,28 @@
-const boton = document.getElementById("boton");
-
 let theme = "Light";
 
-boton.innerHTML = "Cambiar al tema Dark";
-boton.addEventListener("click", async () => {
-  if (theme === "Slice") {
-    await slice.stylesManager.setTheme("Light");
-    theme = "Light";
-    boton.innerHTML = "Cambiar al tema Dark";
-  } else if (theme === "Light") {
-    await slice.stylesManager.setTheme("Dark");
-    theme = "Dark";
-    boton.innerHTML = "Cambiar al tema Slice";
-  } else if (theme === "Dark") {
-    await slice.stylesManager.setTheme("Slice");
-    theme = "Slice";
-    boton.innerHTML = "Cambiar al tema Light";
-  }
-  // console.log(theme);
+let changeThemeButton = await slice.build("Button", {
+  value: "Cambiar al tema Dark",
+  onClickCallback: async function hola() {
+    if (theme === "Slice") {
+      await slice.stylesManager.setTheme("Light");
+      theme = "Light";
+      changeThemeButton.value = "Cambiar al tema Dark";
+    } else if (theme === "Light") {
+      await slice.stylesManager.setTheme("Dark");
+      theme = "Dark";
+      changeThemeButton.value = "Cambiar al tema Slice";
+    } else if (theme === "Dark") {
+      await slice.stylesManager.setTheme("Slice");
+      theme = "Slice";
+      changeThemeButton.value = "Cambiar al tema Light";
+    }
+  },
 });
+
+document.body.insertBefore(changeThemeButton, document.body.firstChild);
+
+//append the component to the body first element
+
 
 const tester = await slice.build("Tester", {
   id: "tester",
@@ -182,9 +186,9 @@ const button2 = await slice.build("Button", {
   value: "Color",
   customColor: "red",
   onClickCallback: () => {
-    if(slice.translator.currentLanguage === "es"){
+    if (slice.translator.currentLanguage === "es") {
       slice.translator.changeLanguage("en");
-    }else{
+    } else {
       slice.translator.changeLanguage("es");
     }
   },
