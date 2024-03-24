@@ -49,6 +49,7 @@
   border-radius: 5px;
   box-shadow: 0 0 10px 0 #00000050;
   div {
+    color: var(--font-primary-color);
     cursor: pointer;
     padding: 10px;
     &:hover {
@@ -60,12 +61,12 @@
 .menu_open {
   overflow-y: scroll;
   min-height: min-content;
-  max-height: 30vh;
+  max-height: 200px;
   visibility: visible;
   opacity: 1;
 }
 .menu_open::-webkit-scrollbar {
-  width: 7px;
+  width: 5px;
 }
 .menu_open::-webkit-scrollbar-thumb {
   background: var(--primary-color);

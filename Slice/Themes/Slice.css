@@ -1,8 +1,5 @@
-@import url("https://fonts.googleapis.com/css2?family=Montserrat&family=Poppins&family=Roboto&display=swap");
-
 :root {
-  --font-family: "Roboto", sans-serif;
-  --font-primary-color: #000;
+  --font-primary-color: #2f1335;
   /** primary **/
   --primary-color: #8e44ad; /* Morado oscuro */
   --primary-color-rgb: rgb(142, 68, 173);

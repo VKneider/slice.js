@@ -1,7 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Montserrat&family=Poppins&family=Roboto&display=swap");
-
 :root {
-  --font-family: "Roboto", sans-serif;
   --font-primary-color: #000;
   /** primary **/
   --primary-color: #0066ff;

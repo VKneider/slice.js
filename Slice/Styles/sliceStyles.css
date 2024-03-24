@@ -1,0 +1,8 @@
+@import url("https://fonts.googleapis.com/css2?family=Montserrat&family=Poppins&family=Roboto&display=swap");
+
+:root {
+  --font-family: "Roboto", sans-serif;
+}
+body {
+  background-color: var(--primary-background-color);
+}

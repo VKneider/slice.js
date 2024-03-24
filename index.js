@@ -196,26 +196,6 @@ const button2 = await slice.build("Button", {
 
 form.appendChild(button2);
 
-const botonName = document.getElementById("botonName");
-const botonClear = document.getElementById("botonClear");
-
-botonName.addEventListener("click", () => {
-  console.log(confirmPassword.getValue());
-});
-
-botonClear.addEventListener("click", () => {
-  if (password.value !== confirmPassword.value) {
-    password.triggerError();
-    confirmPassword.triggerError();
-  } else {
-    password.triggerSuccess();
-    confirmPassword.triggerSuccess();
-  }
-  // name1.clear();
-  // lastname.clear();
-  // password.clear();
-});
-
 const icon = await slice.build("Icon", {
   name: "twitter",
   size: "200px",

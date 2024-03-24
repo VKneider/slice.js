@@ -9,7 +9,6 @@ export default class Slice {
     this.controller = new Controller();
     this.stylesManager = new StylesManager();
     this.paths = sliceConfig.paths;
-
   }
 
   async getClass(module) {
@@ -185,6 +184,7 @@ async function init() {
     window.slice.logger.logInfo("Slice", "Translator succesfuly enabled");
   }
 
+  await window.slice.stylesManager.init();
 
   await window.slice.stylesManager.setTheme(
     sliceConfig.stylesManager.defaultTheme
@@ -192,4 +192,3 @@ async function init() {
 }
 
 await init();
-
