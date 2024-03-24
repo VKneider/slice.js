@@ -4,7 +4,7 @@
   position: fixed;
   top: 20px;
   left: 20px;
-  padding: 15px;
+  padding: 10px;
   border: var(--slice-border) solid var(--primary-color);
   background-color: var(--primary-background-color);
   z-index: 1000;
@@ -15,7 +15,11 @@
 #debugger-container.active {
   display: block;
 }
-
+.slice_thead td {
+  font-weight: bold;
+  background-color: var(--primary-color);
+  color: var(--primary-color-contrast);
+}
 #close-debugger {
   cursor: pointer;
   position: absolute;
@@ -30,29 +34,36 @@ h3 {
   margin-bottom: 10px;
 }
 
+#component-details {
+  color: var(--font-primary-color);
+}
 #component-details table {
-  /* width: 100%; */
+  width: 100%;
   border-collapse: collapse;
   margin-top: 10px;
+  /* border: 1px solid var(--primary-color); */
+}
+
+.debugger-header {
+  border-bottom: 1px solid var(--primary-color);
+  user-select: none;
+  cursor: grab;
+}
+.debugger-header:active {
+  cursor: grabbing;
 }
 
 #component-details th,
 #component-details td {
-  border: 1px solid #2b2a4c;
-  padding: 12px;
+  padding: 10px;
   text-align: left;
+  border-bottom: 1px solid var(--primary-color);
 }
 
-#component-details th {
-  background-color: #ede2de;
-  color: #2b2a4c;
+.slice_component-details td {
+  background-color: var(--secondary-background-color);
+  color: var(--font-primary-color);
 }
-
-#component-details td {
-  background-color: #fff;
-  color: #555;
-}
-
 /* Estilo para las filas impares, solo para mejorar la legibilidad */
 #component-details tr:nth-child(odd) {
   background-color: #f9f9f9;
