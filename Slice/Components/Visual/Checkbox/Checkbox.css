@@ -30,9 +30,9 @@
   height: 1.3em;
   width: 1.3em;
   background-color: var(--secondary-background-color);
-  border: 1px solid var(--primary-color-rgb);
+  border: var(--slice-border) solid var(--primary-color);
   transition: all 0.3s;
-  border-radius: 5px;
+  border-radius: var(--border-radius-slice);
   cursor: pointer;
 }
 .slice_checkbox input:checked ~ .checkmark {

@@ -17,9 +17,9 @@
 .slice_input {
   padding: 10px;
   max-width: 100%;
-  border-radius: 5px;
+  border-radius: var(--border-radius-slice);
   font-family: var(--font-family);
-  border: 1px solid var(--primary-color-rgb);
+  border: var(--slice-border) solid var(--primary-color);
   background-color: var(--primary-background-color);
   margin-bottom: 25px;
   margin-top: 25px;

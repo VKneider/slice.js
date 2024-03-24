@@ -12,8 +12,8 @@
   max-width: fit-content;
   background-color: var(--primary-color);
   color: var(--primary-color-contrast);
-  border-radius: 5px;
-  border: 1px solid var(--primary-color);
+  border-radius: var(--border-radius-slice);
+  border: var(--slice-border) solid var(--primary-color);
   font-weight: 800;
   min-width: 100%;
   padding: 10px 0;

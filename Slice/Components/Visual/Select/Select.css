@@ -9,8 +9,8 @@
   cursor: pointer;
   display: flex;
   padding: 10px;
-  border-radius: 5px;
-  border: 1px solid var(--primary-color-rgb);
+  border-radius: var(--border-radius-slice);
+  border: var(--slice-border) solid var(--primary-color);
   background-color: var(--primary-background-color);
   justify-content: space-between;
   align-items: center;
@@ -46,7 +46,7 @@
   width: 100%;
   z-index: 1;
   background-color: var(--primary-background-color);
-  border-radius: 5px;
+  border-radius: var(--border-radius-slice);
   box-shadow: 0 0 10px 0 #00000050;
   div {
     color: var(--font-primary-color);
@@ -70,7 +70,7 @@
 }
 .menu_open::-webkit-scrollbar-thumb {
   background: var(--primary-color);
-  border-radius: 5px;
+  border-radius: var(--border-radius-slice);
 }
 .active {
   /* color: var(--primary-color); */
