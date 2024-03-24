@@ -2,6 +2,7 @@
 
 :root {
   --font-family: "Roboto", sans-serif;
+  --slice-border-radius: 5px;
 }
 body {
   background-color: var(--primary-background-color);
