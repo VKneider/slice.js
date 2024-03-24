@@ -86,9 +86,9 @@ export default class Select extends HTMLElement {
 
         if (this._value.length === 1 && !this.multiple) {
           this.removeOptionFromValue(this._value[0]);
-           this.addSelectedOption(option);
-           if (this.onOptionSelect) this.onOptionSelect();
-          return ;
+          this.addSelectedOption(option);
+          if (this.onOptionSelect) this.onOptionSelect();
+          return;
         }
 
         if (this.isObjectInArray(option, this._value).found) {
