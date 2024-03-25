@@ -31,9 +31,14 @@ export default class Input extends HTMLElement {
   }
 
   set value(value) {
-    this._value = value;
-    this.$input.value = value;
-    this.$placeholder.classList.add("slice_input_value");
+    if (value) {
+      this._value = value;
+      this.$input.value = value;
+      this.$placeholder.classList.add("slice_input_value");
+    } else {
+      this.$placeholder.classList.remove("slice_input_value");
+      this.$input.value="";
+    }
   }
 
   get type() {
@@ -136,6 +141,11 @@ export default class Input extends HTMLElement {
     if (!this.type) {
       this.type = "text";
     }
+
+    if(!this.disabled){
+      this._disabled=false;
+    }
+
     this.$input.addEventListener("input", () => {
       this.update();
     });

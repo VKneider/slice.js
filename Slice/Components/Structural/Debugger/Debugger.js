@@ -106,21 +106,18 @@ export default class Debugger extends HTMLElement {
     });
 
     const ComponentPropsWithValues = this.getAttributesWithValues(details.ComponentProps);
-    const ComponentPropsWithoutValues = this.getAttributesWithoutValues(details.ComponentProps);
 
     if (ComponentPropsWithValues.length > 0) {
       this.createTable("Attributes with Values", ComponentPropsWithValues, details);
     }
 
-    if (ComponentPropsWithoutValues.length > 0) {
-      this.createTable("Attributes without Values", ComponentPropsWithoutValues, details);
-    }
+
 
     this.debuggerContainer.classList.add("active");
     this.debuggerContainer.appendChild(this.applyChangesButton); // Agregar el botón al debugger
   }
 
-  createTable(title, attributes, details) {
+   createTable(title, attributes, details) {
     this.componentDetailsTable.innerHTML = "";
     const tableContainer = document.createElement("div");
     tableContainer.classList.add("table-container");

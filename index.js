@@ -217,3 +217,8 @@ const icon3 = await slice.build("Icon", {
 document.body.appendChild(icon);
 document.body.appendChild(icon2);
 document.body.appendChild(icon3);
+
+const loading = await slice.build("Loading", {})
+
+loading.start()
+

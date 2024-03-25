@@ -36,7 +36,15 @@ export default class Select extends HTMLElement {
     ];
   }
 
-  init() {}
+  init() {
+    if(!this.disabled){
+      this._disabled=false;
+    }
+
+    if(!this._multiple){
+      this._multiple=false;
+    }
+  }
 
   get options() {
     return this._options;

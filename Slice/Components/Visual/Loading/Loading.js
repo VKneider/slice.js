@@ -1,39 +1,45 @@
 export default class Loading extends HTMLElement {
-  constructor() {
+  constructor(props) {
     super();
-    slice.controller
-      .loadTemplate("./Slice/templates/Loading.html")
-      .then((template) => {
-        this.shadow = this.attachShadow({ mode: "open" });
-        this.shadowRoot.appendChild(template.content.cloneNode(true));
+    slice.attachTemplate(this);
 
-        if (this.props != undefined) {
-          if (this.props.id != undefined) {
-            this.id = this.props.id;
-          }
-        }
-
-        slice.controller.registerComponent(this);
-        slice.appendStyles(`.blocked{
-                pointer-events: none;
-                background-color: #1d2630;
-                opacity: 0.5;
-                z-index: 5;
-              }`);
-      });
+    slice.controller.setComponentProps(this, props);
+    this.debuggerProps = ["isActive"];
   }
 
-  connectedCallback() {}
+  init() {
 
-  start() {
-    document.body.appendChild(this);
-    document.body.classList.add("blocked");
   }
 
-  stop() {
-    document.body.classList.remove("blocked");
+  start(){
+    document.body.appendChild(this)
+    this._isActive=true;
+  }
+
+  stop(){
     this.remove();
+    this._isActive=false;
   }
+
+  get isActive(){
+    return this._isActive;
+  }
+
+  set isActive(value){
+    if(value===true){
+      this._isActive=true;
+      if(!this._isActive)  this.start();
+    }
+    
+    if(value===false){
+      this._isActive=false;
+      this.stop();
+    }
+  }
+
+
+
+ 
 }
 
-window.customElements.define("load-popup", Loading);
+customElements.define("slice-loading", Loading);
