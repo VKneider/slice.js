@@ -70,6 +70,8 @@ export default class Debugger extends HTMLElement {
     });
   }
 
+
+
   handleDebugClick(event, component) {
     event.preventDefault();
     const sliceId = component.sliceId;
@@ -77,21 +79,21 @@ export default class Debugger extends HTMLElement {
     const componentDetails = {
       SliceId: sliceId,
       ClassName: component.constructor.name,
-      ObservedAttributes: {},
+      ComponentProps: {}, // Cambiar el nombre de observedAttributes a ComponentProps
     };
 
     const realComponentProps = component.debuggerProps;
 
     realComponentProps.forEach((attr) => {
-      //verify if the attr doesnt exist in the component, assign the value of _attr
+      // Verificar si el atributo no existe en el componente, asignar el valor de _attr
       if (component[attr] === undefined) {
-        componentDetails.ObservedAttributes[attr] = component[`_${attr}`];
+        componentDetails.ComponentProps[attr] = component[`_${attr}`];
       } else {
-        componentDetails.ObservedAttributes[attr] = component[attr];
+        componentDetails.ComponentProps[attr] = component[attr];
       }
     });
 
-    // Mostrar observedAttributes y sus valores
+    // Mostrar componentProps y sus valores
     this.showComponentDetails(componentDetails);
   }
 
@@ -105,32 +107,34 @@ export default class Debugger extends HTMLElement {
       this.componentDetailsList.appendChild(listItem);
     });
 
-    // Mostrar observedAttributes y sus valores
-    const observedAttributesWithValues = this.getAttributesWithValues(
-      details.ObservedAttributes
+    // Mostrar componentProps y sus valores
+    const componentPropsWithValues = this.getAttributesWithValues(
+      details.ComponentProps
     );
-    const observedAttributesWithoutValues = this.getAttributesWithoutValues(
-      details.ObservedAttributes
+    const componentPropsWithoutValues = this.getAttributesWithoutValues(
+      details.ComponentProps
     );
 
-    if (observedAttributesWithValues.length > 0) {
+    if (componentPropsWithValues.length > 0) {
       this.createTable(
-        "Attributes with Values",
-        observedAttributesWithValues,
+        "Component Props with Values",
+        componentPropsWithValues,
         details
       );
     }
 
-    if (observedAttributesWithoutValues.length > 0) {
+    if (componentPropsWithoutValues.length > 0) {
       this.createTable(
-        "Attributes without Values",
-        observedAttributesWithoutValues,
+        "Component Props without Values",
+        componentPropsWithoutValues,
         details
       );
     }
 
     this.debuggerContainer.classList.add("active");
   }
+
+
 
   createTable(title, attributes, details) {
     this.componentDetailsTable.innerHTML = "";
@@ -160,7 +164,7 @@ export default class Debugger extends HTMLElement {
       const cell2 = row.insertCell(1);
 
       cell1.textContent = attr;
-      cell2.textContent = details.ObservedAttributes[attr];
+      cell2.textContent = details.ComponentProps[attr];
     });
 
     tableContainer.appendChild(table);

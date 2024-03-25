@@ -34,9 +34,9 @@ export default class Controller {
         return null;
       }
     } else {
-      sliceId = `slice-${this.idCounter}`;
-      component.sliceId = sliceId;
-      this.idCounter++;
+        sliceId = `${component.constructor.name[0].toLowerCase()}${component.constructor.name.slice(1)}-${this.idCounter}`;
+        component.sliceId = sliceId;
+        this.idCounter++;
     }
 
     this.activeComponents.set(sliceId, component);
