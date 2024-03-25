@@ -82,6 +82,7 @@ export default class Switch extends HTMLElement {
     if (value === "bottom") {
       this.$switch.style = `flex-direction: column;`;
     }
+    this._position = value;
   }
 
   get disabled() {
@@ -91,7 +92,12 @@ export default class Switch extends HTMLElement {
   set disabled(value) {
     this._disabled = value;
     this.$checkbox.disabled = value;
-    this.querySelector(".slider").classList.add("disabled");
+    if(value===true){
+      this.querySelector(".slider").classList.add("disabled");
+    }else{
+      this.querySelector(".slider").classList.remove("disabled");
+    }
+
   }
 }
 
