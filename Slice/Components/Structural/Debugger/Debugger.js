@@ -5,6 +5,7 @@ export default class Debugger extends HTMLElement {
     super();
     this.toggleClick = sliceConfig.debugger.click;
     this.toggle = "click";
+    this.selectedComponentSliceId = null;
   }
 
   async enableDebugMode() {
@@ -19,7 +20,13 @@ export default class Debugger extends HTMLElement {
     this.componentDetailsTable = this.querySelector(".component-details-table");
     this.componentDetailsList = this.querySelector(".component-details-list");
 
+
     this.closeDebugger.addEventListener("click", () => this.hideDebugger());
+    this.applyChangesButton = await slice.build("Button", {
+      value: "Apply Changes",
+      onClickCallback: () => this.applyChanges(),
+    });
+
 
     // Arrastrar y soltar
     this.makeDraggable();
@@ -34,12 +41,8 @@ export default class Debugger extends HTMLElement {
     } else {
       this.toggle = "click";
     }
-    component.addEventListener(this.toggle, (event) =>
-      this.handleDebugClick(event, component)
-    );
+    component.addEventListener(this.toggle, (event) => this.handleDebugClick(event, component));
   }
-
-  // VISUAL
 
   makeDraggable() {
     let offsetX, offsetY;
@@ -49,10 +52,8 @@ export default class Debugger extends HTMLElement {
 
     header.addEventListener("mousedown", (event) => {
       isDragging = true;
-      offsetX =
-        event.clientX - this.debuggerContainer.getBoundingClientRect().left;
-      offsetY =
-        event.clientY - this.debuggerContainer.getBoundingClientRect().top;
+      offsetX = event.clientX - this.debuggerContainer.getBoundingClientRect().left;
+      offsetY = event.clientY - this.debuggerContainer.getBoundingClientRect().top;
     });
 
     document.addEventListener("mousemove", (event) => {
@@ -70,8 +71,6 @@ export default class Debugger extends HTMLElement {
     });
   }
 
-
-
   handleDebugClick(event, component) {
     event.preventDefault();
     const sliceId = component.sliceId;
@@ -79,13 +78,14 @@ export default class Debugger extends HTMLElement {
     const componentDetails = {
       SliceId: sliceId,
       ClassName: component.constructor.name,
-      ComponentProps: {}, // Cambiar el nombre de observedAttributes a ComponentProps
+      ComponentProps: {},
     };
+    this.selectedComponentSliceId = component.sliceId; // Almacena el sliceId del componente seleccionado
+
 
     const realComponentProps = component.debuggerProps;
 
     realComponentProps.forEach((attr) => {
-      // Verificar si el atributo no existe en el componente, asignar el valor de _attr
       if (component[attr] === undefined) {
         componentDetails.ComponentProps[attr] = component[`_${attr}`];
       } else {
@@ -93,48 +93,32 @@ export default class Debugger extends HTMLElement {
       }
     });
 
-    // Mostrar componentProps y sus valores
     this.showComponentDetails(componentDetails);
   }
 
   showComponentDetails(details) {
     this.componentDetailsList.innerHTML = "";
 
-    // Mostrar información general
     Object.entries(details).forEach(([key, value]) => {
       const listItem = document.createElement("li");
       listItem.textContent = `${key}: ${value}`;
       this.componentDetailsList.appendChild(listItem);
     });
 
-    // Mostrar componentProps y sus valores
-    const componentPropsWithValues = this.getAttributesWithValues(
-      details.ComponentProps
-    );
-    const componentPropsWithoutValues = this.getAttributesWithoutValues(
-      details.ComponentProps
-    );
+    const ComponentPropsWithValues = this.getAttributesWithValues(details.ComponentProps);
+    const ComponentPropsWithoutValues = this.getAttributesWithoutValues(details.ComponentProps);
 
-    if (componentPropsWithValues.length > 0) {
-      this.createTable(
-        "Component Props with Values",
-        componentPropsWithValues,
-        details
-      );
+    if (ComponentPropsWithValues.length > 0) {
+      this.createTable("Attributes with Values", ComponentPropsWithValues, details);
     }
 
-    if (componentPropsWithoutValues.length > 0) {
-      this.createTable(
-        "Component Props without Values",
-        componentPropsWithoutValues,
-        details
-      );
+    if (ComponentPropsWithoutValues.length > 0) {
+      this.createTable("Attributes without Values", ComponentPropsWithoutValues, details);
     }
 
     this.debuggerContainer.classList.add("active");
+    this.debuggerContainer.appendChild(this.applyChangesButton); // Agregar el botón al debugger
   }
-
-
 
   createTable(title, attributes, details) {
     this.componentDetailsTable.innerHTML = "";
@@ -164,7 +148,19 @@ export default class Debugger extends HTMLElement {
       const cell2 = row.insertCell(1);
 
       cell1.textContent = attr;
-      cell2.textContent = details.ComponentProps[attr];
+
+      // Crear un elemento editable para la celda de valor
+      const valueInput = document.createElement("input");
+      valueInput.value = details.ComponentProps[attr]; // Asignar el valor actual
+      if (typeof details.ComponentProps[attr] === 'function') {
+        valueInput.disabled = true;
+      }
+      cell2.appendChild(valueInput);
+
+      // Agregar evento de doble clic para permitir la edición
+      cell2.addEventListener("dblclick", () => {
+        valueInput.readOnly = false;
+      });
     });
 
     tableContainer.appendChild(table);
@@ -177,6 +173,37 @@ export default class Debugger extends HTMLElement {
 
   getAttributesWithoutValues(attributes) {
     return Object.keys(attributes).filter((attr) => attributes[attr] === null);
+  }
+
+  applyChanges() {
+    const inputCells = this.componentDetailsTable.querySelectorAll("td input");
+    const selectedComponent = slice.controller.getComponent(this.selectedComponentSliceId);
+    inputCells.forEach((inputCell) => {
+      const attributeName = inputCell.parentElement.previousElementSibling.textContent;
+      let newValue = inputCell.value;
+      const oldValue = slice.controller.getComponent(this.selectedComponentSliceId)[attributeName];
+
+      // Verificar si el valor anterior y el nuevo valor son iguales como cadenas
+      if (String(newValue) !== String(oldValue)) {
+        //Verificar si es funcion para que no lo vuelva a guardar sin cambios
+        /*
+        if (typeof selectedComponent[attributeName] === 'function') {
+          try {
+            newValue = eval(`(${newValue})`);
+          } catch (error) {
+            console.error(`Error al analizar la función: ${error}`);
+            return;
+          }
+        }
+*/
+        if (typeof selectedComponent[attributeName] === 'function') {return;}
+        console.log(`Changing ${attributeName} from ${oldValue} to ${newValue}`);
+        if (newValue === "true") newValue = true;
+        if (newValue === "false") newValue = false;
+
+        selectedComponent[attributeName] = newValue
+      }
+    });
   }
 
   hideDebugger() {
