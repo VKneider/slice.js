@@ -16,5 +16,6 @@ const components = {
   Logger: "Structural",
   StylesManager: "Structural",
   Icon: "Visual",
+  Loading: "Visual"
 };
 export default components;

@@ -13,6 +13,11 @@ export default class Checkbox extends HTMLElement {
     if (this._checked === undefined) {
       this.checked = false;
     }
+    
+    if(!this.disabled){
+      this._disabled=false;
+    }
+
   }
 
   get checked() {

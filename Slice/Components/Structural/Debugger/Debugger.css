@@ -15,11 +15,13 @@
 #debugger-container.active {
   display: block;
 }
+
 .slice_thead td {
   font-weight: bold;
   background-color: var(--primary-color);
   color: var(--primary-color-contrast);
 }
+
 #close-debugger {
   cursor: pointer;
   position: absolute;
@@ -37,6 +39,7 @@ h3 {
 #component-details {
   color: var(--font-primary-color);
 }
+
 #component-details table {
   width: 100%;
   border-collapse: collapse;
@@ -49,6 +52,7 @@ h3 {
   user-select: none;
   cursor: grab;
 }
+
 .debugger-header:active {
   cursor: grabbing;
 }
@@ -60,10 +64,16 @@ h3 {
   border-bottom: 1px solid var(--primary-color);
 }
 
-.slice_component-details td {
+input {
+  border: 0px;
+}
+
+.slice_component-details td,
+input {
   background-color: var(--secondary-background-color);
   color: var(--font-primary-color);
 }
+
 /* Estilo para las filas impares, solo para mejorar la legibilidad */
 #component-details tr:nth-child(odd) {
   background-color: #f9f9f9;

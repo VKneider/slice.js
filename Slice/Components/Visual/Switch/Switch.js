@@ -26,6 +26,11 @@ export default class Switch extends HTMLElement {
     if (this.position === undefined) {
       this.position = "right";
     }
+
+    if(!this.disabled){
+      this._disabled=false;
+    }
+
     this.querySelector("input").addEventListener("change", (e) => {
       this.checked = e.target.checked;
     });
