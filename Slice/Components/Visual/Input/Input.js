@@ -13,7 +13,7 @@ export default class Input extends HTMLElement {
       "type",
       "required",
       "conditions",
-      "disabled"
+      "disabled",
     ];
   }
 
@@ -72,6 +72,7 @@ export default class Input extends HTMLElement {
     this.$input.disabled = boolean;
     this.$inputContainer.classList.add("disabled");
     this.$placeholder.classList.add("disabled");
+    this.querySelector(".eye").classList.add("disabled");
   }
 
   get secret() {

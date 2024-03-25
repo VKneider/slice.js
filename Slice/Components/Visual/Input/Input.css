@@ -48,6 +48,7 @@
   background-color: var(--primary-color-shade);
   color: var(--disabled-color);
   cursor: not-allowed;
+  pointer-events: none;
 }
 .color_input {
   border-radius: 100%;

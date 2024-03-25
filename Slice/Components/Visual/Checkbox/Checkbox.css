@@ -36,7 +36,7 @@
   cursor: pointer;
 }
 .slice_checkbox input:checked ~ .checkmark {
-  border-color: var(--success-color);
+  border: var(--slice-border) solid var(--success-color);
   background-color: var(--success-color);
   animation: pop 0.5s;
   animation-direction: alternate;

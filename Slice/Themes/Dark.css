@@ -1,10 +1,38 @@
 :root {
   --font-primary-color: #fff;
 
-  --primary-color: #cecece;
-  --primary-color-rgb: rgb(206, 206, 206, 0.5);
-  --primary-background-color: #191919;
-  --secundary-background-color: #292929;
+  /** primary **/
+  --primary-color: #0066ff;
+  --primary-color-rgb: rgb(0, 102, 255);
+  --primary-background-color: #000;
+  --primary-color-contrast: #000;
+  --primary-color-shade: #222;
 
+  /** secondary **/
+  --secondary-color: #63ccfd;
+  --secondary-color-rgb: rgb(99, 204, 253);
+  --secondary-background-color: #222;
+  --secondary-color-contrast: #fff;
+
+  /** tertiary **/
+  --tertiary-background-color: #444;
+
+  /** success **/
+  --success-color: #00ff40;
+  --success-contrast: #000;
+
+  /** warning **/
+  --warning-color: #ffff40;
+  --warning-contrast: #000;
+
+  /** danger **/
   --danger-color: #ff0000;
+  --danger-contrast: #000;
+
+  /** medium **/
+  --medium-color: #92949c;
+  --medium-contrast: #fff;
+
+  /* Disabled color */
+  --disabled-color: #7f7f7f;
 }

@@ -15,7 +15,9 @@ export default class Debugger extends HTMLElement {
 
     this.debuggerContainer = this.querySelector("#debugger-container");
     this.closeDebugger = this.querySelector("#close-debugger");
-    this.componentDetailsList = this.querySelector("#component-details");
+    this.componentDetails = this.querySelector("#component-details");
+    this.componentDetailsTable = this.querySelector(".component-details-table");
+    this.componentDetailsList = this.querySelector(".component-details-list");
 
     this.closeDebugger.addEventListener("click", () => this.hideDebugger());
 
@@ -43,7 +45,9 @@ export default class Debugger extends HTMLElement {
     let offsetX, offsetY;
     let isDragging = false;
 
-    this.debuggerContainer.addEventListener("mousedown", (event) => {
+    const header = this.querySelector(".debugger-header");
+
+    header.addEventListener("mousedown", (event) => {
       isDragging = true;
       offsetX =
         event.clientX - this.debuggerContainer.getBoundingClientRect().left;
@@ -129,6 +133,7 @@ export default class Debugger extends HTMLElement {
   }
 
   createTable(title, attributes, details) {
+    this.componentDetailsTable.innerHTML = "";
     const tableContainer = document.createElement("div");
     tableContainer.classList.add("table-container");
 
@@ -139,6 +144,8 @@ export default class Debugger extends HTMLElement {
     const table = document.createElement("table");
     const thead = table.createTHead();
     const tbody = table.createTBody();
+    thead.classList.add("slice_thead");
+    tbody.classList.add("slice_component-details");
 
     const headerRow = thead.insertRow();
     const headerCell1 = headerRow.insertCell(0);
@@ -157,7 +164,7 @@ export default class Debugger extends HTMLElement {
     });
 
     tableContainer.appendChild(table);
-    this.componentDetailsList.appendChild(tableContainer);
+    this.componentDetailsTable.appendChild(tableContainer);
   }
 
   getAttributesWithValues(attributes) {

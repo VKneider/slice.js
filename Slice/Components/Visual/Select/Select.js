@@ -2,6 +2,7 @@ export default class Select extends HTMLElement {
   constructor(props) {
     super();
     slice.attachTemplate(this);
+    this.$dropdown = this.querySelector(".slice_dropdown");
     this.$selectContainer = this.querySelector(".slice_select_container");
     this.$label = this.querySelector(".slice_select_label");
     this.$select = this.querySelector(".slice_select");
@@ -11,6 +12,10 @@ export default class Select extends HTMLElement {
     this.$selectContainer.addEventListener("click", () => {
       this.$menu.classList.toggle("menu_open");
       this.$caret.classList.toggle("caret_open");
+    });
+    this.$dropdown.addEventListener("mouseleave", () => {
+      this.$menu.classList.remove("menu_open");
+      this.$caret.classList.remove("caret_open");
     });
 
     if (props.visibleProp) {

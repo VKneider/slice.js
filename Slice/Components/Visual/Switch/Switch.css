@@ -53,7 +53,7 @@
 
 .slice_switch input[type="checkbox"]:checked + .slider {
   background-color: var(--success-color);
-  border-color: var(--success-color);
+  border: var(--slice-border) solid var(--success-color);
 }
 
 .slice_switch input[type="checkbox"]:checked + .slider::after {
