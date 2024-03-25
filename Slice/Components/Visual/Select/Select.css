@@ -35,6 +35,7 @@
   transition: all 0.5s;
 }
 .slice_menu {
+  border: var(--slice-border) solid var(--primary-color);
   list-style: none;
   font-family: var(--font-family);
   visibility: hidden;
@@ -42,7 +43,7 @@
   position: absolute;
   opacity: 0;
   transition: 0s, opacity 0.3s;
-  top: 120%;
+  top: 100%;
   width: 100%;
   z-index: 1;
   background-color: var(--primary-background-color);
@@ -53,8 +54,8 @@
     cursor: pointer;
     padding: 10px;
     &:hover {
-      color: var(--primary-color);
-      background-color: var(--secondary-background-color);
+      color: var(--secondary-color-contrast);
+      background-color: var(--secondary-color);
     }
   }
 }
@@ -69,7 +70,7 @@
   width: 5px;
 }
 .menu_open::-webkit-scrollbar-thumb {
-  background: var(--primary-color);
+  background: var(--secondary-color);
   border-radius: var(--border-radius-slice);
 }
 .active {
