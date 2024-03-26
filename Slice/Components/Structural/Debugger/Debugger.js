@@ -21,9 +21,8 @@ export default class Debugger extends HTMLElement {
     this.componentDetailsTable = this.querySelector(".component-details-table");
     this.componentDetailsList = this.querySelector(".component-details-list");
 
-
     this.closeDebugger.addEventListener("click", () => {
-      this.hideDebugger()
+      this.hideDebugger();
       this.isActive = false;
     });
 
@@ -38,9 +37,6 @@ export default class Debugger extends HTMLElement {
       onClickCallback: () => this.applyChanges(),
     });
 
-
-
-
     // Arrastrar y soltar
     this.makeDraggable();
 
@@ -54,40 +50,50 @@ export default class Debugger extends HTMLElement {
     } else {
       this.toggle = "click";
     }
-    component.addEventListener(this.toggle, (event) => this.handleDebugClick(event, component));
+    component.addEventListener(this.toggle, (event) =>
+      this.handleDebugClick(event, component)
+    );
   }
 
   makeDraggable() {
-    let offsetX, offsetY;
+    let offset = {
+      x: 0,
+      y: 0,
+    };
     let isDragging = false;
 
     const header = this.querySelector(".debugger-header");
 
     header.addEventListener("mousedown", (event) => {
       isDragging = true;
-      offsetX = event.clientX - this.debuggerContainer.getBoundingClientRect().left;
-      offsetY = event.clientY - this.debuggerContainer.getBoundingClientRect().top;
+      offset.x =
+        event.clientX - this.debuggerContainer.getBoundingClientRect().left;
+      offset.y =
+        event.clientY - this.debuggerContainer.getBoundingClientRect().top;
     });
 
     document.addEventListener("mousemove", (event) => {
       if (isDragging) {
-        const x = event.clientX - offsetX;
-        const y = event.clientY - offsetY;
+        const x = event.clientX - offset.x;
+        const y = event.clientY - offset.y;
 
         this.debuggerContainer.style.left = `${x}px`;
         this.debuggerContainer.style.top = `${y}px`;
       }
     });
 
-    document.addEventListener("mouseup", () => {
+    header.addEventListener("mouseup", () => {
       isDragging = false;
     });
   }
 
   handleDebugClick(event, component) {
     event.preventDefault();
-    const sliceId = component.sliceId;
 
+    this.debuggerContainer.style.left = `${event.clientX}px`;
+    this.debuggerContainer.style.top = `${event.clientY}px`;
+
+    const sliceId = component.sliceId;
     this.isActive = true;
 
     const componentDetails = {
@@ -96,7 +102,6 @@ export default class Debugger extends HTMLElement {
       ComponentProps: {},
     };
     this.selectedComponentSliceId = component.sliceId; // Almacena el sliceId del componente seleccionado
-
 
     const realComponentProps = component.debuggerProps;
 
@@ -121,13 +126,13 @@ export default class Debugger extends HTMLElement {
       this.componentDetailsList.appendChild(listItem);
     });
 
-    const ComponentPropsWithValues = this.getAttributesWithValues(details.ComponentProps);
+    const ComponentPropsWithValues = this.getAttributesWithValues(
+      details.ComponentProps
+    );
 
     if (ComponentPropsWithValues.length > 0) {
       this.createTable("", ComponentPropsWithValues, details);
     }
-
-
 
     this.debuggerContainer.classList.add("active");
     this.debuggerContainer.appendChild(this.applyChangesButton); // Agregar el botón al debugger
@@ -165,7 +170,7 @@ export default class Debugger extends HTMLElement {
       // Crear un elemento editable para la celda de valor
       const valueInput = document.createElement("input");
       valueInput.value = details.ComponentProps[attr]; // Asignar el valor actual
-      if (typeof details.ComponentProps[attr] === 'function') {
+      if (typeof details.ComponentProps[attr] === "function") {
         valueInput.disabled = true;
       }
       cell2.appendChild(valueInput);
@@ -190,11 +195,16 @@ export default class Debugger extends HTMLElement {
 
   applyChanges() {
     const inputCells = this.componentDetailsTable.querySelectorAll("td input");
-    const selectedComponent = slice.controller.getComponent(this.selectedComponentSliceId);
+    const selectedComponent = slice.controller.getComponent(
+      this.selectedComponentSliceId
+    );
     inputCells.forEach((inputCell) => {
-      const attributeName = inputCell.parentElement.previousElementSibling.textContent;
+      const attributeName =
+        inputCell.parentElement.previousElementSibling.textContent;
       let newValue = inputCell.value;
-      const oldValue = slice.controller.getComponent(this.selectedComponentSliceId)[attributeName];
+      const oldValue = slice.controller.getComponent(
+        this.selectedComponentSliceId
+      )[attributeName];
 
       // Verificar si el valor anterior y el nuevo valor son iguales como cadenas
       if (String(newValue) !== String(oldValue)) {
@@ -209,12 +219,16 @@ export default class Debugger extends HTMLElement {
           }
         }
 */
-        if (typeof selectedComponent[attributeName] === 'function') { return; }
-        console.log(`Changing ${attributeName} from ${oldValue} to ${newValue}`);
+        if (typeof selectedComponent[attributeName] === "function") {
+          return;
+        }
+        console.log(
+          `Changing ${attributeName} from ${oldValue} to ${newValue}`
+        );
         if (newValue === "true") newValue = true;
         if (newValue === "false") newValue = false;
 
-        selectedComponent[attributeName] = newValue
+        selectedComponent[attributeName] = newValue;
       }
     });
   }
