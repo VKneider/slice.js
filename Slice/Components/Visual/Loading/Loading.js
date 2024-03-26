@@ -7,39 +7,33 @@ export default class Loading extends HTMLElement {
     this.debuggerProps = ["isActive"];
   }
 
-  init() {
+  init() {}
 
+  start() {
+    document.body.appendChild(this);
+    this._isActive = true;
   }
 
-  start(){
-    document.body.appendChild(this)
-    this._isActive=true;
-  }
-
-  stop(){
+  stop() {
     this.remove();
-    this._isActive=false;
+    this._isActive = false;
   }
 
-  get isActive(){
+  get isActive() {
     return this._isActive;
   }
 
-  set isActive(value){
-    if(value===true){
-      this._isActive=true;
-      if(!this._isActive)  this.start();
+  set isActive(value) {
+    if (value === true) {
+      this._isActive = true;
+      if (!this._isActive) this.start();
     }
-    
-    if(value===false){
-      this._isActive=false;
+
+    if (value === false) {
+      this._isActive = false;
       this.stop();
     }
   }
-
-
-
- 
 }
 
 customElements.define("slice-loading", Loading);

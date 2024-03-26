@@ -1,42 +1,50 @@
 .pizza-container {
-    width: 50px;
-    /* Ancho del SVG */
-    height: 50px;
-    /* Alto del SVG */
-    position: relative;
-    animation: spin 2s linear infinite;
-    /* Animación de rotación */
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  z-index: 499;
 }
 
 @keyframes spin {
-    from {
-        transform: rotate(0deg);
-    }
+  from {
+    transform: rotate(0deg);
+  }
 
-    to {
-        transform: rotate(360deg);
-    }
+  to {
+    transform: rotate(360deg);
+  }
 }
-
-
+@keyframes fade {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.slice_logo {
+  animation: spin 0.5s linear infinite;
+  height: 50px;
+  width: 50px;
+  position: absolute;
+  path {
+    fill: var(--primary-color);
+  }
+}
 .full-screen {
-    height: 100%;
-    width: 100%;
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: rgba(90, 90, 90, 0.5);
-    z-index: 500;
-}
-
-.center-screen {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    margin-right: -50%;
-    transform: translate(-50%, -50%);
-    z-index: 499;
-
+  height: 100%;
+  width: 100%;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(90, 90, 90, 0.5);
+  z-index: 500;
 }
