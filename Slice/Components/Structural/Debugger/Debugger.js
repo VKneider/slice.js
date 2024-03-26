@@ -6,6 +6,7 @@ export default class Debugger extends HTMLElement {
     this.toggleClick = sliceConfig.debugger.click;
     this.toggle = "click";
     this.selectedComponentSliceId = null;
+    this.isActive = false;
   }
 
   async enableDebugMode() {
@@ -21,11 +22,23 @@ export default class Debugger extends HTMLElement {
     this.componentDetailsList = this.querySelector(".component-details-list");
 
 
-    this.closeDebugger.addEventListener("click", () => this.hideDebugger());
+    this.closeDebugger.addEventListener("click", () => {
+      this.hideDebugger()
+      this.isActive = false;
+    });
+
+    this.debuggerContainer.addEventListener("keypress", (event) => {
+      if (event.key === "Enter") {
+        this.applyChanges();
+      }
+    });
+
     this.applyChangesButton = await slice.build("Button", {
       value: "Apply Changes",
       onClickCallback: () => this.applyChanges(),
     });
+
+
 
 
     // Arrastrar y soltar
@@ -75,6 +88,8 @@ export default class Debugger extends HTMLElement {
     event.preventDefault();
     const sliceId = component.sliceId;
 
+    this.isActive = true;
+
     const componentDetails = {
       SliceId: sliceId,
       ClassName: component.constructor.name,
@@ -100,7 +115,7 @@ export default class Debugger extends HTMLElement {
     this.componentDetailsList.innerHTML = "";
 
     Object.entries(details).forEach(([key, value]) => {
-      if(key === "ComponentProps") return;
+      if (key === "ComponentProps") return;
       const listItem = document.createElement("li");
       listItem.textContent = `${key}: ${value}`;
       this.componentDetailsList.appendChild(listItem);
@@ -118,7 +133,7 @@ export default class Debugger extends HTMLElement {
     this.debuggerContainer.appendChild(this.applyChangesButton); // Agregar el botón al debugger
   }
 
-   createTable(title, attributes, details) {
+  createTable(title, attributes, details) {
     this.componentDetailsTable.innerHTML = "";
     const tableContainer = document.createElement("div");
     tableContainer.classList.add("table-container");
@@ -194,7 +209,7 @@ export default class Debugger extends HTMLElement {
           }
         }
 */
-        if (typeof selectedComponent[attributeName] === 'function') {return;}
+        if (typeof selectedComponent[attributeName] === 'function') { return; }
         console.log(`Changing ${attributeName} from ${oldValue} to ${newValue}`);
         if (newValue === "true") newValue = true;
         if (newValue === "false") newValue = false;

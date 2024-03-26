@@ -15,6 +15,8 @@ export default class Icon extends HTMLElement {
 
   set name(value) {
     this._name = value;
+    //remove all classes
+    this.$icon.className = "";
     this.$icon.classList.add(`slc-${value}`);
   }
 
