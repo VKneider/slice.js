@@ -1,62 +1,133 @@
- export default class FetchManager {
+export default class FetchManager {
     constructor(baseUrl, timeout) {
-        if(baseUrl != undefined){
+        if (baseUrl !== undefined) {
             this.url = baseUrl;
         }
         this.methods = ["GET", "POST", "PUT", "DELETE"];
-        
-        if(timeout != undefined){
-            this.timeout = timeout;
-        } else {this.timeout=5000}
+        this.lastRequest = null;
+        this.cacheEnabled = false;
+        this.defaultHeaders = {};
+        timeout ? (this.timeout = timeout) : (this.timeout = 10000);
     }
 
-    async request(method, data, endpoint) {
-
+    async request(
+        method,
+        data,
+        endpoint,
+        onRequestSuccess,
+        onRequestError,
+        refetchOnError = false,
+        requestOptions = {}
+    ) {
         if (!this.methods.includes(method)) throw new Error("Invalid method");
-        if(data && typeof data !== "object") throw new Error("Invalid data, not json");
-        const controller = new AbortController()
+        if (data && typeof data !== "object")
+            throw new Error("Invalid data, not JSON");
+        const controller = new AbortController();
 
         let options;
-        if(method !="GET"){
+        if (method !== "GET") {
             options = {
                 method: method,
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    ...this.defaultHeaders,
+                    ...requestOptions.headers,
                 },
                 signal: controller.signal,
-            }
-        }else{
+            };
+        } else {
             options = {
                 method: method,
+                headers: {
+                    ...this.defaultHeaders,
+                    ...requestOptions.headers,
+                },
                 signal: controller.signal,
-            }
+            };
         }
-        
-        
-        if(data!=null){
+
+        if (data) {
             options.body = JSON.stringify(data);
         }
-        
-        if(slice.controller.components.has("myLoading")){
-            slice.controller.components.delete("myLoading")
+
+        let loading;
+        if (!slice.controller.getComponent("Loading")) {
+            loading = await slice.build("Loading", { sliceId: "Loading" });
+        } else {
+            loading = slice.controller.getComponent("Loading");
         }
-        
-        let loading = await slice.getInstance("Loading", {id:"myLoading"});
         loading.start();
-        const timeoutId = setTimeout(() => controller.abort(), this.timeout || 10000)
+        const timeoutId = setTimeout(() => controller.abort(), this.timeout || 10000);
 
-        let response;
-        if(this.baseUrl != undefined){
-         response = await fetch(this.url + endpoint, options);
-        }else{
-          response = await fetch(endpoint, options);
+        try {
+            let response;
+
+            // Check if cache is enabled and a cached response exists
+            if (this.cacheEnabled && this.lastRequest && this.lastRequest.endpoint === endpoint) {
+                return this.lastRequest.response;
+            }
+
+            if (this.baseUrl !== undefined) {
+                response = await fetch(this.url + endpoint, options);
+            } else {
+                response = await fetch(endpoint, options);
+            }
+
+            if (response.ok) {
+                if (typeof onRequestSuccess === "function") {
+                    onRequestSuccess(data, response);
+                }
+            } else {
+                if (typeof onRequestError === "function") {
+                    onRequestError(data, response);
+                }
+                if (refetchOnError) {
+                    // Retry the request in case of error
+                    return await this.request(
+                        method,
+                        data,
+                        endpoint,
+                        onRequestSuccess,
+                        onRequestError,
+                        refetchOnError,
+                        requestOptions
+                    );
+                }
+            }
+
+            let output = await response.json();
+            loading.stop();
+
+            // Cache the response if cache is enabled
+            if (this.cacheEnabled) {
+                this.lastRequest = { data, response, endpoint };
+            }
+
+            return output;
+        } catch (error) {
+            if (error.message === "Failed to fetch") {
+                slice.logger.logError("Se perdió la conexión a internet");
+            } else {
+                console.error("Error al realizar la solicitud:", error);
+            }
+            loading.stop();
+            throw error;
+        } finally {
+            clearTimeout(timeoutId);
         }
-        
-        let output = await response.json();
-        loading.stop();
-
-        return output;
     }
-        
-}
 
+    // Enable or disable caching of responses
+    enableCache() {
+        this.cacheEnabled = true;
+    }
+
+    disableCache() {
+        this.cacheEnabled = false;
+    }
+
+    // Set default headers for all requests
+    setDefaultHeaders(headers) {
+        this.defaultHeaders = headers;
+    }
+}
