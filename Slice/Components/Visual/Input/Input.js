@@ -37,7 +37,7 @@ export default class Input extends HTMLElement {
       this.$placeholder.classList.add("slice_input_value");
     } else {
       this.$placeholder.classList.remove("slice_input_value");
-      this.$input.value="";
+      this.$input.value = "";
     }
   }
 
@@ -142,8 +142,12 @@ export default class Input extends HTMLElement {
       this.type = "text";
     }
 
-    if(!this.disabled){
-      this._disabled=false;
+    if (!this.disabled) {
+      this._disabled = false;
+    }
+
+    if (!this.required) {
+      this._required = false;
     }
 
     this.$input.addEventListener("input", () => {

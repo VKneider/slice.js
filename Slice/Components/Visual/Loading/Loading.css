@@ -17,26 +17,32 @@
     transform: rotate(360deg);
   }
 }
+
 @keyframes fade {
   0% {
     opacity: 0;
   }
+
   50% {
     opacity: 1;
   }
+
   100% {
     opacity: 0;
   }
 }
+
 .slice_logo {
-  animation: spin 0.5s linear infinite;
+  animation: spin 0.1s linear infinite;
   height: 50px;
   width: 50px;
   position: absolute;
+
   path {
     fill: var(--primary-color);
   }
 }
+
 .full-screen {
   height: 100%;
   width: 100%;
