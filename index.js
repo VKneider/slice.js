@@ -220,5 +220,5 @@ document.body.appendChild(icon3);
 
 const loading = await slice.build("Loading", {})
 
-loading.start()
+
 

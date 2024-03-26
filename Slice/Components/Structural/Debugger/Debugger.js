@@ -100,6 +100,7 @@ export default class Debugger extends HTMLElement {
     this.componentDetailsList.innerHTML = "";
 
     Object.entries(details).forEach(([key, value]) => {
+      if(key === "ComponentProps") return;
       const listItem = document.createElement("li");
       listItem.textContent = `${key}: ${value}`;
       this.componentDetailsList.appendChild(listItem);
@@ -108,7 +109,7 @@ export default class Debugger extends HTMLElement {
     const ComponentPropsWithValues = this.getAttributesWithValues(details.ComponentProps);
 
     if (ComponentPropsWithValues.length > 0) {
-      this.createTable("Attributes with Values", ComponentPropsWithValues, details);
+      this.createTable("", ComponentPropsWithValues, details);
     }
 
 
