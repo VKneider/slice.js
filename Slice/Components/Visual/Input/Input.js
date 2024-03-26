@@ -76,8 +76,6 @@ export default class Input extends HTMLElement {
     this._disabled = boolean;
     this.$input.disabled = boolean;
     this.$inputContainer.classList.add("disabled");
-    this.$placeholder.classList.add("disabled");
-    this.querySelector(".eye").classList.add("disabled");
   }
 
   get secret() {
@@ -87,7 +85,7 @@ export default class Input extends HTMLElement {
   set secret(boolean) {
     this._secret = boolean;
     this.$input.type = "password";
-    const reveal = document.createElement("div");
+    const reveal = document.createElement("label");
     reveal.classList.add("eye");
     reveal.textContent = "Mostrar";
     reveal.addEventListener("click", () => {
