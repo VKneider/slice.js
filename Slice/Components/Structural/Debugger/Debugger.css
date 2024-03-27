@@ -39,6 +39,21 @@ h3 {
 #component-details {
   color: var(--font-primary-color);
 }
+.component-details-table {
+  overflow: scroll;
+  input {
+    outline: none;
+    border-bottom: 1px solid var(--tertiary-background-color);
+  }
+}
+.component-details-table::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.component-details-table::-webkit-scrollbar-thumb {
+  background: var(--secondary-color);
+  border-radius: var(--border-radius-slice);
+}
 
 #component-details table {
   width: 100%;
