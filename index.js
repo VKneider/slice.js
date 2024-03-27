@@ -23,7 +23,6 @@ document.body.insertBefore(changeThemeButton, document.body.firstChild);
 
 //append the component to the body first element
 
-
 const tester = await slice.build("Tester", {
   id: "tester",
   sliceId: "tester",
@@ -92,6 +91,7 @@ const button = await slice.build("Button", {
   value: "Slice",
   sliceId: "gio",
   onClickCallback: () => {
+    password.triggerError();
     select.value = [
       { value: "Hola", id: 0 },
       { value: "Hello", id: 1 },
@@ -218,7 +218,4 @@ document.body.appendChild(icon);
 document.body.appendChild(icon2);
 document.body.appendChild(icon3);
 
-const loading = await slice.build("Loading", {})
-
-
-
+const loading = await slice.build("Loading", {});

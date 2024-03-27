@@ -36,23 +36,21 @@
   transform: translateY(-200%);
   transition: all 0.5s;
 }
-.input_required {
-  border: 1px solid var(--danger-color);
-  color: var(--danger-color);
-}
-.placeholder_required {
+.required,
+.required label,
+.required input {
+  border-color: var(--danger-color);
   color: var(--danger-color);
 }
 
-.disabled {
+.disabled,
+.disabled label {
   border-color: var(--disabled-color);
   cursor: not-allowed;
+  pointer-events: none;
+  color: var(--disabled-color);
   div {
     background-color: var(--primary-color-shade);
-  }
-  label {
-    pointer-events: none;
-    color: var(--disabled-color);
   }
 }
 .color_input {
@@ -64,10 +62,7 @@
   color: var(--danger-color);
   font-size: small;
 }
-.non-clickable {
-  pointer-events: none;
-  cursor: not-allowed;
-}
+
 @keyframes shake {
   0% {
     transform: translateX(0);

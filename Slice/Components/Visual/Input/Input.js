@@ -2,9 +2,9 @@ export default class Input extends HTMLElement {
   constructor(props) {
     super();
     slice.attachTemplate(this);
-    this.$placeholder = this.querySelector(".slice_input_placeholder");
     this.$inputContainer = this.querySelector(".slice_input");
     this.$input = this.querySelector(".input_area");
+    this.$placeholder = this.querySelector(".slice_input_placeholder");
 
     slice.controller.setComponentProps(this, props);
     this.debuggerProps = [
@@ -184,14 +184,12 @@ export default class Input extends HTMLElement {
   }
 
   triggerSuccess() {
-    this.$placeholder.classList.remove("placeholder_required");
-    this.$inputContainer.classList.remove("input_required");
+    this.$inputContainer.classList.remove("required");
   }
 
   triggerError() {
     this.$inputContainer.classList.add("error");
-    this.$inputContainer.classList.add("input_required");
-    this.$placeholder.classList.add("placeholder_required");
+    this.$inputContainer.classList.add("required");
     setTimeout(() => {
       this.$inputContainer.classList.remove("error");
     }, 500);
