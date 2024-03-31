@@ -92,6 +92,7 @@ const button = await slice.build("Button", {
   sliceId: "gio",
   onClickCallback: () => {
     password.triggerError();
+    password.triggerError();
     select.value = [
       { value: "Hola", id: 0 },
       { value: "Hello", id: 1 },
@@ -203,8 +204,8 @@ const icon = await slice.build("Icon", {
 });
 
 const icon2 = await slice.build("Icon", {
-  name: "anchor",
-  size: "50px",
+  name: "play",
+  size: "500px",
   color: "blue",
 });
 
@@ -217,5 +218,8 @@ const icon3 = await slice.build("Icon", {
 document.body.appendChild(icon);
 document.body.appendChild(icon2);
 document.body.appendChild(icon3);
+
+const loading = await slice.build("Loading", {});
+
 
 const loading = await slice.build("Loading", {});

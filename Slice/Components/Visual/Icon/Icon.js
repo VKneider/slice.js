@@ -4,8 +4,36 @@ export default class Icon extends HTMLElement {
 
     slice.attachTemplate(this);
     this.$icon = this.querySelector("i");
+
+    if (!this.iconStyle) {
+      this._iconStyle = "filled";
+    }
+
     slice.controller.setComponentProps(this, props);
-    this.debuggerProps = ["name", "size", "color"];
+    this.debuggerProps = ["name", "size", "color", "iconStyle"];
+  }
+
+  get random() {
+    return this.$icon.classList;
+  }
+
+  set random(value) {
+  }
+
+  init() {
+
+    if (!this._name) {
+      this.name = "youtube";
+    }
+
+    if (!this._size) {
+      this.size = "small";
+    }
+
+    if (!this._color) {
+      this.color = "black";
+    }
+
 
   }
 
@@ -15,9 +43,19 @@ export default class Icon extends HTMLElement {
 
   set name(value) {
     this._name = value;
-    //remove all classes
     this.$icon.className = "";
-    this.$icon.classList.add(`slc-${value}`);
+    this.$icon.classList.add(`slc-${styleTypes[this._iconStyle]}${value}`);
+  }
+
+  get iconStyle() {
+    return this._iconStyle;
+  }
+
+
+  set iconStyle(value) {
+    if (value !== "filled" && value !== "outlined") value = "filled";
+    this._iconStyle = value;
+    this.name = this._name;
   }
 
   get size() {
@@ -51,20 +89,7 @@ export default class Icon extends HTMLElement {
     this.$icon.style.color = value;
   }
 
-  init() {
-    if (!this._name) {
-      this.name = "anchor";
-    }
-
-    if (!this._size) {
-      this.size = "16px";
-    }
-
-    if (!this._color) {
-      this.color = "black";
-    }
-
-  }
 }
 
+const styleTypes = { outlined: "out", filled: "fil" };
 customElements.define("slice-icon", Icon);
