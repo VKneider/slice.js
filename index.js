@@ -53,7 +53,7 @@ const confirmPassword = await slice.build("Input", {
   placeholder: "Confirm Password",
   type: "password",
   required: true,
-  secret: true,
+  secret: false,
   disabled: true,
   conditions: {
     // regex: "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[\\W_]).{8,}$",
@@ -224,34 +224,30 @@ document.body.appendChild(icon3);
 const loading = await slice.build("Loading", {});
 
 const fetchManager = await slice.build("FetchManager", {
-  baseUrl: "https://jsonplaceholder.typicode.com"
+  baseUrl: "https://jsonplaceholder.typicode.com",
 });
 
 // Definimos una función para manejar el éxito de la solicitud
 const handleSuccess = (data, response) => {
   console.log("Solicitud exitosa:", response);
-
 };
 
 // Definimos una función para manejar el error de la solicitud
 const handleError = (data, response) => {
   console.error("Error en la solicitud:", response);
   console.error("Datos enviados:", data);
-  hola()
+  hola();
 };
 
 // Realizamos una solicitud GET
-fetchManager.request(
-  "GET",
-  null,
-  "/posts",
-  handleSuccess,
-  handleError
-).then((responseData) => {
-  console.log("Respuesta recibida:", responseData);
-}).catch((error) => {
-  console.error("Error:", error);
-});
+fetchManager
+  .request("GET", null, "/posts", handleSuccess, handleError)
+  .then((responseData) => {
+    console.log("Respuesta recibida:", responseData);
+  })
+  .catch((error) => {
+    console.error("Error:", error);
+  });
 
 const card = await slice.build("Card", {
   title: "Hola",
@@ -262,5 +258,5 @@ const card = await slice.build("Card", {
     icon: "blue",
   },
 });
-console.log(card)
+console.log(card);
 document.body.appendChild(card);

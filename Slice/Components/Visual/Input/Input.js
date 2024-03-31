@@ -14,6 +14,7 @@ export default class Input extends HTMLElement {
       "required",
       "conditions",
       "disabled",
+      "secret",
     ];
   }
 
@@ -75,7 +76,11 @@ export default class Input extends HTMLElement {
   set disabled(boolean) {
     this._disabled = boolean;
     this.$input.disabled = boolean;
-    this.$inputContainer.classList.add("disabled");
+    if (boolean) {
+      this.$inputContainer.classList.add("disabled");
+    } else {
+      this.$inputContainer.classList.remove("disabled");
+    }
   }
 
   get secret() {
@@ -84,20 +89,26 @@ export default class Input extends HTMLElement {
 
   set secret(boolean) {
     this._secret = boolean;
-    this.$input.type = "password";
-    const reveal = document.createElement("label");
-    reveal.classList.add("eye");
-    reveal.textContent = "Mostrar";
-    reveal.addEventListener("click", () => {
-      if (this.$input.type === "password") {
-        this.$input.type = "text";
-        reveal.textContent = "Ocultar";
-      } else {
-        this.$input.type = "password";
+    if (boolean) {
+      this.$input.type = "password";
+      if (!this.querySelector(".eye")) {
+        const reveal = document.createElement("label");
+        reveal.classList.add("eye");
         reveal.textContent = "Mostrar";
+        reveal.addEventListener("click", () => {
+          if (this.$input.type === "password") {
+            this.$input.type = "text";
+            reveal.textContent = "Ocultar";
+          } else {
+            this.$input.type = "password";
+            reveal.textContent = "Mostrar";
+          }
+        });
+        this.$inputContainer.appendChild(reveal);
+      } else {
+        this.querySelector(".eye").remove();
       }
-    });
-    this.$inputContainer.appendChild(reveal);
+    }
   }
 
   get conditions() {
