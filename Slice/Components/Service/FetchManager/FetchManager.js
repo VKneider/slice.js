@@ -1,6 +1,5 @@
 export default class FetchManager {
     constructor(props) {
-        console.log(props)
         const { baseUrl, timeout } = props;
         if (baseUrl !== undefined) {
             this.baseUrl = baseUrl;
