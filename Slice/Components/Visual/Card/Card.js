@@ -1,4 +1,4 @@
-export default class Card extends HTMLElement {
+ class Card2 extends HTMLElement {
   constructor(props) {
     super();
     slice.controller.loadTemplate(this);
@@ -22,3 +22,24 @@ export default class Card extends HTMLElement {
 }
 
 customElements.define("card-box", Card);
+
+export default class Card extends HTMLElement {
+  constructor(props) {
+    super();
+    this.$title = this.querySelector(".title")
+    this.$text = this.querySelector(".text")
+    this.$iconContainer = this.querySelector(".icon-container")
+  }
+
+  async init(){
+    this.$icon = await slice.build("Icon", {
+      name:"twitter",
+      size:"100px",
+      color:"lightblue",
+      iconStyle:"filled"
+    })
+  }
+}
+
+customElements.define("card-box", Card);
+

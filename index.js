@@ -223,7 +223,6 @@ document.body.appendChild(icon3);
 
 const loading = await slice.build("Loading", {});
 
-
 const fetchManager = await slice.build("FetchManager", {
   baseUrl: "https://jsonplaceholder.typicode.com"
 });
@@ -231,12 +230,14 @@ const fetchManager = await slice.build("FetchManager", {
 // Definimos una función para manejar el éxito de la solicitud
 const handleSuccess = (data, response) => {
   console.log("Solicitud exitosa:", response);
+
 };
 
 // Definimos una función para manejar el error de la solicitud
 const handleError = (data, response) => {
   console.error("Error en la solicitud:", response);
   console.error("Datos enviados:", data);
+  hola()
 };
 
 // Realizamos una solicitud GET
