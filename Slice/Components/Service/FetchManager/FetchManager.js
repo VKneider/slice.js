@@ -1,7 +1,9 @@
 export default class FetchManager {
-    constructor(baseUrl, timeout) {
+    constructor(props) {
+        console.log(props)
+        const { baseUrl, timeout } = props;
         if (baseUrl !== undefined) {
-            this.url = baseUrl;
+            this.baseUrl = baseUrl;
         }
         this.methods = ["GET", "POST", "PUT", "DELETE"];
         this.lastRequest = null;
@@ -68,7 +70,7 @@ export default class FetchManager {
             }
 
             if (this.baseUrl !== undefined) {
-                response = await fetch(this.url + endpoint, options);
+                response = await fetch(this.baseUrl + endpoint, options);
             } else {
                 response = await fetch(endpoint, options);
             }

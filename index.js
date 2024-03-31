@@ -1,22 +1,24 @@
 let theme = "Light";
 
+async function hola() {
+  if (theme === "Slice") {
+    await slice.stylesManager.setTheme("Light");
+    theme = "Light";
+    changeThemeButton.value = "Cambiar al tema Dark";
+  } else if (theme === "Light") {
+    await slice.stylesManager.setTheme("Dark");
+    theme = "Dark";
+    changeThemeButton.value = "Cambiar al tema Slice";
+  } else if (theme === "Dark") {
+    await slice.stylesManager.setTheme("Slice");
+    theme = "Slice";
+    changeThemeButton.value = "Cambiar al tema Light";
+  }
+}
+
 let changeThemeButton = await slice.build("Button", {
   value: "Cambiar al tema Dark",
-  onClickCallback: async function hola() {
-    if (theme === "Slice") {
-      await slice.stylesManager.setTheme("Light");
-      theme = "Light";
-      changeThemeButton.value = "Cambiar al tema Dark";
-    } else if (theme === "Light") {
-      await slice.stylesManager.setTheme("Dark");
-      theme = "Dark";
-      changeThemeButton.value = "Cambiar al tema Slice";
-    } else if (theme === "Dark") {
-      await slice.stylesManager.setTheme("Slice");
-      theme = "Slice";
-      changeThemeButton.value = "Cambiar al tema Light";
-    }
-  },
+  onClickCallback: hola,
 });
 
 document.body.insertBefore(changeThemeButton, document.body.firstChild);
@@ -222,4 +224,30 @@ document.body.appendChild(icon3);
 const loading = await slice.build("Loading", {});
 
 
-const loading = await slice.build("Loading", {});
+const fetchManager = await slice.build("FetchManager", {
+  baseUrl: "https://jsonplaceholder.typicode.com"
+});
+
+// Definimos una función para manejar el éxito de la solicitud
+const handleSuccess = (data, response) => {
+  console.log("Solicitud exitosa:", response);
+};
+
+// Definimos una función para manejar el error de la solicitud
+const handleError = (data, response) => {
+  console.error("Error en la solicitud:", response);
+  console.error("Datos enviados:", data);
+};
+
+// Realizamos una solicitud GET
+fetchManager.request(
+  "GET",
+  null,
+  "/posts",
+  handleSuccess,
+  handleError
+).then((responseData) => {
+  console.log("Respuesta recibida:", responseData);
+}).catch((error) => {
+  console.error("Error:", error);
+});
