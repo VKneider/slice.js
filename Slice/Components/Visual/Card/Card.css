@@ -1,17 +1,11 @@
-
-.Card{
-  --card-color:blue;
-  --card-background:#EFF3F5;
-}
-
-.title{
+.title {
   font-size: 20px;
   font-weight: bolder;
   color: black;
   text-align: center;
 }
 
-.container__card{
+.container__card {
   max-width: 1200px;
   padding: 20px;
   padding-bottom: 40px;
@@ -22,7 +16,9 @@
   justify-content: center
 }
 
-.card{
+.card {
+  --card-color: blue;
+  --card-background: #EFF3F5;
   width: 300px;
   position: relative;
   margin: 20px;
@@ -32,22 +28,22 @@
   border-radius: 20px;
 }
 
-.card:hover{
+.card:hover {
   box-shadow: 1px 1px 20px -10px #20202049;
 }
 
-.card:hover .info__description{
+.card:hover .info__description {
   margin-top: 0;
   border-radius: 0px 0px 20px 20px;
 
 }
 
-.card:hover .icon{
+.card:hover .icon {
   margin-top: -110px;
   border-radius: 20px 20px 0px 0px;
 }
 
-.icon{
+.icon-container {
   width: 100%;
   height: 220px;
   background: var(--card-background);
@@ -57,16 +53,13 @@
   align-items: center;
   position: relative;
   z-index: 1;
-  transition: all 400ms cubic-bezier(0.5,0,0,1);
+  transition: all 400ms cubic-bezier(0.5, 0, 0, 1);
   border-radius: 20px;
 }
 
-.icon i{
-  font-size: 150px;
-  transition: all 400ms cubic-bezier(0.5,0,0,1);
-}
 
-.info__description{
+
+.info__description {
   width: 100%;
   height: 180px;
   color: #474747;
@@ -74,11 +67,15 @@
   padding: 20px;
   margin-top: -180px;
   font-size: 15px;
-  transition: all 400ms cubic-bezier(0.5,0,0,1);
+  transition: all 400ms cubic-bezier(0.5, 0, 0, 1);
   border-radius: 20px;
 }
 
-.info__description p{
+.icon {
+  transition: all 400ms cubic-bezier(0.5, 0, 0, 1);
+}
+
+.info__description p {
   font-size: 20px;
   margin-top: 10px;
   display: -webkit-box;
@@ -92,7 +89,7 @@
   overflow: hidden;
 }
 
-.info__description input{
+.info__description input {
   margin-top: 20px;
   padding: 10px 40px;
   background: #2196f3;
@@ -106,7 +103,7 @@
   transition: box-shadow 300ms;
 }
 
-.info__description input:hover{
+.info__description input:hover {
   box-shadow: 1px 1px 30px -5px #20202070;
 }
 
@@ -114,15 +111,13 @@
 /*COLOR DE LAS CARD*/
 
 
-.c:hover .icon i{
+.c:hover .icon-container slice-icon i {
   color: var(--card-background);
+  transition: all 400ms cubic-bezier(0.5, 0, 0, 1);
+
 }
 
-.c:hover .icon{
+
+.c:hover .icon-container {
   background: var(--card-color)
-
-}
-
-.c .icon i{
-  color: var(--card-color);
 }

@@ -252,3 +252,15 @@ fetchManager.request(
 }).catch((error) => {
   console.error("Error:", error);
 });
+
+const card = await slice.build("Card", {
+  title: "Hola",
+  text: "Saludo",
+  icon: "twitter",
+  customColor: {
+    card: "red",
+    icon: "blue",
+  },
+});
+console.log(card)
+document.body.appendChild(card);
