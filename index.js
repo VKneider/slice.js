@@ -179,7 +179,7 @@ form.appendChild(select2);
 form.appendChild(button);
 
 const button2 = await slice.build("Button", {
-  value: "Color",
+  value: "Cambiar Idioma",
   customColor: "red",
   onClickCallback: () => {
     if (slice.translator.currentLanguage === "es") {
@@ -188,6 +188,7 @@ const button2 = await slice.build("Button", {
       slice.translator.changeLanguage("es");
     }
   },
+  sliceId:"buttonLanguage"
 });
 
 form.appendChild(button2);

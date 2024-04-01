@@ -3,9 +3,6 @@
         "myInput": {
             "placeholder": "Type here"
         },
-        "gio": {
-            "value": "INGLES"
-        },
         "cardYoutube": {
             "title": "Youtube in English",
             "text": "Youtube is a video sharing platform. You can watch videos, upload your own videos and comment on videos."
@@ -21,14 +18,14 @@
         "cardTwitter": {
             "title": "Twitter in English",
             "text": "Twitter is a social network. You can share tweets, follow other people and stay informed."
+        },
+        "buttonLanguage": {
+            "value": "Change language"
         }
     },
     "es": {
         "myInput": {
             "placeholder": "Escribe aquí"
-        },
-        "gio": {
-            "value": "ESPAÑOL"
         },
         "cardYoutube": {
             "title": "Youtube en Español",
@@ -45,6 +42,9 @@
         "cardTwitter": {
             "title": "Twitter en Español",
             "text": "Twitter es una red social. Puedes compartir tweets, seguir a otras personas y mantenerte informado."
+        },
+        "buttonLanguage": {
+            "value": "Cambiar idioma"
         }
     }
 }
