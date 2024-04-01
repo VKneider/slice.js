@@ -12,6 +12,15 @@ export default class Card extends HTMLElement {
       this.isOpen = !this.isOpen;
     });
 
+    this.$card.addEventListener("mouseover", () => {
+      this.$cover.style.backgroundColor = this.$color.icon;
+      this.$icon.color = this.$color.card;
+    });
+    this.$card.addEventListener("mouseout", () => {
+      this.$cover.style.backgroundColor = this.$color.card;
+      this.$icon.color = this.$color.icon;
+    });
+
     this.debuggerProps = ["title", "text", "icon", "customColor", "isOpen"];
   }
 
@@ -19,10 +28,18 @@ export default class Card extends HTMLElement {
     if (this.isOpen === undefined) {
       this.isOpen = false;
     }
+
+    if (!this.customColor) {
+      this.$color = {
+        icon: "var(--primary-color-contrast)",
+        card: "var(--primary-color)",
+      };
+    }
+
     this.$icon = await slice.build("Icon", {
       name: this.icon,
       size: "150px",
-      color: this.color.icon,
+      color: this.$color.icon,
       iconStyle: "filled",
     });
     this.$cover.appendChild(this.$icon);
@@ -56,20 +73,6 @@ export default class Card extends HTMLElement {
     this.$icon.name = value;
   }
 
-  get color() {
-    return this._color;
-  }
-
-  set color(value) {
-    this._color = value;
-    if (!value.icon) {
-      this.color.icon = "var(--primary-color-contrast)";
-    }
-    if (value.card) {
-      this.$cover.style.backgroundColor = value.card;
-    }
-  }
-
   get isOpen() {
     return this._isOpen;
   }
@@ -89,7 +92,10 @@ export default class Card extends HTMLElement {
 
   set customColor(value) {
     this._customColor = value;
-    this.color = value;
+    this.$color = value;
+    if (value.card) {
+      this.$cover.style.backgroundColor = value.card;
+    }
   }
 }
 

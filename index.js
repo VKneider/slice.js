@@ -256,8 +256,8 @@ const card = await slice.build("Card", {
   text: "Esta es la descripcion del componente",
   icon: "youtube",
   customColor: {
-    card: "white",
-    icon: "red",
+    card: "red",
+    icon: "white",
   },
 });
 console.log(card);
