@@ -90,9 +90,6 @@ export default class Debugger extends HTMLElement {
   handleDebugClick(event, component) {
     event.preventDefault();
 
-    console.log(window.screen.width);
-    console.log(this.debuggerContainer.getBoundingClientRect().left);
-
     if (event.clientX > window.screen.width / 2) {
       this.debuggerContainer.style.left = `calc(${event.clientX}px - 25%)`;
     } else {
