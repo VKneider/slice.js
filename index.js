@@ -233,6 +233,30 @@ const cardYoutube = await slice.build("Card", {
     card: "red",
     icon: "white",
   },
+});
+console.log(card);
+document.body.appendChild(card);
+
+const navBar = await slice.build("NavBar", {
+  items: [
+    {
+      text: "Home",
+      href: "",
+    },
+    {
+      text: "About Us",
+      href: "",
+    },
+    {
+      text: "Contact Us",
+      href: "",
+    },
+    select,
+  ],
+});
+
+document.body.insertBefore(navBar, document.body.firstChild);
+
   sliceId: "cardYoutube",
 });
 
