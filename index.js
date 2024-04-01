@@ -40,8 +40,7 @@ const name1 = await slice.build("Input", {
   id: "nombre",
   placeholder: "Name",
   required: true,
-  sliceId: "myInput"
-
+  sliceId: "myInput",
 });
 
 const lastname = await slice.build("Input", {
@@ -188,7 +187,7 @@ const button2 = await slice.build("Button", {
       slice.translator.changeLanguage("es");
     }
   },
-  sliceId:"buttonLanguage"
+  sliceId: "buttonLanguage",
 });
 
 form.appendChild(button2);
@@ -221,22 +220,6 @@ fetchManager
     console.error("Error:", error);
   });
 */
-
-const cardYoutube = await slice.build("Card", {
-  title: "Youtube",
-  text: "Plataforma para ver videos",
-  icon: {
-    name: "youtube",
-    iconStyle: "filled",
-  },
-  customColor: {
-    card: "red",
-    icon: "white",
-  },
-});
-console.log(card);
-document.body.appendChild(card);
-
 const navBar = await slice.build("NavBar", {
   items: [
     {
@@ -257,6 +240,17 @@ const navBar = await slice.build("NavBar", {
 
 document.body.insertBefore(navBar, document.body.firstChild);
 
+const cardYoutube = await slice.build("Card", {
+  title: "Youtube",
+  text: "Plataforma para ver videos",
+  icon: {
+    name: "youtube",
+    iconStyle: "filled",
+  },
+  customColor: {
+    card: "red",
+    icon: "white",
+  },
   sliceId: "cardYoutube",
 });
 
@@ -287,7 +281,6 @@ const cardFacebook = await slice.build("Card", {
   },
   sliceId: "cardFacebook",
 });
-
 
 const cardLinkedin = await slice.build("Card", {
   title: "Linkedin",
@@ -386,9 +379,7 @@ gridDiv.style.display = "grid";
 gridDiv.style.gridTemplateColumns = "repeat(5, 1fr)";
 gridDiv.style.gap = "1rem";
 gridDiv.style.padding = "1rem";
-gridDiv.style.height = "600px"
-
-
+gridDiv.style.height = "600px";
 
 gridDiv.appendChild(cardYoutube);
 gridDiv.appendChild(cardTwitter);
@@ -400,6 +391,5 @@ gridDiv.appendChild(cardApple);
 gridDiv.appendChild(cardStackoverflow);
 gridDiv.appendChild(cardDiscord);
 gridDiv.appendChild(cardHTML);
-
 
 document.body.appendChild(gridDiv);
