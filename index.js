@@ -227,3 +227,23 @@ const card = await slice.build("Card", {
 });
 console.log(card);
 document.body.appendChild(card);
+
+const navBar = await slice.build("NavBar", {
+  items: [
+    {
+      text: "Home",
+      href: "",
+    },
+    {
+      text: "About Us",
+      href: "",
+    },
+    {
+      text: "Contact Us",
+      href: "",
+    },
+    select,
+  ],
+});
+
+document.body.insertBefore(navBar, document.body.firstChild);

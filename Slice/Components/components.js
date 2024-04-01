@@ -18,5 +18,6 @@ const components = {
   Icon: "Visual",
   Loading: "Visual",
   Card: "Visual",
+  NavBar: "Visual",
 };
 export default components;
