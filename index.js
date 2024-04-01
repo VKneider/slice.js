@@ -40,17 +40,21 @@ const name1 = await slice.build("Input", {
   id: "nombre",
   placeholder: "Name",
   required: true,
-  sliceId: "myInput",
+  sliceId: "myInput"
+
 });
+
 const lastname = await slice.build("Input", {
   placeholder: "Last Name",
 });
+
 const password = await slice.build("Input", {
   placeholder: "Password",
   type: "password",
   required: true,
   secret: true,
 });
+
 const confirmPassword = await slice.build("Input", {
   placeholder: "Confirm Password",
   type: "password",
@@ -189,7 +193,7 @@ const button2 = await slice.build("Button", {
 form.appendChild(button2);
 
 const loading = await slice.build("Loading", {});
-
+/*
 const fetchManager = await slice.build("FetchManager", {
   baseUrl: "https://jsonplaceholder.typicode.com",
 });
@@ -215,15 +219,162 @@ fetchManager
   .catch((error) => {
     console.error("Error:", error);
   });
+*/
 
-const card = await slice.build("Card", {
-  title: "Este es el Titulo",
-  text: "Esta es la descripcion del componente",
-  icon: "youtube",
+const cardYoutube = await slice.build("Card", {
+  title: "Youtube",
+  text: "Plataforma para ver videos",
+  icon: {
+    name: "youtube",
+    iconStyle: "filled",
+  },
   customColor: {
     card: "red",
     icon: "white",
   },
+  sliceId: "cardYoutube",
 });
-console.log(card);
-document.body.appendChild(card);
+
+const cardTwitter = await slice.build("Card", {
+  title: "Twitter",
+  text: "Plataforma donde nada te nutre",
+  icon: {
+    name: "twitter",
+    iconStyle: "filled",
+  },
+  customColor: {
+    card: "#1DA1F2",
+    icon: "white",
+  },
+  sliceId: "cardTwitter",
+});
+
+const cardFacebook = await slice.build("Card", {
+  title: "Facebook",
+  text: "Plataforma para responder en marketplace y vender 1 vez a la cuaresma",
+  icon: {
+    name: "facebook",
+    iconStyle: "filled",
+  },
+  customColor: {
+    card: "#1877F2",
+    icon: "white",
+  },
+  sliceId: "cardFacebook",
+});
+
+
+const cardLinkedin = await slice.build("Card", {
+  title: "Linkedin",
+  text: "Plataforma para buscar trabajo",
+  icon: {
+    name: "linkedin",
+    iconStyle: "filled",
+  },
+  customColor: {
+    card: "#0A66C2",
+    icon: "white",
+  },
+});
+
+const cardGoogle = await slice.build("Card", {
+  title: "Google",
+  text: "Plataforma para buscar cosas",
+  icon: {
+    name: "google",
+    iconStyle: "filled",
+  },
+  customColor: {
+    card: "white",
+    icon: "black",
+  },
+  sliceId: "cardGoogle",
+});
+
+const cardApple = await slice.build("Card", {
+  title: "Apple",
+  text: "Plataforma para comprar cosas caras",
+  icon: {
+    name: "apple",
+    iconStyle: "filled",
+  },
+  customColor: {
+    card: "black",
+    icon: "white",
+  },
+});
+
+const cardStackoverflow = await slice.build("Card", {
+  title: "Stackoverflow",
+  text: "Plataforma para preguntar cosas",
+  icon: {
+    name: "stackoverflow",
+    iconStyle: "filled",
+  },
+  customColor: {
+    card: "#F48024",
+    icon: "white",
+  },
+});
+
+const cardGithub = await slice.build("Card", {
+  title: "Github",
+  text: "Plataforma para compartir código",
+  icon: {
+    name: "github",
+    iconStyle: "filled",
+  },
+  customColor: {
+    card: "black",
+    icon: "white",
+  },
+});
+
+const cardDiscord = await slice.build("Card", {
+  title: "Discord",
+  text: "Plataforma para hablar con amigos y fumar porro y la tarea de Eli",
+  icon: {
+    name: "discord",
+    iconStyle: "filled",
+  },
+  customColor: {
+    card: "#5865F2",
+    icon: "white",
+  },
+});
+
+const cardHTML = await slice.build("Card", {
+  title: "HTML",
+  text: "Lenguaje de marcado",
+  icon: {
+    name: "html",
+    iconStyle: "filled",
+  },
+  customColor: {
+    card: "orange",
+    icon: "white",
+  },
+});
+
+const gridDiv = document.createElement("div");
+gridDiv.style.display = "grid";
+gridDiv.style.gridTemplateColumns = "repeat(5, 1fr)";
+gridDiv.style.gap = "1rem";
+gridDiv.style.padding = "1rem";
+gridDiv.style.height = "600px"
+
+
+
+gridDiv.appendChild(cardYoutube);
+gridDiv.appendChild(cardTwitter);
+gridDiv.appendChild(cardFacebook);
+gridDiv.appendChild(cardLinkedin);
+gridDiv.appendChild(cardGithub);
+gridDiv.appendChild(cardGoogle);
+gridDiv.appendChild(cardApple);
+gridDiv.appendChild(cardStackoverflow);
+gridDiv.appendChild(cardDiscord);
+gridDiv.appendChild(cardHTML);
+
+
+document.body.appendChild(gridDiv);

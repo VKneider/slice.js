@@ -36,11 +36,16 @@ export default class Card extends HTMLElement {
       };
     }
 
+    if (!this._icon) {
+      this.icon.name = "youtube";
+      this.icon.iconStyle = "filled";
+    }
+
     this.$icon = await slice.build("Icon", {
-      name: this.icon,
+      name: this.icon.name,
       size: "150px",
       color: this.$color.icon,
-      iconStyle: "filled",
+      iconStyle: this._icon.iconStyle,
     });
     this.$cover.appendChild(this.$icon);
   }
@@ -70,7 +75,10 @@ export default class Card extends HTMLElement {
   set icon(value) {
     this._icon = value;
     if (!this.$icon) return;
-    this.$icon.name = value;
+    this.$icon.name = value.name;
+    this.$icon.iconStyle = value.iconStyle;
+
+
   }
 
   get isOpen() {
