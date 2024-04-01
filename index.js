@@ -124,19 +124,6 @@ const checkbox2 = await slice.build("Checkbox", {
   position: "left",
 });
 
-async function testSliceSwitch() {
-  // console.log(sliceSwitch.checked);
-  if (theme === "Dark") {
-    await slice.stylesManager.setTheme("Light");
-    theme = "Light";
-    boton.innerHTML = "Cambiar al tema Dark";
-  } else if (theme === "Light") {
-    await slice.stylesManager.setTheme("Dark");
-    theme = "Dark";
-    boton.innerHTML = "Cambiar al tema Slice";
-  }
-}
-
 const sliceSwitch = await slice.build("Switch", {
   label: slice.translator.currentLanguage,
   customColor: "black",
@@ -200,28 +187,6 @@ const button2 = await slice.build("Button", {
 });
 
 form.appendChild(button2);
-
-const icon = await slice.build("Icon", {
-  name: "twitter",
-  size: "200px",
-  color: "yellow",
-});
-
-const icon2 = await slice.build("Icon", {
-  name: "play",
-  size: "500px",
-  color: "blue",
-});
-
-const icon3 = await slice.build("Icon", {
-  name: "github",
-  size: "100px",
-  color: "green",
-});
-
-document.body.appendChild(icon);
-document.body.appendChild(icon2);
-document.body.appendChild(icon3);
 
 const loading = await slice.build("Loading", {});
 
