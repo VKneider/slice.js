@@ -1,5 +1,6 @@
 :root {
   --font-primary-color: #000;
+  --font-secondary-color: #474747;
   /** primary **/
   --primary-color: #0066ff;
   --primary-color-rgb: rgb(0, 102, 255);

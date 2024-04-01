@@ -4,7 +4,7 @@
     "click": "right"
   },
   "stylesManager": {
-    "defaultTheme": "Light"
+    "defaultTheme": "Dark"
   },
   "logger": {
     "enabled": true,

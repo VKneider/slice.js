@@ -2,31 +2,30 @@ export default class Card extends HTMLElement {
   constructor(props) {
     super();
     slice.attachTemplate(this);
-
-    this.$title = this.querySelector(".title")
-    this.$text = this.querySelector(".text")
-    this.$iconContainer = this.querySelector(".icon-container")
+    this.$card = this.querySelector(".slice-card");
+    this.$title = this.querySelector(".title");
+    this.$text = this.querySelector(".text");
+    this.$cover = this.querySelector(".card_cover");
     slice.controller.setComponentProps(this, props);
 
-    this.debuggerProps = ["title", "text", "icon", "customColor"];
+    this.$card.addEventListener("click", () => {
+      this.isOpen = !this.isOpen;
+    });
+
+    this.debuggerProps = ["title", "text", "icon", "customColor", "isOpen"];
   }
 
   async init() {
-    this.$icon = await slice.build("Icon", {
-      name: "twitter",
-      size: "150px",
-      color: "var(--card-color)",
-      iconStyle: "filled"
-    })
-
-
-
-    this.$icon.classList.add("icon")
-    this.$iconContainer.appendChild(this.$icon)
-
-    if (this._customColor) {
-      this.customColor = this._customColor
+    if (this.isOpen === undefined) {
+      this.isOpen = false;
     }
+    this.$icon = await slice.build("Icon", {
+      name: this.icon,
+      size: "150px",
+      color: this.color.icon,
+      iconStyle: "filled",
+    });
+    this.$cover.appendChild(this.$icon);
   }
 
   get title() {
@@ -57,19 +56,41 @@ export default class Card extends HTMLElement {
     this.$icon.name = value;
   }
 
+  get color() {
+    return this._color;
+  }
+
+  set color(value) {
+    this._color = value;
+    if (!value.icon) {
+      this.color.icon = "var(--primary-color-contrast)";
+    }
+    if (value.card) {
+      this.$cover.style.backgroundColor = value.card;
+    }
+  }
+
+  get isOpen() {
+    return this._isOpen;
+  }
+
+  set isOpen(boolean) {
+    this._isOpen = boolean;
+    if (boolean) {
+      this.$cover.style.zIndex = 0;
+    } else {
+      this.$cover.style.zIndex = 1;
+    }
+  }
+
   get customColor() {
     return this._customColor;
   }
 
   set customColor(value) {
     this._customColor = value;
-    this.querySelector(".card").style["--card-color"] = value;
-    if (!this.$icon) return;
-    this.$icon.color = value.iconColor;
+    this.color = value;
   }
-
-
 }
 
 customElements.define("slice-card", Card);
-

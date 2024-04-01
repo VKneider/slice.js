@@ -1,4 +1,6 @@
-let theme = "Light";
+import sliceConfig from "./Slice/sliceConfig.json" assert { type: "json" };
+
+let theme = sliceConfig.stylesManager.defaultTheme;
 
 async function hola() {
   if (theme === "Slice") {
@@ -17,7 +19,7 @@ async function hola() {
 }
 
 let changeThemeButton = await slice.build("Button", {
-  value: "Cambiar al tema Dark",
+  value: "Cambiar Tema",
   onClickCallback: hola,
 });
 
@@ -250,12 +252,12 @@ fetchManager
   });
 
 const card = await slice.build("Card", {
-  title: "Hola",
-  text: "Saludo",
-  icon: "twitter",
+  title: "Este es el Titulo",
+  text: "Esta es la descripcion del componente",
+  icon: "youtube",
   customColor: {
-    card: "red",
-    icon: "blue",
+    card: "white",
+    icon: "red",
   },
 });
 console.log(card);
