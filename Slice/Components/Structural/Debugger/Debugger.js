@@ -90,8 +90,20 @@ export default class Debugger extends HTMLElement {
   handleDebugClick(event, component) {
     event.preventDefault();
 
-    this.debuggerContainer.style.left = `${event.clientX}px`;
-    this.debuggerContainer.style.top = `${event.clientY}px`;
+    console.log(window.screen.width);
+    console.log(this.debuggerContainer.getBoundingClientRect().left);
+
+    if (event.clientX > window.screen.width / 2) {
+      this.debuggerContainer.style.left = `calc(${event.clientX}px - 25%)`;
+    } else {
+      this.debuggerContainer.style.left = `${event.clientX}px`;
+    }
+
+    if (event.clientY > window.screen.height / 2) {
+      this.debuggerContainer.style.top = `calc(${event.clientY}px - 75%)`;
+    } else {
+      this.debuggerContainer.style.top = `${event.clientY}px`;
+    }
 
     const sliceId = component.sliceId;
     this.isActive = true;
