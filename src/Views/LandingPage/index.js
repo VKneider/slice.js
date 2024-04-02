@@ -1,6 +1,4 @@
-import sliceConfig from "./Slice/sliceConfig.json" assert { type: "json" };
-
-let theme = sliceConfig.stylesManager.defaultTheme;
+let theme = "Light";
 
 async function hola() {
   if (theme === "Slice") {
@@ -220,7 +218,7 @@ fetchManager
     console.error("Error:", error);
   });
 */
-const navBar = await slice.build("NavBar", {
+const navBar = await slice.build("Navbar", {
   items: [
     {
       text: "Home",
@@ -238,7 +236,7 @@ const navBar = await slice.build("NavBar", {
   ],
 });
 
-document.body.insertBefore(navBar, document.body.firstChild);
+//document.body.insertBefore(navBar, document.body.firstChild);
 
 const cardYoutube = await slice.build("Card", {
   title: "Youtube",

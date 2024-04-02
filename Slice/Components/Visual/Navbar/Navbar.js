@@ -1,4 +1,4 @@
-export default class NavBar extends HTMLElement {
+export default class Navbar extends HTMLElement {
   constructor(props) {
     super();
     slice.attachTemplate(this);
@@ -36,4 +36,4 @@ export default class NavBar extends HTMLElement {
     });
   }
 }
-window.customElements.define("slice-nav-bar", NavBar);
+window.customElements.define("slice-nav-bar", Navbar);
