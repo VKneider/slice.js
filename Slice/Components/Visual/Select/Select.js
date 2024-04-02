@@ -92,7 +92,7 @@ export default class Select extends HTMLElement {
     values.forEach((option) => {
       const opt = document.createElement("div");
       opt.textContent = option[this.visibleProp];
-      opt.addEventListener("click", () => {
+      opt.addEventListener("click", async () => {
         if (this.$menu.querySelector(".active") && !this.multiple) {
           this.$menu.querySelector(".active").classList.remove("active");
         }
@@ -100,7 +100,7 @@ export default class Select extends HTMLElement {
         if (this._value.length === 1 && !this.multiple) {
           this.removeOptionFromValue(this._value[0]);
           this.addSelectedOption(option);
-          if (this.onOptionSelect) this.onOptionSelect();
+          if (this.onOptionSelect) await this.onOptionSelect();
           return;
         }
 
@@ -111,7 +111,7 @@ export default class Select extends HTMLElement {
           this.addSelectedOption(option);
           opt.classList.add("active");
         }
-        if (this.onOptionSelect) this.onOptionSelect();
+        if (this.onOptionSelect) await this.onOptionSelect();
       });
       this.$menu.appendChild(opt);
     });
