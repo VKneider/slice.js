@@ -3,6 +3,7 @@ export default class DropDown extends HTMLElement {
     super();
     slice.attachTemplate(this);
 
+    this.$dropdown = this.querySelector(".slice_dropdown");
     this.$menu = this.querySelector(".slice_dropdown_menu");
     this.$label = this.querySelector(".slice_dropdown_label");
     this.$caret = this.querySelector(".caret");
@@ -10,6 +11,11 @@ export default class DropDown extends HTMLElement {
     this.$caret.addEventListener("click", () => {
       this.$menu.classList.toggle("menu_open");
       this.$caret.classList.toggle("caret_open");
+    });
+
+    this.$menu.addEventListener("mouseleave", () => {
+      this.$menu.classList.remove("menu_open");
+      this.$caret.classList.remove("caret_open");
     });
 
     slice.controller.setComponentProps(this, props);
@@ -35,6 +41,10 @@ export default class DropDown extends HTMLElement {
     this._options = values;
     values.forEach((element) => {
       const e = document.createElement("div");
+      e.addEventListener("click", () => {
+        this.$menu.classList.remove("menu_open");
+        this.$caret.classList.remove("caret_open");
+      });
       e.textContent = element.text;
       this.$menu.appendChild(e);
     });

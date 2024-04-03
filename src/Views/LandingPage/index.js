@@ -229,11 +229,11 @@ const navBar = await slice.build("Navbar", {
       type: "dropdown",
       options: [
         {
-          text: "Es",
+          text: "Español",
           href: "",
         },
         {
-          text: "En",
+          text: "Ingles",
           href: "",
         },
       ],
