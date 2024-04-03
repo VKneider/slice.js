@@ -18,22 +18,23 @@ export default class Navbar extends HTMLElement {
   set items(values) {
     this._items = values;
     values.forEach((value) => {
-      if (
-        value &&
-        typeof value === "object" &&
-        "text" in value &&
-        "href" in value
-      ) {
-        const item = document.createElement("a");
-        item.textContent = value.text;
-        item.href = value.href;
-        item.classList.add("item");
-        this.$items.appendChild(item);
-      } else {
-        // value.classList.add("item");
-        // this.$items.appendChild(value);
+      if (!value.type) {
+        value.type = "text";
       }
+      this.addItem(value);
     });
+  }
+  addItem(value) {
+    if (value.type === "text") {
+      console.log(value.type);
+      const item = document.createElement("a");
+      item.textContent = value.text;
+      item.href = value.href;
+      item.classList.add("item");
+      this.$items.appendChild(item);
+    }
+    if (value.type === "dropdown") {
+    }
   }
 }
 window.customElements.define("slice-nav-bar", Navbar);

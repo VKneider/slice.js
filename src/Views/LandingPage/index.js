@@ -232,7 +232,11 @@ const navBar = await slice.build("Navbar", {
       text: "Contact Us",
       href: "",
     },
-    select,
+    {
+      text: "Language",
+      href: "",
+      type: "dropdown",
+    },
   ],
 });
 
