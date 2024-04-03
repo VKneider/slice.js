@@ -11,6 +11,7 @@ export default class Navbar extends HTMLElement {
     this.$navBar = this.querySelector(".slice_nav_bar");
     this.$menu = this.querySelector(".nav_bar_menu");
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
     this.$navBar = this.querySelector(".slice_nav_bar");
     this.$menu = this.querySelector(".nav_bar_menu");
@@ -50,6 +51,9 @@ export default class Navbar extends HTMLElement {
       this.$mobileMenu.style.transform = "translateX(-100%)";
     });
 >>>>>>> 9a11b47 (functional mobile menu in navbar mobile view)
+=======
+    this.$logoContainer = this.querySelector(".logo_container");
+>>>>>>> bdab084 (NavBar logo can be added, and anim-item on hover. Mobile menu next to be added)
 
     slice.controller.setComponentProps(this, props);
     this.debuggerProps = ["logo", "items"];
@@ -79,6 +83,18 @@ export default class Navbar extends HTMLElement {
   }
 =======
 >>>>>>> 9a11b47 (functional mobile menu in navbar mobile view)
+
+  get logo() {
+    return this._logo;
+  }
+
+  set logo(value) {
+    this._logo = value;
+    const img = document.createElement("img");
+    img.src = value.src;
+    this.$logoContainer.appendChild(img);
+    this.$logoContainer.href = value.href;
+  }
 
   get logo() {
     return this._logo;
