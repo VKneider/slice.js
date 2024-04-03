@@ -16,7 +16,7 @@ body {
   border-left: 5px solid transparent;
   border-right: 5px solid transparent;
   border-top: 6px solid;
-  transition: 0.3s;
+  transition: transform 0.3s;
 }
 .caret_open {
   transform: rotate(180deg);

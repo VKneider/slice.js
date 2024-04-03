@@ -411,4 +411,4 @@ gridDiv.appendChild(cardStackoverflow);
 gridDiv.appendChild(cardDiscord);
 gridDiv.appendChild(cardHTML);
 
-document.body.appendChild(gridDiv);
+// document.body.appendChild(gridDiv);
