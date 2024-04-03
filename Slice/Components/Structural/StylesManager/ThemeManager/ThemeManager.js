@@ -2,8 +2,8 @@ export default class ThemeManager {
   constructor() {
     this.themeStyles = new Map();
     this.currentTheme = null;
-    this.$themeStyle = document.createElement('style');
-    document.head.appendChild(this.$themeStyle);
+    this.themeStyle = document.createElement('style');
+    document.head.appendChild(this.themeStyle);
   }
 
   async applyTheme(themeName) {
@@ -23,12 +23,12 @@ export default class ThemeManager {
 
   removeCurrentTheme() {
     if (this.currentTheme) {
-      this.$themeStyle.textContent = '';
+      this.themeStyle.textContent = '';
     }
   }
 
   setThemeStyle(themeName) {
-    this.$themeStyle.textContent = this.themeStyles.get(themeName);
+    this.themeStyle.textContent = this.themeStyles.get(themeName);
     this.currentTheme = themeName;
   }
 }
