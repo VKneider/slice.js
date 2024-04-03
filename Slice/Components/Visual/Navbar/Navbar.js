@@ -5,6 +5,7 @@ export default class Navbar extends HTMLElement {
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> a5f3d58 (navbar direction reverse added)
     this.$header = this.querySelector(".slice_nav_header");
@@ -12,6 +13,10 @@ export default class Navbar extends HTMLElement {
     this.$menu = this.querySelector(".nav_bar_menu");
 <<<<<<< HEAD
 <<<<<<< HEAD
+=======
+    this.$navBar = this.querySelector(".slice_nav_bar");
+    this.$menu = this.querySelector(".nav_bar_menu");
+>>>>>>> 7396563 (Navbar adds Buttons)
 =======
     this.$navBar = this.querySelector(".slice_nav_bar");
     this.$menu = this.querySelector(".nav_bar_menu");
@@ -135,6 +140,7 @@ export default class Navbar extends HTMLElement {
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> a5f3d58 (navbar direction reverse added)
   get direction() {
@@ -153,6 +159,8 @@ export default class Navbar extends HTMLElement {
 >>>>>>> 7396563 (Navbar adds Buttons)
 =======
 >>>>>>> a5f3d58 (navbar direction reverse added)
+=======
+>>>>>>> 7396563 (Navbar adds Buttons)
   async addItem(value) {
     const item = document.createElement("li");
     const hover = document.createElement("div");
@@ -180,6 +188,7 @@ export default class Navbar extends HTMLElement {
   async addButton(value) {
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> 38695ad (button change color fixed)
     if (!value.color) {
@@ -194,10 +203,13 @@ export default class Navbar extends HTMLElement {
       customColor: value.color,
       onClickCallback: value.onClickCallback,
 =======
+=======
+>>>>>>> 7396563 (Navbar adds Buttons)
     const button = await slice.build("Button", {
       value: value.value,
       customColor: "black",
       onClickCallback: () => value.onClickCallback,
+<<<<<<< HEAD
 >>>>>>> 7396563 (Navbar adds Buttons)
 =======
     const button = await slice.build("Button", {
@@ -205,6 +217,8 @@ export default class Navbar extends HTMLElement {
       customColor: value.color,
       onClickCallback: value.onClickCallback,
 >>>>>>> 38695ad (button change color fixed)
+=======
+>>>>>>> 7396563 (Navbar adds Buttons)
     });
     this.$buttonsContainer.appendChild(button);
   }
