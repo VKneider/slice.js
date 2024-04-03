@@ -102,10 +102,13 @@
 =======
 .nav_bar_buttons {
   display: flex;
+<<<<<<< HEAD
   slice-button {
     /* width: 150px; */
   }
 >>>>>>> 7396563 (Navbar adds Buttons)
+=======
+>>>>>>> 37efcce (small change)
 }
 .slice_mobile_menu {
 <<<<<<< HEAD
