@@ -234,7 +234,11 @@ const navBar = await slice.build("NavBar", {
       text: "Contact Us",
       href: "",
     },
-    select,
+    {
+      text: "Language",
+      href: "",
+      type: "dropdown",
+    },
   ],
 });
 
