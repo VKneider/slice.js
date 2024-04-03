@@ -16,7 +16,7 @@
   border: var(--slice-border) solid var(--primary-color);
   font-weight: 800;
   min-width: 100%;
-  padding: 10px 0;
+  padding: 10px;
   -webkit-transition-duration: 0.4s; /* Safari */
   transition-duration: 0.4s;
 }

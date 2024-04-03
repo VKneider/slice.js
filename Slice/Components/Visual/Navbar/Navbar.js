@@ -2,8 +2,10 @@ export default class Navbar extends HTMLElement {
   constructor(props) {
     super();
     slice.attachTemplate(this);
+
     this.$navBar = this.querySelector(".slice_nav_bar");
     this.$menu = this.querySelector(".nav_bar_menu");
+    this.$buttonsContainer = this.querySelector(".nav_bar_buttons");
     this.$logoContainer = this.querySelector(".logo_container");
 
     slice.controller.setComponentProps(this, props);
@@ -37,6 +39,18 @@ export default class Navbar extends HTMLElement {
       this.addItem(value);
     });
   }
+
+  get buttons() {
+    return this._buttons;
+  }
+
+  set buttons(values) {
+    this._buttons = values;
+    values.forEach((value) => {
+      this.addButton(value);
+    });
+  }
+
   async addItem(value) {
     const item = document.createElement("li");
     const hover = document.createElement("div");
@@ -59,6 +73,15 @@ export default class Navbar extends HTMLElement {
     }
     item.appendChild(hover);
     this.$menu.appendChild(item);
+  }
+
+  async addButton(value) {
+    const button = await slice.build("Button", {
+      value: value.value,
+      customColor: "black",
+      onClickCallback: () => value.onClickCallback,
+    });
+    this.$buttonsContainer.appendChild(button);
   }
 }
 window.customElements.define("slice-nav-bar", Navbar);

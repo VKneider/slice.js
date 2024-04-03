@@ -247,6 +247,16 @@ const navBar = await slice.build("Navbar", {
       href: "",
     },
   ],
+  buttons: [
+    {
+      value: "Sing in",
+      onClickCallback: () => console.log("Navbar button"),
+    },
+    {
+      value: "Log in",
+      onClickCallback: () => console.log("Navbar button"),
+    },
+  ],
 });
 
 document.body.insertBefore(navBar, document.body.firstChild);

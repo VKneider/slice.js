@@ -48,7 +48,6 @@
   width: 100%;
   left: 0;
 }
-
 .slice_nav_header .logo_container {
   padding: 10px;
 }
@@ -58,6 +57,12 @@
   max-height: 50px;
   max-width: 200px;
 }
+.nav_bar_buttons {
+  display: flex;
+  slice-button {
+    /* width: 150px; */
+  }
+}
 .slice_mobile_menu {
   visibility: hidden;
   position: absolute;
@@ -65,7 +70,8 @@
   margin-right: 25px;
 }
 @media only screen and (max-width: 770px) {
-  .slice_nav_bar {
+  .slice_nav_bar,
+  .nav_bar_buttons {
     visibility: hidden;
   }
   .slice_mobile_menu {
