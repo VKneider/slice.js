@@ -3,7 +3,7 @@ export default class Navbar extends HTMLElement {
     super();
     slice.attachTemplate(this);
     this.$navBar = this.querySelector(".slice_nav_bar");
-    this.$items = this.querySelector(".nav_bar_items");
+    this.$menu = this.querySelector(".nav_bar_menu");
 
     slice.controller.setComponentProps(this, props);
     this.debuggerProps = ["items"];
@@ -24,17 +24,25 @@ export default class Navbar extends HTMLElement {
       this.addItem(value);
     });
   }
-  addItem(value) {
+  async addItem(value) {
+    const item = document.createElement("li");
     if (value.type === "text") {
-      console.log(value.type);
-      const item = document.createElement("a");
-      item.textContent = value.text;
-      item.href = value.href;
-      item.classList.add("item");
-      this.$items.appendChild(item);
+      const a = document.createElement("a");
+      a.textContent = value.text;
+      a.href = value.href;
+      a.classList.add("item");
+      item.appendChild(a);
     }
     if (value.type === "dropdown") {
+      console.log(value);
+      const d = await slice.build("DropDown", {
+        label: value.text,
+        options: value.options,
+      });
+      d.classList.add("item");
+      item.appendChild(d);
     }
+    this.$menu.appendChild(item);
   }
 }
 window.customElements.define("slice-nav-bar", Navbar);

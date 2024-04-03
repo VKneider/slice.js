@@ -25,7 +25,6 @@ document.body.insertBefore(changeThemeButton, document.body.firstChild);
 
 //append the component to the body first element
 
-
 // Form
 //
 const name1 = await slice.build("Input", {
@@ -182,7 +181,7 @@ const button2 = await slice.build("Button", {
   sliceId: "buttonLanguage",
 });
 
-button2.classList.add("center-screen")
+button2.classList.add("center-screen");
 
 form.appendChild(button2);
 
@@ -225,18 +224,28 @@ const navBar = await slice.build("Navbar", {
       href: "",
     },
     {
-      text: "Contact Us",
-      href: "",
-    },
-    {
       text: "Language",
       href: "",
       type: "dropdown",
+      options: [
+        {
+          text: "Es",
+          href: "",
+        },
+        {
+          text: "En",
+          href: "",
+        },
+      ],
+    },
+    {
+      text: "Contact Us",
+      href: "",
     },
   ],
 });
 
-//document.body.insertBefore(navBar, document.body.firstChild);
+document.body.insertBefore(navBar, document.body.firstChild);
 
 const cardYoutube = await slice.build("Card", {
   title: "Youtube",
