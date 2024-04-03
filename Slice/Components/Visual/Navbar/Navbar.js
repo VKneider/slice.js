@@ -3,10 +3,15 @@ export default class Navbar extends HTMLElement {
     super();
     slice.attachTemplate(this);
 
+<<<<<<< HEAD
     this.$header = this.querySelector(".slice_nav_header");
     this.$navBar = this.querySelector(".slice_nav_bar");
     this.$menu = this.querySelector(".nav_bar_menu");
 <<<<<<< HEAD
+=======
+    this.$navBar = this.querySelector(".slice_nav_bar");
+    this.$menu = this.querySelector(".nav_bar_menu");
+>>>>>>> 7396563 (Navbar adds Buttons)
     this.$buttonsContainer = this.querySelector(".nav_bar_buttons");
     this.$logoContainer = this.querySelector(".logo_container");
     this.$mobileMenu = this.querySelector(".slice_mobile_menu");
@@ -87,6 +92,7 @@ export default class Navbar extends HTMLElement {
     });
   }
 
+<<<<<<< HEAD
   get direction() {
     return this._direction;
   }
@@ -98,6 +104,8 @@ export default class Navbar extends HTMLElement {
     }
   }
 
+=======
+>>>>>>> 7396563 (Navbar adds Buttons)
   async addItem(value) {
     const item = document.createElement("li");
     const hover = document.createElement("div");
@@ -123,6 +131,7 @@ export default class Navbar extends HTMLElement {
   }
 
   async addButton(value) {
+<<<<<<< HEAD
     if (!value.color) {
       value.color = {
         label: "var(--primary-color-rgb)",
@@ -133,6 +142,12 @@ export default class Navbar extends HTMLElement {
       value: value.value,
       customColor: value.color,
       onClickCallback: value.onClickCallback,
+=======
+    const button = await slice.build("Button", {
+      value: value.value,
+      customColor: "black",
+      onClickCallback: () => value.onClickCallback,
+>>>>>>> 7396563 (Navbar adds Buttons)
     });
     this.$buttonsContainer.appendChild(button);
   }

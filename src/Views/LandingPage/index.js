@@ -250,9 +250,18 @@ const navBar = await slice.build("Navbar", {
   ],
   buttons: [
     {
+<<<<<<< HEAD
       value: "Change Theme",
       // color:
       onClickCallback: hola,
+=======
+      value: "Sing in",
+      onClickCallback: () => console.log("Navbar button"),
+    },
+    {
+      value: "Log in",
+      onClickCallback: () => console.log("Navbar button"),
+>>>>>>> 7396563 (Navbar adds Buttons)
     },
   ],
 });

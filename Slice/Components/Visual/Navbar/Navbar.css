@@ -55,9 +55,12 @@
   left: 0;
 }
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 
 >>>>>>> bdab084 (NavBar logo can be added, and anim-item on hover. Mobile menu next to be added)
+=======
+>>>>>>> 7396563 (Navbar adds Buttons)
 .slice_nav_header .logo_container {
   padding: 10px;
 }
@@ -68,8 +71,16 @@
   max-width: 200px;
 }
 <<<<<<< HEAD
+<<<<<<< HEAD
 .nav_bar_buttons {
   display: flex;
+=======
+.nav_bar_buttons {
+  display: flex;
+  slice-button {
+    /* width: 150px; */
+  }
+>>>>>>> 7396563 (Navbar adds Buttons)
 }
 .slice_mobile_menu {
   width: 100%;
@@ -110,7 +121,8 @@
   .mobile_close_menu {
 =======
 @media only screen and (max-width: 770px) {
-  .slice_nav_bar {
+  .slice_nav_bar,
+  .nav_bar_buttons {
     visibility: hidden;
   }
   .slice_mobile_menu {
