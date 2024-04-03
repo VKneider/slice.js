@@ -228,9 +228,6 @@ export default class Debugger extends HTMLElement {
         if (typeof selectedComponent[attributeName] === "function") {
           return;
         }
-        console.log(
-          `Changing ${attributeName} from ${oldValue} to ${newValue}`
-        );
         if (newValue === "true") newValue = true;
         if (newValue === "false") newValue = false;
 

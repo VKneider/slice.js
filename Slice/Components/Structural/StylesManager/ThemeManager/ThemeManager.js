@@ -1,25 +1,38 @@
 export default class ThemeManager {
   constructor() {
-    this.currentThemeLink = null;
+    this.themeStyles = new Map();
+    this.currentThemeStyle = null;
   }
 
   async applyTheme(themeName) {
-    // Eliminar el tema actual
-    this.removeCurrentTheme();
-
-    // Crear un nuevo link y agregarlo al head
-    const themeLink = document.createElement("link");
-    themeLink.setAttribute("rel", "stylesheet");
-    themeLink.setAttribute("href", `Slice/${slice.paths.themes}/${themeName}.css`);
-    document.head.appendChild(themeLink);
-
-    // Establecer el nuevo link como el tema actual
-    this.currentThemeLink = themeLink;
+      if (!this.themeStyles.has(themeName)) {
+          this.removeCurrentTheme();
+          await this.loadThemeCSS(themeName);        
+      } else {
+          this.setThemeStyle(themeName);
+      }
   }
-
+  
   removeCurrentTheme() {
-    if (this.currentThemeLink) {
-      this.currentThemeLink.parentNode.removeChild(this.currentThemeLink);
+    if (this.currentThemeStyle) {
+      this.currentThemeStyle.parentNode.removeChild(this.currentThemeStyle);
     }
   }
+
+  async loadThemeCSS( themeName) {
+
+    const themeCss = await slice.controller.fetchText(themeName, "theme");
+    this.themeStyles.set(themeName, themeCss);
+    this.setThemeStyle(themeName);
+    
+  }
+
+  setThemeStyle(themeName) {
+      const themeStyle = document.createElement('style');
+      themeStyle.textContent = this.themeStyles.get(themeName);
+      document.head.appendChild(themeStyle);
+      this.currentThemeStyle = themeStyle;
+  }
+
+  
 }
