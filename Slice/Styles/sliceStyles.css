@@ -8,3 +8,16 @@
 body {
   background-color: var(--primary-background-color);
 }
+.caret {
+  cursor: pointer;
+  margin-left: 10px;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid;
+  transition: 0.3s;
+}
+.caret_open {
+  transform: rotate(180deg);
+}

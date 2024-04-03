@@ -77,15 +77,6 @@
   /* color: var(--primary-color); */
   background-color: var(--secondary-background-color);
 }
-.caret {
-  margin-left: 10px;
-  width: 0;
-  height: 0;
-  border-left: 5px solid transparent;
-  border-right: 5px solid transparent;
-  border-top: 6px solid var(--primary-color-rgb);
-  transition: 0.3s;
-}
-.caret_open {
-  transform: rotate(180deg);
+.slice_select_container .caret {
+  border-top-color: var(--primary-color);
 }

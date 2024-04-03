@@ -245,7 +245,7 @@ const navBar = await slice.build("Navbar", {
   ],
 });
 
-//document.body.insertBefore(navBar, document.body.firstChild);
+document.body.insertBefore(navBar, document.body.firstChild);
 
 const cardYoutube = await slice.build("Card", {
   title: "Youtube",

@@ -1,4 +1,5 @@
 .slice_dropdown {
+  user-select: none;
   display: flex;
   justify-content: center;
 }
@@ -11,18 +12,8 @@
   border: var(--slice-border) solid var(--primary-color);
   align-items: center;
 }
-.caret {
-  cursor: pointer;
-  margin-left: 10px;
-  width: 0;
-  height: 0;
-  border-left: 5px solid transparent;
-  border-right: 5px solid transparent;
-  border-top: 6px solid var(--primary-color-contrast);
-  transition: 0.3s;
-}
-.caret_open {
-  transform: rotate(180deg);
+.slice_dropdown_container .caret {
+  border-top-color: var(--primary-color-contrast);
 }
 .slice_dropdown_menu {
   border: var(--slice-border) solid var(--primary-color);
@@ -34,9 +25,8 @@
   opacity: 0;
   transition: 0s, opacity 0.3s;
   top: 100%;
-  width: 25%;
   z-index: 1;
-  background-color: var(--primary-background-color);
+  background-color: var(--primary-color);
   border-radius: var(--border-radius-slice);
   box-shadow: 0 0 10px 0 #00000050;
   div {
