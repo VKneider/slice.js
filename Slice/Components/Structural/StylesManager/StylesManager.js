@@ -1,4 +1,3 @@
-import CustomStylesManager from "./CustomStylesManager/CustomStylesManager.js";
 import ThemeManager from "./ThemeManager/ThemeManager.js";
 
 export default class StylesManager {
@@ -7,7 +6,6 @@ export default class StylesManager {
     this.componentStyles.id = "slice-component-styles";
     document.head.appendChild(this.componentStyles);
 
-    this.customStylesManager = new CustomStylesManager();
     this.themeManager = new ThemeManager();
   }
 
@@ -18,12 +16,6 @@ export default class StylesManager {
     );
     this.componentStyles.innerText += sliceStyles;
     slice.logger.logInfo("StylesManager", "sliceStyles loaded");
-  }
-
-  handleInstanceStyles(instance, props) {
-    if (props.customCSS) {
-      this.customStylesManager.proccess(instance, props);
-    }
   }
 
   setTheme(themeName) {

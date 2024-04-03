@@ -125,7 +125,7 @@ export default class Slice {
       if (componentIds.sliceId)
         componentInstance.sliceId = componentIds.sliceId;
 
-      this.stylesManager.handleInstanceStyles(componentInstance, props);
+      //this.stylesManager.handleInstanceStyles(componentInstance, props);
 
       if (!this.controller.registerComponent(componentInstance)) {
         this.logger.logError(
