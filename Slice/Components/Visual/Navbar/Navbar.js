@@ -4,12 +4,25 @@ export default class Navbar extends HTMLElement {
     slice.attachTemplate(this);
     this.$navBar = this.querySelector(".slice_nav_bar");
     this.$menu = this.querySelector(".nav_bar_menu");
+    this.$logoContainer = this.querySelector(".logo_container");
 
     slice.controller.setComponentProps(this, props);
-    this.debuggerProps = ["items"];
+    this.debuggerProps = ["logo", "items"];
   }
 
   async init() {}
+
+  get logo() {
+    return this._logo;
+  }
+
+  set logo(value) {
+    this._logo = value;
+    const img = document.createElement("img");
+    img.src = value.src;
+    this.$logoContainer.appendChild(img);
+    this.$logoContainer.href = value.href;
+  }
 
   get items() {
     return this._items;
@@ -26,6 +39,8 @@ export default class Navbar extends HTMLElement {
   }
   async addItem(value) {
     const item = document.createElement("li");
+    const hover = document.createElement("div");
+    hover.classList.add("anim-item");
     if (value.type === "text") {
       const a = document.createElement("a");
       a.textContent = value.text;
@@ -42,6 +57,7 @@ export default class Navbar extends HTMLElement {
       d.classList.add("item");
       item.appendChild(d);
     }
+    item.appendChild(hover);
     this.$menu.appendChild(item);
   }
 }

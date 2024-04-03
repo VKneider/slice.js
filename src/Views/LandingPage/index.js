@@ -214,6 +214,10 @@ fetchManager
   });
 */
 const navBar = await slice.build("Navbar", {
+  logo: {
+    src: "./Slice.js-logo.png",
+    href: "",
+  },
   items: [
     {
       text: "Home",
@@ -399,4 +403,4 @@ gridDiv.appendChild(cardStackoverflow);
 gridDiv.appendChild(cardDiscord);
 gridDiv.appendChild(cardHTML);
 
-document.body.appendChild(gridDiv);
+// document.body.appendChild(gridDiv);

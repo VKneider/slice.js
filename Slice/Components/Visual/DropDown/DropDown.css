@@ -1,18 +1,16 @@
+.slice_dropdown_label {
+  cursor: default;
+}
 .slice_dropdown {
   user-select: none;
   display: flex;
   justify-content: center;
-}
-.slice_dropdown_label {
-  cursor: default;
-}
-.slice_dropdown_container {
   display: flex;
   border-radius: var(--border-radius-slice);
   border: var(--slice-border) solid var(--primary-color);
   align-items: center;
 }
-.slice_dropdown_container .caret {
+.slice_dropdown .caret {
   border-top-color: var(--primary-color-contrast);
 }
 .slice_dropdown_menu {
