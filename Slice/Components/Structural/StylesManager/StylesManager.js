@@ -18,10 +18,6 @@ export default class StylesManager {
     slice.logger.logInfo("StylesManager", "sliceStyles loaded");
   }
 
-  setTheme(themeName) {
-    this.themeManager.applyTheme(themeName);
-  }
-
   //add a method that will add css as text to the componentStyles element
   appendComponentStyles(cssText) {
     this.componentStyles.appendChild(document.createTextNode(cssText));

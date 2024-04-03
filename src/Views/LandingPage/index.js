@@ -2,15 +2,15 @@ let theme = "Light";
 
 async function hola() {
   if (theme === "Slice") {
-    await slice.stylesManager.setTheme("Light");
+    await slice.setTheme("Light");
     theme = "Light";
     changeThemeButton.value = "Cambiar al tema Dark";
   } else if (theme === "Light") {
-    await slice.stylesManager.setTheme("Dark");
+    await slice.setTheme("Dark");
     theme = "Dark";
     changeThemeButton.value = "Cambiar al tema Slice";
   } else if (theme === "Dark") {
-    await slice.stylesManager.setTheme("Slice");
+    await slice.setTheme("Slice");
     theme = "Slice";
     changeThemeButton.value = "Cambiar al tema Light";
   }
@@ -245,7 +245,7 @@ const navBar = await slice.build("Navbar", {
   ],
 });
 
-document.body.insertBefore(navBar, document.body.firstChild);
+//document.body.insertBefore(navBar, document.body.firstChild);
 
 const cardYoutube = await slice.build("Card", {
   title: "Youtube",

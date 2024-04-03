@@ -158,7 +158,7 @@ export default class Slice {
   }
 
   setTheme(themeName) {
-    this.stylesManager.setTheme(themeName);
+    this.stylesManager.themeManager.applyTheme(themeName);
   }
 
   attachTemplate(componentInstance) {
@@ -186,9 +186,11 @@ async function init() {
 
   await window.slice.stylesManager.init();
 
-  await window.slice.stylesManager.setTheme(
-    sliceConfig.stylesManager.defaultTheme
+  await window.slice.setTheme(
+    sliceConfig.stylesManager.defaultTheme || "Slice"
   );
+
+
 }
 
 await init();
