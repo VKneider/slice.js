@@ -59,9 +59,6 @@
 }
 .nav_bar_buttons {
   display: flex;
-  slice-button {
-    /* width: 150px; */
-  }
 }
 .slice_mobile_menu {
   visibility: hidden;
