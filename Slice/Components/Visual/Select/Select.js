@@ -2,7 +2,7 @@ export default class Select extends HTMLElement {
   constructor(props) {
     super();
     slice.attachTemplate(this);
-    this.$dropdown = this.querySelector(".slice_dropdown");
+    this.$dropdown = this.querySelector(".slice_select_dropdown");
     this.$selectContainer = this.querySelector(".slice_select_container");
     this.$label = this.querySelector(".slice_select_label");
     this.$select = this.querySelector(".slice_select");
@@ -37,12 +37,12 @@ export default class Select extends HTMLElement {
   }
 
   init() {
-    if(!this.disabled){
-      this._disabled=false;
+    if (!this.disabled) {
+      this._disabled = false;
     }
 
-    if(!this._multiple){
-      this._multiple=false;
+    if (!this._multiple) {
+      this._multiple = false;
     }
   }
 
