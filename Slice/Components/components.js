@@ -2,6 +2,7 @@ const components = {
   "Button": "Visual",
   "Card": "Visual",
   "Checkbox": "Visual",
+  "DropDown": "Visual",
   "Icon": "Visual",
   "imageCarousel": "Visual",
   "Information": "Visual",
