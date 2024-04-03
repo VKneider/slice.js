@@ -26,5 +26,5 @@
   color: var(--primary-color-contrast);
   text-decoration: none;
   margin: 0 25px 0 25px;
-  border-bottom: 5px solid transparent;
+  border-radius: var(--border-radius-slice);
 }
