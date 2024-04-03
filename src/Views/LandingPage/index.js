@@ -25,13 +25,7 @@ document.body.insertBefore(changeThemeButton, document.body.firstChild);
 
 //append the component to the body first element
 
-const tester = await slice.build("Tester", {
-  id: "tester",
-  sliceId: "tester",
-  subject: "Hola",
-  description: "Saludo",
-});
-//
+
 // Form
 //
 const name1 = await slice.build("Input", {
@@ -187,6 +181,8 @@ const button2 = await slice.build("Button", {
   },
   sliceId: "buttonLanguage",
 });
+
+button2.classList.add("center-screen")
 
 form.appendChild(button2);
 

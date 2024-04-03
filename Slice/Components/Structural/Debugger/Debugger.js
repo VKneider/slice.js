@@ -22,7 +22,7 @@ export default class Debugger extends HTMLElement {
     this.componentDetailsList = this.querySelector(".component-details-list");
 
     this.closeDebugger.addEventListener("click", () => {
-      this.hideDebugger();
+      this.hide();
       this.isActive = false;
     });
 
@@ -135,7 +135,7 @@ export default class Debugger extends HTMLElement {
       this.componentDetailsList.appendChild(listItem);
     });
 
-    const ComponentPropsWithValues = this.getAttributesWithValues(
+    const ComponentPropsWithValues = this.getPropertiesWithValues(
       details.ComponentProps
     );
 
@@ -194,13 +194,10 @@ export default class Debugger extends HTMLElement {
     this.componentDetailsTable.appendChild(tableContainer);
   }
 
-  getAttributesWithValues(attributes) {
+  getPropertiesWithValues(attributes) {
     return Object.keys(attributes).filter((attr) => attributes[attr] !== null);
   }
 
-  getAttributesWithoutValues(attributes) {
-    return Object.keys(attributes).filter((attr) => attributes[attr] === null);
-  }
 
   applyChanges() {
     const inputCells = this.componentDetailsTable.querySelectorAll("td input");
@@ -242,7 +239,7 @@ export default class Debugger extends HTMLElement {
     });
   }
 
-  hideDebugger() {
+  hide() {
     this.debuggerContainer.classList.remove("active");
   }
 }
