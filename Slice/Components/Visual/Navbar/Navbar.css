@@ -89,6 +89,7 @@
 >>>>>>> 37efcce (small change)
 }
 .slice_mobile_menu {
+<<<<<<< HEAD
   width: 100%;
   height: 100%;
   position: fixed;
@@ -108,6 +109,26 @@
 =======
 .slice_mobile_menu {
 >>>>>>> bdab084 (NavBar logo can be added, and anim-item on hover. Mobile menu next to be added)
+=======
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  visibility: hidden;
+  position: fixed;
+  top: 0;
+  left: 100%;
+  width: 100%;
+  height: 100%;
+  background-color: var(--primary-color);
+  transition: left 0.3s ease;
+}
+.menu_open {
+  left: 0;
+}
+.mobile_menu_button {
+  z-index: 1;
+>>>>>>> b740578 (mobile menu on process)
   visibility: hidden;
   position: absolute;
   right: 0px;
@@ -131,8 +152,13 @@
   .nav_bar_buttons {
     visibility: hidden;
   }
+<<<<<<< HEAD
   .slice_mobile_menu {
 >>>>>>> bdab084 (NavBar logo can be added, and anim-item on hover. Mobile menu next to be added)
+=======
+  .slice_mobile_menu,
+  .mobile_menu_button {
+>>>>>>> b740578 (mobile menu on process)
     visibility: visible;
   }
 }
