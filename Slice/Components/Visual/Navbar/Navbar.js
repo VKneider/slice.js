@@ -10,16 +10,31 @@ export default class Navbar extends HTMLElement {
     this.$logoContainer = this.querySelector(".logo_container");
     this.$mobileMenu = this.querySelector(".slice_mobile_menu");
     this.$mobileButton = this.querySelector(".mobile_menu_button");
+    this.$closeMenu = this.querySelector(".mobile_close_menu");
 
-    // this.$mobileButton.addEventListener("click", () => {
-    //   this.$mobileMenu.classList.toggle("menu_open");
-    // });
+    this.$mobileButton.addEventListener("click", () => {
+      this.$mobileMenu.style.visibility = "visible";
+      this.$mobileMenu.style.transform = "translateX(0%)";
+    });
+
+    this.$closeMenu.addEventListener("click", () => {
+      // this.$mobileMenu.style.visibility = "hidden";
+      this.$mobileMenu.style.transform = "translateX(-100%)";
+    });
 
     slice.controller.setComponentProps(this, props);
     this.debuggerProps = ["logo", "items"];
   }
 
-  async init() {}
+  async init() {
+    const mobileItems = this.items;
+    mobileItems.forEach((item) => {
+      const it = document.createElement("a");
+      it.href = item.href;
+      it.innerText = item.text;
+      this.$mobileMenu.appendChild(it);
+    });
+  }
 
   get logo() {
     return this._logo;
