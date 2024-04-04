@@ -132,12 +132,16 @@ export default class Navbar extends HTMLElement {
 
   async addButton(value) {
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 38695ad (button change color fixed)
     if (!value.color) {
       value.color = {
         label: "var(--primary-color-rgb)",
         button: "var(--primary-background-color)",
       };
     }
+<<<<<<< HEAD
     const button = await slice.build("Button", {
       value: value.value,
       customColor: value.color,
@@ -148,6 +152,12 @@ export default class Navbar extends HTMLElement {
       customColor: "black",
       onClickCallback: () => value.onClickCallback,
 >>>>>>> 7396563 (Navbar adds Buttons)
+=======
+    const button = await slice.build("Button", {
+      value: value.value,
+      customColor: value.color,
+      onClickCallback: value.onClickCallback,
+>>>>>>> 38695ad (button change color fixed)
     });
     this.$buttonsContainer.appendChild(button);
   }
