@@ -8,6 +8,12 @@ export default class Navbar extends HTMLElement {
     this.$menu = this.querySelector(".nav_bar_menu");
     this.$buttonsContainer = this.querySelector(".nav_bar_buttons");
     this.$logoContainer = this.querySelector(".logo_container");
+    this.$mobileMenu = this.querySelector(".slice_mobile_menu");
+    this.$mobileButton = this.querySelector(".mobile_menu_button");
+
+    // this.$mobileButton.addEventListener("click", () => {
+    //   this.$mobileMenu.classList.toggle("menu_open");
+    // });
 
     slice.controller.setComponentProps(this, props);
     this.debuggerProps = ["logo", "items"];
