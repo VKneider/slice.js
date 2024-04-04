@@ -116,6 +116,7 @@
 .slice_mobile_menu {
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   width: 100%;
   height: 100%;
   position: fixed;
@@ -136,6 +137,8 @@
 .slice_mobile_menu {
 >>>>>>> bdab084 (NavBar logo can be added, and anim-item on hover. Mobile menu next to be added)
 =======
+=======
+>>>>>>> b740578 (mobile menu on process)
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -144,6 +147,7 @@
   position: fixed;
   top: 0;
   left: 100%;
+<<<<<<< HEAD
 =======
 >>>>>>> 9a11b47 (functional mobile menu in navbar mobile view)
   width: 100%;
@@ -171,6 +175,18 @@
 =======
 .slice_mobile_menu {
 >>>>>>> bdab084 (NavBar logo can be added, and anim-item on hover. Mobile menu next to be added)
+=======
+  width: 100%;
+  height: 100%;
+  background-color: var(--primary-color);
+  transition: left 0.3s ease;
+}
+.menu_open {
+  left: 0;
+}
+.mobile_menu_button {
+  z-index: 1;
+>>>>>>> b740578 (mobile menu on process)
   visibility: hidden;
   position: absolute;
   right: 0px;
@@ -189,6 +205,7 @@
   .nav_bar_buttons {
     visibility: hidden;
   }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
@@ -221,6 +238,10 @@
   }
   .slice_mobile_menu {
 >>>>>>> bdab084 (NavBar logo can be added, and anim-item on hover. Mobile menu next to be added)
+=======
+  .slice_mobile_menu,
+  .mobile_menu_button {
+>>>>>>> b740578 (mobile menu on process)
     visibility: visible;
   }
 }
