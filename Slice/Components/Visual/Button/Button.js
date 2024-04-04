@@ -23,6 +23,7 @@ export default class Button extends HTMLElement {
         name: this.icon,
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
         size: "25px",
 =======
         size: "100%",
@@ -30,6 +31,9 @@ export default class Button extends HTMLElement {
 =======
         size: "25px",
 >>>>>>> b740578 (mobile menu on process)
+=======
+        size: "25px",
+>>>>>>> 17d8ac2d5ca54844263fbba02e282e0ac27e3cfd
         color: "var(--primary-color-contrast)",
         // iconStyle: this._icon.iconStyle,
       });
