@@ -302,6 +302,7 @@ const details3 = await slice.build("Details", {
 
 document.body.appendChild(details);
 document.body.appendChild(details2);
+details2.addDetail(button);
 document.body.appendChild(details3);
 
 const cardYoutube = await slice.build("Card", {
@@ -317,8 +318,6 @@ const cardYoutube = await slice.build("Card", {
   },
   sliceId: "cardYoutube",
 });
-
-details2.addDetail(button2);
 
 const cardTwitter = await slice.build("Card", {
   title: "Twitter",

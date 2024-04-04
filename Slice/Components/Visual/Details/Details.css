@@ -1,5 +1,6 @@
 .slice_details {
   font-family: var(--font-family);
+  color: var(--font-primary-color);
 }
 .slice_details .details_summary {
   cursor: pointer;
@@ -16,6 +17,9 @@
 .details_title {
   width: 100%;
   font-weight: bold;
+}
+.details_text {
+  color: var(--font-secondary-color);
 }
 .details_container {
   padding-left: 5px;
