@@ -170,9 +170,7 @@ form.appendChild(button);
 
 const button2 = await slice.build("Button", {
   value: "Cambiar Idioma",
-  customColor: {
-    button: "red",
-  },
+  customColor: "red",
   onClickCallback: () => {
     if (slice.translator.currentLanguage === "es") {
       slice.translator.changeLanguage("en");
@@ -216,18 +214,6 @@ fetchManager
   });
 */
 const navBar = await slice.build("Navbar", {
-<<<<<<< HEAD
-<<<<<<< HEAD
-  // direction: "reverse",
-=======
->>>>>>> bdab084 (NavBar logo can be added, and anim-item on hover. Mobile menu next to be added)
-=======
-  // direction: "reverse",
->>>>>>> a5f3d58 (navbar direction reverse added)
-  logo: {
-    src: "./Slice.js-logo.png",
-    href: "",
-  },
   items: [
     {
       text: "Home",
@@ -255,48 +241,6 @@ const navBar = await slice.build("Navbar", {
     {
       text: "Contact Us",
       href: "",
-    },
-  ],
-  buttons: [
-    {
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> d54834e44799f8989dd05756edf839d61f86cd96
-      value: "Change Theme",
-      // color:
-      onClickCallback: hola,
-=======
-=======
->>>>>>> 7396563 (Navbar adds Buttons)
-      value: "Sing in",
-      onClickCallback: () => console.log("Navbar button"),
-    },
-    {
-      value: "Log in",
-      onClickCallback: () => console.log("Navbar button"),
-<<<<<<< HEAD
->>>>>>> 7396563 (Navbar adds Buttons)
-=======
-      value: "Change Theme",
-      // color:
-      onClickCallback: hola,
->>>>>>> 38695ad (button change color fixed)
-=======
->>>>>>> 7396563 (Navbar adds Buttons)
-=======
-      value: "Change Theme",
-      // color:
-      onClickCallback: hola,
->>>>>>> 38695ad (button change color fixed)
-=======
-      value: "Change Theme",
-      // color:
-      onClickCallback: hola,
->>>>>>> 17d8ac2d5ca54844263fbba02e282e0ac27e3cfd
     },
   ],
 });
@@ -455,4 +399,4 @@ gridDiv.appendChild(cardStackoverflow);
 gridDiv.appendChild(cardDiscord);
 gridDiv.appendChild(cardHTML);
 
-// document.body.appendChild(gridDiv);
+document.body.appendChild(gridDiv);

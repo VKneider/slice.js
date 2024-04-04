@@ -6,62 +6,12 @@ export default class Button extends HTMLElement {
     this.$button = this.querySelector(".slice_button");
     if (props.onClickCallback) {
       this.onClickCallback = props.onClickCallback;
-      this.$button.addEventListener(
-        "click",
-        async () => await this.onClickCallback()
-      );
+      this.$button.addEventListener("click", async () => await this.onClickCallback());
       //revisar esta verga por si habria q deletear o no
     }
 
     slice.controller.setComponentProps(this, props);
     this.debuggerProps = ["value", "onClickCallback", "customColor"];
-  }
-
-  async init() {
-    if (this.icon) {
-      this.$icon = await slice.build("Icon", {
-        name: this.icon,
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> d54834e44799f8989dd05756edf839d61f86cd96
-        size: "25px",
-=======
-        size: "100%",
->>>>>>> 882c3ed (button adds icon)
-=======
-        size: "25px",
->>>>>>> b740578 (mobile menu on process)
-=======
-<<<<<<< HEAD
-        size: "100%",
->>>>>>> 882c3ed (button adds icon)
-=======
-        size: "25px",
->>>>>>> b740578 (mobile menu on process)
-=======
-        size: "25px",
->>>>>>> 17d8ac2d5ca54844263fbba02e282e0ac27e3cfd
->>>>>>> d54834e44799f8989dd05756edf839d61f86cd96
-        color: "var(--primary-color-contrast)",
-        // iconStyle: this._icon.iconStyle,
-      });
-      this.$button.appendChild(this.$icon);
-    }
-  }
-
-  get icon() {
-    return this._icon;
-  }
-
-  set icon(value) {
-    this._icon = value;
-    if (!this.$icon) return;
-    this.$icon.name = value.name;
-    this.$icon.iconStyle = value.iconStyle;
   }
 
   get value() {
@@ -79,12 +29,7 @@ export default class Button extends HTMLElement {
 
   set customColor(value) {
     this._customColor = value;
-    if (value.button) {
-      this.style = `--primary-color: ${value.button};`;
-    }
-    if (value.label) {
-      this.$button.style = `--primary-color-contrast: ${value.label};`;
-    }
+    this.$button.style = `--primary-color: ${value};`;
   }
 
   handleButtonClick() {

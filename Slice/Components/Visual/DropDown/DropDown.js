@@ -9,15 +9,17 @@ export default class DropDown extends HTMLElement {
     this.$caret = this.querySelector(".caret");
 
     this.$caret.addEventListener("click", () => {
-      this.toggleDrop();
+      this.$menu.classList.toggle("menu_open");
+      this.$caret.classList.toggle("caret_open");
     });
 
     this.$menu.addEventListener("mouseleave", () => {
-      this.closeDrop();
+      this.$menu.classList.remove("menu_open");
+      this.$caret.classList.remove("caret_open");
     });
 
     slice.controller.setComponentProps(this, props);
-    this.debuggerProps = ["label", "options"];
+    this.debuggerProps = [];
   }
 
   init() {}
@@ -40,58 +42,12 @@ export default class DropDown extends HTMLElement {
     values.forEach((element) => {
       const e = document.createElement("div");
       e.addEventListener("click", () => {
-        this.closeDrop();
+        this.$menu.classList.remove("menu_open");
+        this.$caret.classList.remove("caret_open");
       });
       e.textContent = element.text;
       this.$menu.appendChild(e);
     });
-  }
-
-  toggleDrop() {
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-=======
->>>>>>> 17d8ac2d5ca54844263fbba02e282e0ac27e3cfd
->>>>>>> d54834e44799f8989dd05756edf839d61f86cd96
-    this.$menu.classList.toggle("dropdown_menu_open");
-    this.$caret.classList.toggle("caret_open");
-  }
-  closeDrop() {
-    this.$menu.classList.remove("dropdown_menu_open");
-<<<<<<< HEAD
-=======
-=======
->>>>>>> 730dff9 (dropdown additions)
-    this.$menu.classList.toggle("menu_open");
-    this.$caret.classList.toggle("caret_open");
-  }
-  closeDrop() {
-    this.$menu.classList.remove("menu_open");
-<<<<<<< HEAD
->>>>>>> 730dff9 (dropdown additions)
-=======
-    this.$menu.classList.toggle("dropdown_menu_open");
-    this.$caret.classList.toggle("caret_open");
-  }
-  closeDrop() {
-    this.$menu.classList.remove("dropdown_menu_open");
->>>>>>> 17d8ac2 (dropdown changed)
-=======
->>>>>>> 730dff9 (dropdown additions)
-=======
-    this.$menu.classList.toggle("dropdown_menu_open");
-    this.$caret.classList.toggle("caret_open");
-  }
-  closeDrop() {
-    this.$menu.classList.remove("dropdown_menu_open");
->>>>>>> 17d8ac2 (dropdown changed)
-=======
->>>>>>> 17d8ac2d5ca54844263fbba02e282e0ac27e3cfd
-    this.$caret.classList.remove("caret_open");
   }
 }
 
