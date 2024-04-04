@@ -17,6 +17,9 @@
 =======
 >>>>>>> bdab084 (NavBar logo can be added, and anim-item on hover. Mobile menu next to be added)
 }
+.direction-row-reverse {
+  flex-direction: row-reverse;
+}
 .slice_nav_bar {
   display: flex;
   align-items: center;
