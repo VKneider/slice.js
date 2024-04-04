@@ -12,16 +12,21 @@
   align-items: center;
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 }
 .direction-row-reverse {
   flex-direction: row-reverse;
 =======
 >>>>>>> bdab084 (NavBar logo can be added, and anim-item on hover. Mobile menu next to be added)
+=======
+>>>>>>> d54834e44799f8989dd05756edf839d61f86cd96
 }
 .direction-row-reverse {
   flex-direction: row-reverse;
 =======
 >>>>>>> bdab084 (NavBar logo can be added, and anim-item on hover. Mobile menu next to be added)
+=======
+>>>>>>> 17d8ac2d5ca54844263fbba02e282e0ac27e3cfd
 }
 .direction-row-reverse {
   flex-direction: row-reverse;
@@ -67,16 +72,21 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 
 >>>>>>> bdab084 (NavBar logo can be added, and anim-item on hover. Mobile menu next to be added)
 =======
 >>>>>>> 7396563 (Navbar adds Buttons)
 =======
+>>>>>>> d54834e44799f8989dd05756edf839d61f86cd96
+=======
 
 >>>>>>> bdab084 (NavBar logo can be added, and anim-item on hover. Mobile menu next to be added)
 =======
 >>>>>>> 7396563 (Navbar adds Buttons)
+=======
+>>>>>>> 17d8ac2d5ca54844263fbba02e282e0ac27e3cfd
 .slice_nav_header .logo_container {
   padding: 10px;
 }
@@ -90,6 +100,9 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> d54834e44799f8989dd05756edf839d61f86cd96
 .nav_bar_buttons {
   display: flex;
 =======
@@ -117,6 +130,16 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+=======
+.nav_bar_buttons {
+  display: flex;
+}
+.slice_mobile_menu {
+>>>>>>> 17d8ac2d5ca54844263fbba02e282e0ac27e3cfd
+>>>>>>> d54834e44799f8989dd05756edf839d61f86cd96
   width: 100%;
   height: 100%;
   position: fixed;
@@ -133,6 +156,7 @@
 }
 .mobile_menu_button,
 .mobile_close_menu {
+<<<<<<< HEAD
 =======
 .slice_mobile_menu {
 >>>>>>> bdab084 (NavBar logo can be added, and anim-item on hover. Mobile menu next to be added)
@@ -176,17 +200,32 @@
 .slice_mobile_menu {
 >>>>>>> bdab084 (NavBar logo can be added, and anim-item on hover. Mobile menu next to be added)
 =======
+=======
+>>>>>>> 9a11b47 (functional mobile menu in navbar mobile view)
   width: 100%;
   height: 100%;
-  background-color: var(--primary-color);
-  transition: left 0.3s ease;
-}
-.menu_open {
+  position: fixed;
+  top: 0;
   left: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  background-color: var(--primary-color);
+  visibility: hidden;
+  transition: transform 0.3s ease;
+  transform: translateX(-100%);
 }
+<<<<<<< HEAD
 .mobile_menu_button {
   z-index: 1;
 >>>>>>> b740578 (mobile menu on process)
+=======
+.mobile_menu_button,
+.mobile_close_menu {
+>>>>>>> 9a11b47 (functional mobile menu in navbar mobile view)
+=======
+>>>>>>> 17d8ac2d5ca54844263fbba02e282e0ac27e3cfd
   visibility: hidden;
   position: absolute;
   right: 0px;
@@ -195,8 +234,16 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> 9a11b47 (functional mobile menu in navbar mobile view)
+=======
+>>>>>>> d54834e44799f8989dd05756edf839d61f86cd96
+=======
+>>>>>>> 9a11b47 (functional mobile menu in navbar mobile view)
+=======
+>>>>>>> 17d8ac2d5ca54844263fbba02e282e0ac27e3cfd
 .mobile_close_menu {
   top: 25px;
 }
@@ -208,6 +255,13 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 50207ac (fixed visibility error of mobile view)
+=======
+>>>>>>> d54834e44799f8989dd05756edf839d61f86cd96
 =======
 >>>>>>> 50207ac (fixed visibility error of mobile view)
   .slice_mobile_menu,
@@ -231,6 +285,7 @@
   .mobile_close_menu {
 >>>>>>> 9a11b47 (functional mobile menu in navbar mobile view)
 =======
+<<<<<<< HEAD
 @media only screen and (max-width: 770px) {
   .slice_nav_bar,
   .nav_bar_buttons {
@@ -242,6 +297,16 @@
   .slice_mobile_menu,
   .mobile_menu_button {
 >>>>>>> b740578 (mobile menu on process)
+=======
+  .mobile_menu_button,
+  .mobile_close_menu {
+>>>>>>> 9a11b47 (functional mobile menu in navbar mobile view)
+=======
+  .slice_mobile_menu,
+  .mobile_menu_button,
+  .mobile_close_menu {
+>>>>>>> 17d8ac2d5ca54844263fbba02e282e0ac27e3cfd
+>>>>>>> d54834e44799f8989dd05756edf839d61f86cd96
     visibility: visible;
   }
 }
