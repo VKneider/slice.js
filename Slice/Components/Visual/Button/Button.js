@@ -17,6 +17,29 @@ export default class Button extends HTMLElement {
     this.debuggerProps = ["value", "onClickCallback", "customColor"];
   }
 
+  async init() {
+    if (this.icon) {
+      this.$icon = await slice.build("Icon", {
+        name: this.icon,
+        size: "100%",
+        color: "var(--primary-color-contrast)",
+        // iconStyle: this._icon.iconStyle,
+      });
+      this.$button.appendChild(this.$icon);
+    }
+  }
+
+  get icon() {
+    return this._icon;
+  }
+
+  set icon(value) {
+    this._icon = value;
+    if (!this.$icon) return;
+    this.$icon.name = value.name;
+    this.$icon.iconStyle = value.iconStyle;
+  }
+
   get value() {
     return this._value;
   }
