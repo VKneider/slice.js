@@ -20,6 +20,7 @@ export default class Navbar extends HTMLElement {
     this.$mobileMenu = this.querySelector(".slice_mobile_menu");
     this.$mobileButton = this.querySelector(".mobile_menu_button");
 <<<<<<< HEAD
+<<<<<<< HEAD
     this.$closeMenu = this.querySelector(".mobile_close_menu");
 
     this.$mobileButton.addEventListener("click", () => {
@@ -38,6 +39,19 @@ export default class Navbar extends HTMLElement {
     //   this.$mobileMenu.classList.toggle("menu_open");
     // });
 >>>>>>> b740578 (mobile menu on process)
+=======
+    this.$closeMenu = this.querySelector(".mobile_close_menu");
+
+    this.$mobileButton.addEventListener("click", () => {
+      this.$mobileMenu.style.visibility = "visible";
+      this.$mobileMenu.style.transform = "translateX(0%)";
+    });
+
+    this.$closeMenu.addEventListener("click", () => {
+      // this.$mobileMenu.style.visibility = "hidden";
+      this.$mobileMenu.style.transform = "translateX(-100%)";
+    });
+>>>>>>> 9a11b47 (functional mobile menu in navbar mobile view)
 
     slice.controller.setComponentProps(this, props);
     this.debuggerProps = ["logo", "items"];
@@ -52,6 +66,7 @@ export default class Navbar extends HTMLElement {
       this.$mobileMenu.appendChild(it);
     });
   }
+<<<<<<< HEAD
 
   get logo() {
     return this._logo;
@@ -64,6 +79,8 @@ export default class Navbar extends HTMLElement {
     this.$logoContainer.appendChild(img);
     this.$logoContainer.href = value.href;
   }
+=======
+>>>>>>> 9a11b47 (functional mobile menu in navbar mobile view)
 
   get logo() {
     return this._logo;
