@@ -52,11 +52,17 @@ export default class DropDown extends HTMLElement {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> 17d8ac2d5ca54844263fbba02e282e0ac27e3cfd
+>>>>>>> d54834e44799f8989dd05756edf839d61f86cd96
     this.$menu.classList.toggle("dropdown_menu_open");
     this.$caret.classList.toggle("caret_open");
   }
   closeDrop() {
     this.$menu.classList.remove("dropdown_menu_open");
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> 730dff9 (dropdown additions)
@@ -83,6 +89,8 @@ export default class DropDown extends HTMLElement {
   closeDrop() {
     this.$menu.classList.remove("dropdown_menu_open");
 >>>>>>> 17d8ac2 (dropdown changed)
+=======
+>>>>>>> 17d8ac2d5ca54844263fbba02e282e0ac27e3cfd
     this.$caret.classList.remove("caret_open");
   }
 }

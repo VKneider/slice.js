@@ -7,8 +7,11 @@ export default class Navbar extends HTMLElement {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> a5f3d58 (navbar direction reverse added)
+=======
+>>>>>>> d54834e44799f8989dd05756edf839d61f86cd96
 =======
 >>>>>>> a5f3d58 (navbar direction reverse added)
     this.$header = this.querySelector(".slice_nav_header");
@@ -24,6 +27,11 @@ export default class Navbar extends HTMLElement {
     this.$navBar = this.querySelector(".slice_nav_bar");
     this.$menu = this.querySelector(".nav_bar_menu");
 >>>>>>> 7396563 (Navbar adds Buttons)
+=======
+    this.$header = this.querySelector(".slice_nav_header");
+    this.$navBar = this.querySelector(".slice_nav_bar");
+    this.$menu = this.querySelector(".nav_bar_menu");
+>>>>>>> 17d8ac2d5ca54844263fbba02e282e0ac27e3cfd
     this.$buttonsContainer = this.querySelector(".nav_bar_buttons");
     this.$logoContainer = this.querySelector(".logo_container");
     this.$mobileMenu = this.querySelector(".slice_mobile_menu");
@@ -32,6 +40,11 @@ export default class Navbar extends HTMLElement {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> 17d8ac2d5ca54844263fbba02e282e0ac27e3cfd
+>>>>>>> d54834e44799f8989dd05756edf839d61f86cd96
     this.$closeMenu = this.querySelector(".mobile_close_menu");
 
     this.$mobileButton.addEventListener("click", () => {
@@ -42,6 +55,7 @@ export default class Navbar extends HTMLElement {
 <<<<<<< HEAD
       this.$mobileMenu.style.transform = "translateX(-100%)";
     });
+<<<<<<< HEAD
 =======
     this.$logoContainer = this.querySelector(".logo_container");
 >>>>>>> bdab084 (NavBar logo can be added, and anim-item on hover. Mobile menu next to be added)
@@ -84,6 +98,8 @@ export default class Navbar extends HTMLElement {
       this.$mobileMenu.style.transform = "translateX(-100%)";
     });
 >>>>>>> 9a11b47 (functional mobile menu in navbar mobile view)
+=======
+>>>>>>> 17d8ac2d5ca54844263fbba02e282e0ac27e3cfd
 
     slice.controller.setComponentProps(this, props);
     this.debuggerProps = ["logo", "items"];
@@ -100,6 +116,7 @@ export default class Navbar extends HTMLElement {
   }
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
   get logo() {
     return this._logo;
@@ -114,6 +131,8 @@ export default class Navbar extends HTMLElement {
   }
 =======
 >>>>>>> 9a11b47 (functional mobile menu in navbar mobile view)
+=======
+>>>>>>> d54834e44799f8989dd05756edf839d61f86cd96
 
   get logo() {
     return this._logo;
@@ -128,6 +147,8 @@ export default class Navbar extends HTMLElement {
   }
 =======
 >>>>>>> 9a11b47 (functional mobile menu in navbar mobile view)
+=======
+>>>>>>> 17d8ac2d5ca54844263fbba02e282e0ac27e3cfd
 
   get logo() {
     return this._logo;
@@ -170,10 +191,15 @@ export default class Navbar extends HTMLElement {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> a5f3d58 (navbar direction reverse added)
 =======
+>>>>>>> d54834e44799f8989dd05756edf839d61f86cd96
+=======
 >>>>>>> a5f3d58 (navbar direction reverse added)
+=======
+>>>>>>> 17d8ac2d5ca54844263fbba02e282e0ac27e3cfd
   get direction() {
     return this._direction;
   }
@@ -187,14 +213,19 @@ export default class Navbar extends HTMLElement {
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> 7396563 (Navbar adds Buttons)
 =======
 >>>>>>> a5f3d58 (navbar direction reverse added)
 =======
+>>>>>>> d54834e44799f8989dd05756edf839d61f86cd96
+=======
 >>>>>>> 7396563 (Navbar adds Buttons)
 =======
 >>>>>>> a5f3d58 (navbar direction reverse added)
+=======
+>>>>>>> 17d8ac2d5ca54844263fbba02e282e0ac27e3cfd
   async addItem(value) {
     const item = document.createElement("li");
     const hover = document.createElement("div");
@@ -224,10 +255,15 @@ export default class Navbar extends HTMLElement {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> 38695ad (button change color fixed)
 =======
+>>>>>>> d54834e44799f8989dd05756edf839d61f86cd96
+=======
 >>>>>>> 38695ad (button change color fixed)
+=======
+>>>>>>> 17d8ac2d5ca54844263fbba02e282e0ac27e3cfd
     if (!value.color) {
       value.color = {
         label: "var(--primary-color-rgb)",
@@ -236,10 +272,16 @@ export default class Navbar extends HTMLElement {
     }
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> 17d8ac2d5ca54844263fbba02e282e0ac27e3cfd
+>>>>>>> d54834e44799f8989dd05756edf839d61f86cd96
     const button = await slice.build("Button", {
       value: value.value,
       customColor: value.color,
       onClickCallback: value.onClickCallback,
+<<<<<<< HEAD
 =======
 =======
 >>>>>>> 7396563 (Navbar adds Buttons)
@@ -263,6 +305,8 @@ export default class Navbar extends HTMLElement {
       customColor: value.color,
       onClickCallback: value.onClickCallback,
 >>>>>>> 38695ad (button change color fixed)
+=======
+>>>>>>> 17d8ac2d5ca54844263fbba02e282e0ac27e3cfd
     });
     this.$buttonsContainer.appendChild(button);
   }
