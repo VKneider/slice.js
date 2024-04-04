@@ -93,6 +93,7 @@
   .nav_bar_buttons {
     visibility: hidden;
   }
+  .slice_mobile_menu,
   .mobile_menu_button,
   .mobile_close_menu {
     visibility: visible;
