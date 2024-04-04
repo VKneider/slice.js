@@ -39,6 +39,7 @@ export default class Navbar extends HTMLElement {
     });
 
     this.$closeMenu.addEventListener("click", () => {
+<<<<<<< HEAD
       this.$mobileMenu.style.transform = "translateX(-100%)";
     });
 =======
@@ -78,6 +79,8 @@ export default class Navbar extends HTMLElement {
 >>>>>>> b740578 (mobile menu on process)
 =======
       // this.$mobileMenu.style.visibility = "hidden";
+=======
+>>>>>>> 50207ac (fixed visibility error of mobile view)
       this.$mobileMenu.style.transform = "translateX(-100%)";
     });
 >>>>>>> 9a11b47 (functional mobile menu in navbar mobile view)
