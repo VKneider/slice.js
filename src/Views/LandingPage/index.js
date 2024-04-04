@@ -165,12 +165,40 @@ form.appendChild(sliceSwitch);
 form.appendChild(sliceSwitch2);
 form.appendChild(select);
 form.appendChild(select2);
-
+const select3 = await slice.build("Select", {
+  options: [
+    { value: "Hola", id: 0 },
+    { value: "Hello", id: 1 },
+    { value: "Hallo", id: 2 },
+    { value: "Hi", id: 3 },
+    { value: "Hola", id: 4 },
+    { value: "Hello", id: 5 },
+    { value: "Hallo", id: 6 },
+    { value: "Hi", id: 7 },
+    { value: "Hola", id: 0 },
+    { value: "Hello", id: 1 },
+    { value: "Hallo", id: 2 },
+    { value: "Hi", id: 3 },
+    { value: "Hola", id: 4 },
+    { value: "Hello", id: 5 },
+    { value: "Hallo", id: 6 },
+    { value: "Hi", id: 7 },
+  ],
+  visibleProp: "id",
+  label: "Elige una opcion",
+  multiple: false,
+  onOptionSelect: function xd() {
+    console.log("hi");
+  },
+});
+form.appendChild(select3);
 form.appendChild(button);
 
 const button2 = await slice.build("Button", {
   value: "Cambiar Idioma",
-  customColor: "red",
+  customColor: {
+    button: "red",
+  },
   onClickCallback: () => {
     if (slice.translator.currentLanguage === "es") {
       slice.translator.changeLanguage("en");
@@ -214,6 +242,11 @@ fetchManager
   });
 */
 const navBar = await slice.build("Navbar", {
+  // direction: "reverse",
+  logo: {
+    src: "./Slice.js-logo.png",
+    href: "",
+  },
   items: [
     {
       text: "Home",
@@ -241,6 +274,13 @@ const navBar = await slice.build("Navbar", {
     {
       text: "Contact Us",
       href: "",
+    },
+  ],
+  buttons: [
+    {
+      value: "Change Theme",
+      // color:
+      onClickCallback: hola,
     },
   ],
 });
@@ -399,4 +439,4 @@ gridDiv.appendChild(cardStackoverflow);
 gridDiv.appendChild(cardDiscord);
 gridDiv.appendChild(cardHTML);
 
-document.body.appendChild(gridDiv);
+// document.body.appendChild(gridDiv);
