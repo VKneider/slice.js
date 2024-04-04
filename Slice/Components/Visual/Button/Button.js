@@ -6,7 +6,10 @@ export default class Button extends HTMLElement {
     this.$button = this.querySelector(".slice_button");
     if (props.onClickCallback) {
       this.onClickCallback = props.onClickCallback;
-      this.$button.addEventListener("click", async () => await this.onClickCallback());
+      this.$button.addEventListener(
+        "click",
+        async () => await this.onClickCallback()
+      );
       //revisar esta verga por si habria q deletear o no
     }
 
@@ -29,7 +32,12 @@ export default class Button extends HTMLElement {
 
   set customColor(value) {
     this._customColor = value;
-    this.$button.style = `--primary-color: ${value};`;
+    if (value.button) {
+      this.style = `--primary-color: ${value.button};`;
+    }
+    if (value.label) {
+      this.$button.style = `--primary-color-contrast: ${value.label};`;
+    }
   }
 
   handleButtonClick() {

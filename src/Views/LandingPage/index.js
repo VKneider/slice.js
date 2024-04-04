@@ -170,7 +170,9 @@ form.appendChild(button);
 
 const button2 = await slice.build("Button", {
   value: "Cambiar Idioma",
-  customColor: "red",
+  customColor: {
+    button: "red",
+  },
   onClickCallback: () => {
     if (slice.translator.currentLanguage === "es") {
       slice.translator.changeLanguage("en");
@@ -249,12 +251,9 @@ const navBar = await slice.build("Navbar", {
   ],
   buttons: [
     {
-      value: "Sing in",
-      onClickCallback: () => console.log("Navbar button"),
-    },
-    {
-      value: "Log in",
-      onClickCallback: () => console.log("Navbar button"),
+      value: "Change Theme",
+      // color:
+      onClickCallback: hola,
     },
   ],
 });
