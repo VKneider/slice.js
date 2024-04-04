@@ -21,7 +21,11 @@ export default class Button extends HTMLElement {
     if (this.icon) {
       this.$icon = await slice.build("Icon", {
         name: this.icon,
+<<<<<<< HEAD
         size: "25px",
+=======
+        size: "100%",
+>>>>>>> 882c3ed (button adds icon)
         color: "var(--primary-color-contrast)",
         // iconStyle: this._icon.iconStyle,
       });
