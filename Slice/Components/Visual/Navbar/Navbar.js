@@ -189,6 +189,9 @@ export default class Navbar extends HTMLElement {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 38695ad (button change color fixed)
 =======
 >>>>>>> 38695ad (button change color fixed)
     if (!value.color) {
@@ -197,6 +200,7 @@ export default class Navbar extends HTMLElement {
         button: "var(--primary-background-color)",
       };
     }
+<<<<<<< HEAD
 <<<<<<< HEAD
     const button = await slice.build("Button", {
       value: value.value,
@@ -219,6 +223,12 @@ export default class Navbar extends HTMLElement {
 >>>>>>> 38695ad (button change color fixed)
 =======
 >>>>>>> 7396563 (Navbar adds Buttons)
+=======
+    const button = await slice.build("Button", {
+      value: value.value,
+      customColor: value.color,
+      onClickCallback: value.onClickCallback,
+>>>>>>> 38695ad (button change color fixed)
     });
     this.$buttonsContainer.appendChild(button);
   }

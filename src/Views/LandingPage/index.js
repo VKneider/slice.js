@@ -258,6 +258,7 @@ const navBar = await slice.build("Navbar", {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
       value: "Change Theme",
       // color:
       onClickCallback: hola,
@@ -279,6 +280,11 @@ const navBar = await slice.build("Navbar", {
 >>>>>>> 38695ad (button change color fixed)
 =======
 >>>>>>> 7396563 (Navbar adds Buttons)
+=======
+      value: "Change Theme",
+      // color:
+      onClickCallback: hola,
+>>>>>>> 38695ad (button change color fixed)
     },
   ],
 });
