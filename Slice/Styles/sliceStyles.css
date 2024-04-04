@@ -10,7 +10,6 @@ body {
 }
 .caret {
   cursor: pointer;
-  margin-left: 10px;
   width: 0;
   height: 0;
   border-left: 5px solid transparent;

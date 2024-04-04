@@ -287,6 +287,23 @@ const navBar = await slice.build("Navbar", {
 
 document.body.insertBefore(navBar, document.body.firstChild);
 
+const details = await slice.build("Details", {
+  title: "Slice",
+  text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+});
+const details2 = await slice.build("Details", {
+  title: "Julio",
+  text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+});
+const details3 = await slice.build("Details", {
+  title: "Victor",
+  text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+});
+
+document.body.appendChild(details);
+document.body.appendChild(details2);
+document.body.appendChild(details3);
+
 const cardYoutube = await slice.build("Card", {
   title: "Youtube",
   text: "Plataforma para ver videos",
@@ -300,6 +317,8 @@ const cardYoutube = await slice.build("Card", {
   },
   sliceId: "cardYoutube",
 });
+
+details2.addDetail(button2);
 
 const cardTwitter = await slice.build("Card", {
   title: "Twitter",
