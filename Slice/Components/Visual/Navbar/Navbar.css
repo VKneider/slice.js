@@ -11,6 +11,9 @@
   justify-content: space-around;
   align-items: center;
 }
+.direction-row-reverse {
+  flex-direction: row-reverse;
+}
 .slice_nav_bar {
   display: flex;
   align-items: center;

@@ -216,6 +216,7 @@ fetchManager
   });
 */
 const navBar = await slice.build("Navbar", {
+  // direction: "reverse",
   logo: {
     src: "./Slice.js-logo.png",
     href: "",

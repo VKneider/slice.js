@@ -3,6 +3,7 @@ export default class Navbar extends HTMLElement {
     super();
     slice.attachTemplate(this);
 
+    this.$header = this.querySelector(".slice_nav_header");
     this.$navBar = this.querySelector(".slice_nav_bar");
     this.$menu = this.querySelector(".nav_bar_menu");
     this.$buttonsContainer = this.querySelector(".nav_bar_buttons");
@@ -49,6 +50,17 @@ export default class Navbar extends HTMLElement {
     values.forEach((value) => {
       this.addButton(value);
     });
+  }
+
+  get direction() {
+    return this._direction;
+  }
+
+  set direction(value) {
+    this._direction = value;
+    if (value === "reverse") {
+      this.$header.classList.add("direction-row-reverse");
+    }
   }
 
   async addItem(value) {
