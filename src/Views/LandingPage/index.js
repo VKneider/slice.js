@@ -217,9 +217,13 @@ fetchManager
 */
 const navBar = await slice.build("Navbar", {
 <<<<<<< HEAD
+<<<<<<< HEAD
   // direction: "reverse",
 =======
 >>>>>>> bdab084 (NavBar logo can be added, and anim-item on hover. Mobile menu next to be added)
+=======
+  // direction: "reverse",
+>>>>>>> a5f3d58 (navbar direction reverse added)
   logo: {
     src: "./Slice.js-logo.png",
     href: "",

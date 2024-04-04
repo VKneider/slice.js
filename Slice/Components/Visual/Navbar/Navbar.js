@@ -6,6 +6,9 @@ export default class Navbar extends HTMLElement {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> a5f3d58 (navbar direction reverse added)
 =======
 >>>>>>> a5f3d58 (navbar direction reverse added)
     this.$header = this.querySelector(".slice_nav_header");
@@ -141,6 +144,9 @@ export default class Navbar extends HTMLElement {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> a5f3d58 (navbar direction reverse added)
 =======
 >>>>>>> a5f3d58 (navbar direction reverse added)
   get direction() {
@@ -155,12 +161,15 @@ export default class Navbar extends HTMLElement {
   }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> 7396563 (Navbar adds Buttons)
 =======
 >>>>>>> a5f3d58 (navbar direction reverse added)
 =======
 >>>>>>> 7396563 (Navbar adds Buttons)
+=======
+>>>>>>> a5f3d58 (navbar direction reverse added)
   async addItem(value) {
     const item = document.createElement("li");
     const hover = document.createElement("div");
