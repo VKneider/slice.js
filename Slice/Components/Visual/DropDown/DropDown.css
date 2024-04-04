@@ -37,10 +37,17 @@
     }
   }
 }
-.menu_open {
+.dropdown_menu_open {
   overflow-y: scroll;
   min-height: min-content;
   max-height: 200px;
   visibility: visible;
   opacity: 1;
+}
+.dropdown_menu_open::-webkit-scrollbar {
+  width: 5px;
+}
+.dropdown_menu_open::-webkit-scrollbar-thumb {
+  background: var(--secondary-color);
+  border-radius: var(--border-radius-slice);
 }

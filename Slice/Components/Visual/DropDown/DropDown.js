@@ -48,11 +48,11 @@ export default class DropDown extends HTMLElement {
   }
 
   toggleDrop() {
-    this.$menu.classList.toggle("menu_open");
+    this.$menu.classList.toggle("dropdown_menu_open");
     this.$caret.classList.toggle("caret_open");
   }
   closeDrop() {
-    this.$menu.classList.remove("menu_open");
+    this.$menu.classList.remove("dropdown_menu_open");
     this.$caret.classList.remove("caret_open");
   }
 }
