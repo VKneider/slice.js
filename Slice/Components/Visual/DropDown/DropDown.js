@@ -9,17 +9,15 @@ export default class DropDown extends HTMLElement {
     this.$caret = this.querySelector(".caret");
 
     this.$caret.addEventListener("click", () => {
-      this.$menu.classList.toggle("menu_open");
-      this.$caret.classList.toggle("caret_open");
+      this.toggleDrop();
     });
 
     this.$menu.addEventListener("mouseleave", () => {
-      this.$menu.classList.remove("menu_open");
-      this.$caret.classList.remove("caret_open");
+      this.closeDrop();
     });
 
     slice.controller.setComponentProps(this, props);
-    this.debuggerProps = [];
+    this.debuggerProps = ["label", "options"];
   }
 
   init() {}
@@ -42,12 +40,20 @@ export default class DropDown extends HTMLElement {
     values.forEach((element) => {
       const e = document.createElement("div");
       e.addEventListener("click", () => {
-        this.$menu.classList.remove("menu_open");
-        this.$caret.classList.remove("caret_open");
+        this.closeDrop();
       });
       e.textContent = element.text;
       this.$menu.appendChild(e);
     });
+  }
+
+  toggleDrop() {
+    this.$menu.classList.toggle("menu_open");
+    this.$caret.classList.toggle("caret_open");
+  }
+  closeDrop() {
+    this.$menu.classList.remove("menu_open");
+    this.$caret.classList.remove("caret_open");
   }
 }
 
