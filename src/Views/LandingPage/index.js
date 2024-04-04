@@ -170,7 +170,9 @@ form.appendChild(button);
 
 const button2 = await slice.build("Button", {
   value: "Cambiar Idioma",
-  customColor: "red",
+  customColor: {
+    button: "red",
+  },
   onClickCallback: () => {
     if (slice.translator.currentLanguage === "es") {
       slice.translator.changeLanguage("en");
@@ -214,6 +216,11 @@ fetchManager
   });
 */
 const navBar = await slice.build("Navbar", {
+  // direction: "reverse",
+  logo: {
+    src: "./Slice.js-logo.png",
+    href: "",
+  },
   items: [
     {
       text: "Home",
@@ -241,6 +248,13 @@ const navBar = await slice.build("Navbar", {
     {
       text: "Contact Us",
       href: "",
+    },
+  ],
+  buttons: [
+    {
+      value: "Change Theme",
+      // color:
+      onClickCallback: hola,
     },
   ],
 });
