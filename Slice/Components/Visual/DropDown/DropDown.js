@@ -51,6 +51,7 @@ export default class DropDown extends HTMLElement {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     this.$menu.classList.toggle("dropdown_menu_open");
     this.$caret.classList.toggle("caret_open");
   }
@@ -75,6 +76,13 @@ export default class DropDown extends HTMLElement {
 >>>>>>> 17d8ac2 (dropdown changed)
 =======
 >>>>>>> 730dff9 (dropdown additions)
+=======
+    this.$menu.classList.toggle("dropdown_menu_open");
+    this.$caret.classList.toggle("caret_open");
+  }
+  closeDrop() {
+    this.$menu.classList.remove("dropdown_menu_open");
+>>>>>>> 17d8ac2 (dropdown changed)
     this.$caret.classList.remove("caret_open");
   }
 }
