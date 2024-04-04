@@ -43,12 +43,10 @@ export default class Navbar extends HTMLElement {
     this.$closeMenu = this.querySelector(".mobile_close_menu");
 
     this.$mobileButton.addEventListener("click", () => {
-      this.$mobileMenu.style.visibility = "visible";
       this.$mobileMenu.style.transform = "translateX(0%)";
     });
 
     this.$closeMenu.addEventListener("click", () => {
-      // this.$mobileMenu.style.visibility = "hidden";
       this.$mobileMenu.style.transform = "translateX(-100%)";
     });
 >>>>>>> 9a11b47 (functional mobile menu in navbar mobile view)
