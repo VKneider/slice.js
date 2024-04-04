@@ -6,12 +6,38 @@ export default class Button extends HTMLElement {
     this.$button = this.querySelector(".slice_button");
     if (props.onClickCallback) {
       this.onClickCallback = props.onClickCallback;
-      this.$button.addEventListener("click", async () => await this.onClickCallback());
+      this.$button.addEventListener(
+        "click",
+        async () => await this.onClickCallback()
+      );
       //revisar esta verga por si habria q deletear o no
     }
 
     slice.controller.setComponentProps(this, props);
     this.debuggerProps = ["value", "onClickCallback", "customColor"];
+  }
+
+  async init() {
+    if (this.icon) {
+      this.$icon = await slice.build("Icon", {
+        name: this.icon,
+        size: "25px",
+        color: "var(--primary-color-contrast)",
+        // iconStyle: this._icon.iconStyle,
+      });
+      this.$button.appendChild(this.$icon);
+    }
+  }
+
+  get icon() {
+    return this._icon;
+  }
+
+  set icon(value) {
+    this._icon = value;
+    if (!this.$icon) return;
+    this.$icon.name = value.name;
+    this.$icon.iconStyle = value.iconStyle;
   }
 
   get value() {
@@ -29,7 +55,12 @@ export default class Button extends HTMLElement {
 
   set customColor(value) {
     this._customColor = value;
-    this.$button.style = `--primary-color: ${value};`;
+    if (value.button) {
+      this.style = `--primary-color: ${value.button};`;
+    }
+    if (value.label) {
+      this.$button.style = `--primary-color-contrast: ${value.label};`;
+    }
   }
 
   handleButtonClick() {

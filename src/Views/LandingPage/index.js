@@ -214,6 +214,11 @@ fetchManager
   });
 */
 const navBar = await slice.build("Navbar", {
+  // direction: "reverse",
+  logo: {
+    src: "./Slice.js-logo.png",
+    href: "",
+  },
   items: [
     {
       text: "Home",
@@ -243,9 +248,16 @@ const navBar = await slice.build("Navbar", {
       href: "",
     },
   ],
+  buttons: [
+    {
+      value: "Change Theme",
+      // color:
+      onClickCallback: hola,
+    },
+  ],
 });
 
-//document.body.insertBefore(navBar, document.body.firstChild);
+document.body.insertBefore(navBar, document.body.firstChild);
 
 const cardYoutube = await slice.build("Card", {
   title: "Youtube",
