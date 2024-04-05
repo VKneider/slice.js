@@ -13,7 +13,7 @@ export default class Details extends HTMLElement {
     });
 
     slice.controller.setComponentProps(this, props);
-    this.debuggerProps = [];
+    this.debuggerProps = ["title", "text"];
   }
 
   async init() {}
