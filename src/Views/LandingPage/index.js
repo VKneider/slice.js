@@ -4,9 +4,11 @@ const loading = await slice.build("Loading", {});
 loading.start();
 
 const div = document.createElement("div");
+div.style.height = "90vh";
 let theme = "Light";
 
 const navBar = await slice.build("Navbar", {
+  // position: "fixed",
   logo: {
     src: "../Slice.js-logo.png",
     href: "",
@@ -82,14 +84,20 @@ for (const name in components) {
   }
 }
 
-const menu = await slice.build("Menu", { title: "menu" });
+const menu = await slice.build("Menu", {});
 
 menu.add(compVisual);
 menu.add(compStruc);
 menu.add(compServe);
 
-div.appendChild(menu);
 div.appendChild(navBar);
+div.appendChild(menu);
+
+const button = await slice.build("Button", {
+  value: "Slice",
+});
+
+// div.appendChild(button);
 
 document.body.appendChild(div);
 loading.stop();

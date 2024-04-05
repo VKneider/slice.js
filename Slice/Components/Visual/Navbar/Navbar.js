@@ -27,11 +27,28 @@ export default class Navbar extends HTMLElement {
   async init() {
     const mobileItems = this.items;
     mobileItems.forEach((item) => {
-      const it = document.createElement("a");
-      it.href = item.href;
-      it.innerText = item.text;
-      this.$mobileMenu.appendChild(it);
+      const li = document.createElement("li");
+      const hover = document.createElement("div");
+      hover.classList.add("anim-item");
+      const a = document.createElement("a");
+      a.classList.add("item");
+      a.href = item.href;
+      a.innerText = item.text;
+      li.appendChild(a);
+      li.appendChild(hover);
+      this.$mobileMenu.appendChild(li);
     });
+  }
+
+  get position() {
+    return this._position;
+  }
+
+  set position(value) {
+    this._position = value;
+    if (value === "fixed") {
+      this.classList.add("nav_bar_fixed");
+    }
   }
 
   get logo() {
