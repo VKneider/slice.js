@@ -31,9 +31,6 @@ export default class Logger {
                                     console.log(`\x1b[37mUNKNOWN\x1b[0m - ${log.componentCategory} - ${log.componentSliceId} - ${log.message}`);
                             }
                             break;
-                        case "toast":
-                            // TODO: Implement displaying a ToastAlert with the log message for each log type
-                            break;
                     }
                 }
             });
