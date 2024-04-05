@@ -11,6 +11,7 @@
   align-items: center;
 }
 .slice_dropdown .caret {
+  margin-left: 10px;
   border-top-color: var(--primary-color-contrast);
 }
 .slice_dropdown_menu {
