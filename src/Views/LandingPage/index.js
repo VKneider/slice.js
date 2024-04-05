@@ -52,7 +52,14 @@ const navBar = await slice.build("Navbar", {
   ],
 });
 
+let comps = [];
+
 for (const name in components) {
+  const comp = {
+    text: name,
+    href: "",
+  };
+  comps.push(comp);
   //   console.log(`${name}: ${components[name]}`);
 }
 
