@@ -8,7 +8,7 @@ export default class Card extends HTMLElement {
     this.$cover = this.querySelector(".card_cover");
     slice.controller.setComponentProps(this, props);
 
-    this.$card.addEventListener("click", () => {
+    this.$cover.addEventListener("click", () => {
       this.isOpen = !this.isOpen;
     });
 
@@ -77,8 +77,6 @@ export default class Card extends HTMLElement {
     if (!this.$icon) return;
     this.$icon.name = value.name;
     this.$icon.iconStyle = value.iconStyle;
-
-
   }
 
   get isOpen() {

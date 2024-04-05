@@ -318,6 +318,7 @@ const cardYoutube = await slice.build("Card", {
   },
   sliceId: "cardYoutube",
 });
+// details2.addDetail(cardYoutube);
 
 const cardTwitter = await slice.build("Card", {
   title: "Twitter",
@@ -446,15 +447,15 @@ gridDiv.style.gap = "1rem";
 gridDiv.style.padding = "1rem";
 gridDiv.style.height = "600px";
 
-gridDiv.appendChild(cardYoutube);
-gridDiv.appendChild(cardTwitter);
-gridDiv.appendChild(cardFacebook);
-gridDiv.appendChild(cardLinkedin);
-gridDiv.appendChild(cardGithub);
-gridDiv.appendChild(cardGoogle);
-gridDiv.appendChild(cardApple);
-gridDiv.appendChild(cardStackoverflow);
-gridDiv.appendChild(cardDiscord);
-gridDiv.appendChild(cardHTML);
+// gridDiv.appendChild(cardYoutube);
+// gridDiv.appendChild(cardTwitter);
+// gridDiv.appendChild(cardFacebook);
+// gridDiv.appendChild(cardLinkedin);
+// gridDiv.appendChild(cardGithub);
+// gridDiv.appendChild(cardGoogle);
+// gridDiv.appendChild(cardApple);
+// gridDiv.appendChild(cardStackoverflow);
+// gridDiv.appendChild(cardDiscord);
+// gridDiv.appendChild(cardHTML);
 
 // document.body.appendChild(gridDiv);
