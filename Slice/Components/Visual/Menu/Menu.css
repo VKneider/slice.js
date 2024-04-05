@@ -1,0 +1,48 @@
+.slice_menu_container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+}
+.slice_menu {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--primary-background-color);
+  box-shadow: 10px 0 10px 0px #00000020;
+  padding: 20px;
+  transition: transform 0.3s ease;
+}
+.slice_menu_button {
+  width: min-content;
+  cursor: pointer;
+  padding: 20px;
+}
+.slice_close_menu {
+  visibility: hidden;
+  position: absolute;
+  padding: 20px;
+  top: 0;
+  right: 0;
+}
+@media only screen and (max-width: 770px) {
+  .slice_menu_container {
+    z-index: 100000;
+    display: flex;
+  }
+  .slice_menu_button {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+  .slice_menu {
+    transform: translateX(-100%);
+  }
+  .slice_menu_open {
+    transform: translateX(0%);
+    width: 100%;
+  }
+  .slice_close_menu {
+    visibility: visible;
+  }
+}

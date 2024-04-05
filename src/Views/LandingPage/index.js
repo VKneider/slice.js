@@ -63,6 +63,9 @@ for (const name in components) {
   //   console.log(`${name}: ${components[name]}`);
 }
 
+const menu = await slice.build("Menu", {});
+
+div.appendChild(menu);
 div.appendChild(navBar);
 
 document.body.appendChild(div);
