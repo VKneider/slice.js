@@ -53,9 +53,6 @@ export default class Navbar extends HTMLElement {
   set items(values) {
     this._items = values;
     values.forEach((value) => {
-      if (!value.type) {
-        value.type = "text";
-      }
       this.addItem(value);
     });
   }
@@ -83,6 +80,9 @@ export default class Navbar extends HTMLElement {
   }
 
   async addItem(value) {
+    if (!value.type) {
+      value.type = "text";
+    }
     const item = document.createElement("li");
     const hover = document.createElement("div");
     hover.classList.add("anim-item");

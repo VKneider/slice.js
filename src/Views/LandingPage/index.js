@@ -1,6 +1,10 @@
+import components from "../../../Slice/Components/components.js";
+
 const loading = await slice.build("Loading", {});
 loading.start();
+
 const div = document.createElement("div");
+let theme = "Light";
 
 const navBar = await slice.build("Navbar", {
   logo: {
@@ -10,10 +14,6 @@ const navBar = await slice.build("Navbar", {
   items: [
     {
       text: "Home",
-      href: "",
-    },
-    {
-      text: "Components",
       href: "",
     },
     {
@@ -36,14 +36,27 @@ const navBar = await slice.build("Navbar", {
     {
       value: "Change Theme",
       // color:
-      // onClickCallback: hola,
+      onClickCallback: async () => {
+        if (theme === "Slice") {
+          await slice.setTheme("Light");
+          theme = "Light";
+        } else if (theme === "Light") {
+          await slice.setTheme("Dark");
+          theme = "Dark";
+        } else if (theme === "Dark") {
+          await slice.setTheme("Slice");
+          theme = "Slice";
+        }
+      },
     },
   ],
 });
-div.appendChild(navBar);
 
-const menu = await slice.build("Menu", {});
-div.appendChild(menu);
+for (const name in components) {
+  //   console.log(`${name}: ${components[name]}`);
+}
+
+div.appendChild(navBar);
 
 document.body.appendChild(div);
 loading.stop();
