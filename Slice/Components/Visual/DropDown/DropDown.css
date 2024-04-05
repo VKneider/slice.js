@@ -2,6 +2,7 @@
   cursor: default;
 }
 .slice_dropdown {
+  cursor: pointer;
   user-select: none;
   display: flex;
   justify-content: center;

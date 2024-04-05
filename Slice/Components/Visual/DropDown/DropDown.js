@@ -8,7 +8,7 @@ export default class DropDown extends HTMLElement {
     this.$label = this.querySelector(".slice_dropdown_label");
     this.$caret = this.querySelector(".caret");
 
-    this.$caret.addEventListener("click", () => {
+    this.$dropdown.addEventListener("click", () => {
       this.toggleDrop();
     });
 
