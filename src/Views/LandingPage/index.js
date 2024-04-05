@@ -13,27 +13,23 @@ const navBar = await slice.build("Navbar", {
       href: "",
     },
     {
-      text: "About Us",
+      text: "Components",
       href: "",
     },
     {
-      text: "Language",
+      text: "About Us",
       href: "",
       type: "dropdown",
       options: [
         {
-          text: "Español",
-          href: "",
+          text: "Julio",
+          href: "https://www.instagram.com/juliograterolb/?hl=es",
         },
         {
-          text: "Ingles",
-          href: "",
+          text: "Victor",
+          href: "https://www.instagram.com/victorkneider/?hl=es",
         },
       ],
-    },
-    {
-      text: "Contact Us",
-      href: "",
     },
   ],
   buttons: [

@@ -38,12 +38,15 @@ export default class DropDown extends HTMLElement {
   set options(values) {
     this._options = values;
     values.forEach((element) => {
-      const e = document.createElement("div");
+      const div = document.createElement("div");
+      const e = document.createElement("a");
       e.addEventListener("click", () => {
         this.closeDrop();
       });
       e.textContent = element.text;
-      this.$menu.appendChild(e);
+      e.href = element.href;
+      div.appendChild(e);
+      this.$menu.appendChild(div);
     });
   }
 
