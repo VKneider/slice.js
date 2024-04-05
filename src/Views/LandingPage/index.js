@@ -40,8 +40,10 @@ const navBar = await slice.build("Navbar", {
     },
   ],
 });
-
 div.appendChild(navBar);
+
+const menu = await slice.build("Menu", {});
+div.appendChild(menu);
 
 document.body.appendChild(div);
 loading.stop();

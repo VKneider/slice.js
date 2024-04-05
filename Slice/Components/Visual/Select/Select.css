@@ -34,7 +34,7 @@
   transform: translateY(-200%);
   transition: all 0.5s;
 }
-.slice_menu {
+.slice_select_menu {
   display: none;
   border: var(--slice-border) solid var(--primary-color);
   list-style: none;
