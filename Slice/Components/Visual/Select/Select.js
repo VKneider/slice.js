@@ -6,7 +6,7 @@ export default class Select extends HTMLElement {
     this.$selectContainer = this.querySelector(".slice_select_container");
     this.$label = this.querySelector(".slice_select_label");
     this.$select = this.querySelector(".slice_select");
-    this.$menu = this.querySelector(".slice_menu");
+    this.$menu = this.querySelector(".slice_select_menu");
     this.$caret = this.querySelector(".caret");
 
     this.$selectContainer.addEventListener("click", () => {

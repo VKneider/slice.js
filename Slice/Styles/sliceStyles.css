@@ -6,6 +6,7 @@
   --slice-border: 1px;
 }
 body {
+  margin: 0;
   background-color: var(--primary-background-color);
 }
 .caret {

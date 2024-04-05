@@ -29,8 +29,10 @@
   background-color: var(--primary-color);
   border-radius: var(--border-radius-slice);
   box-shadow: 0 0 10px 0 #00000050;
-  div {
-    color: var(--font-primary-color);
+  div,
+  a {
+    text-decoration: none;
+    color: var(--primary-color-contrast);
     cursor: pointer;
     padding: 10px;
     &:hover {
