@@ -13,11 +13,6 @@
                 "error": true,
                 "warning": true,
                 "info": true
-            },
-            "toast": {
-                "error": true,
-                "warning": true,
-                "info": true
             }
         }
     },

@@ -121,11 +121,10 @@ export default class Slice {
       const ComponentClass = this.controller.classes.get(componentName);
       const componentInstance = new ComponentClass(props);
 
-      if (componentIds.id) componentInstance.id = componentIds.id;
+      if (componentIds.id && isVisual) componentInstance.id = componentIds.id;
       if (componentIds.sliceId)
         componentInstance.sliceId = componentIds.sliceId;
 
-      //this.stylesManager.handleInstanceStyles(componentInstance, props);
 
       if (!this.controller.registerComponent(componentInstance)) {
         this.logger.logError(
