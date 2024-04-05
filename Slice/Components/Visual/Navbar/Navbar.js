@@ -25,18 +25,11 @@ export default class Navbar extends HTMLElement {
   }
 
   async init() {
-    const mobileItems = this.items;
-    mobileItems.forEach((item) => {
-      const li = document.createElement("li");
-      const hover = document.createElement("div");
-      hover.classList.add("anim-item");
-      const a = document.createElement("a");
-      a.classList.add("item");
-      a.href = item.href;
-      a.innerText = item.text;
-      li.appendChild(a);
-      li.appendChild(hover);
-      this.$mobileMenu.appendChild(li);
+    this.items.forEach(async (item) => {
+      await this.addItem(item, this.$mobileMenu);
+    });
+    this.buttons.forEach(async (item) => {
+      await this.addButton(item, this.$mobileMenu);
     });
   }
 
@@ -69,8 +62,8 @@ export default class Navbar extends HTMLElement {
 
   set items(values) {
     this._items = values;
-    values.forEach((value) => {
-      this.addItem(value);
+    values.forEach(async (value) => {
+      await this.addItem(value, this.$menu);
     });
   }
 
@@ -80,8 +73,8 @@ export default class Navbar extends HTMLElement {
 
   set buttons(values) {
     this._buttons = values;
-    values.forEach((value) => {
-      this.addButton(value);
+    values.forEach(async (value) => {
+      await this.addButton(value, this.$buttonsContainer);
     });
   }
 
@@ -96,13 +89,14 @@ export default class Navbar extends HTMLElement {
     }
   }
 
-  async addItem(value) {
+  async addItem(value, addTo) {
     if (!value.type) {
       value.type = "text";
     }
     const item = document.createElement("li");
     const hover = document.createElement("div");
     hover.classList.add("anim-item");
+    //type
     if (value.type === "text") {
       const a = document.createElement("a");
       a.textContent = value.text;
@@ -120,10 +114,11 @@ export default class Navbar extends HTMLElement {
       item.appendChild(d);
     }
     item.appendChild(hover);
-    this.$menu.appendChild(item);
+    addTo.appendChild(item);
+    console.log("Final item");
   }
 
-  async addButton(value) {
+  async addButton(value, addTo) {
     if (!value.color) {
       value.color = {
         label: "var(--primary-color-rgb)",
@@ -135,7 +130,8 @@ export default class Navbar extends HTMLElement {
       customColor: value.color,
       onClickCallback: value.onClickCallback,
     });
-    this.$buttonsContainer.appendChild(button);
+    addTo.appendChild(button);
+    console.log("Final button");
   }
 }
 window.customElements.define("slice-nav-bar", Navbar);

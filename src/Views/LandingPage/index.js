@@ -51,6 +51,22 @@ const navBar = await slice.build("Navbar", {
         }
       },
     },
+    {
+      value: "Change Theme",
+      // color:
+      onClickCallback: async () => {
+        if (theme === "Slice") {
+          await slice.setTheme("Light");
+          theme = "Light";
+        } else if (theme === "Light") {
+          await slice.setTheme("Dark");
+          theme = "Dark";
+        } else if (theme === "Dark") {
+          await slice.setTheme("Slice");
+          theme = "Slice";
+        }
+      },
+    },
   ],
 });
 
