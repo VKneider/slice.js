@@ -54,16 +54,39 @@ const navBar = await slice.build("Navbar", {
 
 let comps = [];
 
+const compVisual = await slice.build("Details", {
+  title: "Visual",
+});
+const compStruc = await slice.build("Details", {
+  title: "Structural",
+});
+const compServe = await slice.build("Details", {
+  title: "Service",
+});
+
 for (const name in components) {
-  const comp = {
-    text: name,
-    href: "",
-  };
-  comps.push(comp);
-  //   console.log(`${name}: ${components[name]}`);
+  console.log(`${name}: ${components[name]}`);
+  const comp = document.createElement("div");
+  const a = document.createElement("a");
+  a.textContent = name;
+  a.href = "";
+  comp.appendChild(a);
+  if (components[name] === "Visual") {
+    compVisual.addDetail(comp);
+  }
+  if (components[name] === "Structural") {
+    compStruc.addDetail(comp);
+  }
+  if (components[name] === "Service") {
+    compServe.addDetail(comp);
+  }
 }
 
-const menu = await slice.build("Menu", {});
+const menu = await slice.build("Menu", { title: "menu" });
+
+menu.add(compVisual);
+menu.add(compStruc);
+menu.add(compServe);
 
 div.appendChild(menu);
 div.appendChild(navBar);

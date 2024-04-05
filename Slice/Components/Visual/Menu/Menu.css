@@ -1,15 +1,18 @@
 .slice_menu_container {
+  font-family: var(--font-family);
   position: fixed;
   top: 0;
   left: 0;
   height: 100%;
-}
-.slice_menu {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
   background-color: var(--primary-background-color);
   box-shadow: 10px 0 10px 0px #00000020;
+  width: 25%;
+}
+.slice_menu {
+  min-height: 80%;
+  overflow-y: scroll;
+  display: flex;
+  flex-direction: column;
   padding: 20px;
   transition: transform 0.3s ease;
 }
@@ -17,6 +20,9 @@
   width: min-content;
   cursor: pointer;
   padding: 20px;
+}
+.menu_title {
+  visibility: hidden;
 }
 .slice_close_menu {
   visibility: hidden;
@@ -29,11 +35,15 @@
   .slice_menu_container {
     z-index: 100000;
     display: flex;
+    width: 0%;
   }
   .slice_menu_button {
     position: absolute;
     top: 0;
     left: 0;
+  }
+  .menu_title {
+    visibility: visible;
   }
   .slice_menu {
     transform: translateX(-100%);

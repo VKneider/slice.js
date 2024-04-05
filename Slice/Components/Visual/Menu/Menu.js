@@ -23,6 +23,10 @@ export default class Menu extends HTMLElement {
   }
 
   init() {}
+
+  add(value) {
+    this.$menu.appendChild(value);
+  }
 }
 
 customElements.define("slice-menu", Menu);
