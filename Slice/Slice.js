@@ -30,6 +30,15 @@ export default class Slice {
       return null;
     }
 
+    if(typeof componentName !== "string") {
+      this.logger.logError(
+        "Slice",
+        null,
+        `Component name must be a string`
+      );
+      return null;
+    }
+
     if (!this.controller.componentCategories.has(componentName)) {
       this.logger.logError(
         "Slice",
@@ -51,12 +60,13 @@ export default class Slice {
     }
 
     let componentBasePath;
+    
     if(componentCategory.includes("User")) {
-      
       componentCategory = componentCategory.replace("User", "")
       componentBasePath = this.paths.userComponents
-      
-    } else {componentBasePath = this.paths.components}
+    } else {
+      componentBasePath = this.paths.components
+    }
     
     const isVisual = componentCategory === "Visual";
     let modulePath = `${componentBasePath}/${componentCategory}/${componentName}/${componentName}.js`;
