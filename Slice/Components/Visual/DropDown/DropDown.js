@@ -4,7 +4,7 @@ export default class DropDown extends HTMLElement {
     slice.attachTemplate(this);
 
     this.$dropdown = this.querySelector(".slice_dropdown");
-    this.$menu = this.querySelector(".slice_dropdown_menu");
+    this.$menu = this.querySelector(".slice_dropbox");
     this.$label = this.querySelector(".slice_dropdown_label");
     this.$caret = this.querySelector(".caret");
 
@@ -17,7 +17,7 @@ export default class DropDown extends HTMLElement {
     });
 
     slice.controller.setComponentProps(this, props);
-    this.debuggerProps = ["label", "options"];
+    this.debuggerProps = ["label", "dropbox"];
   }
 
   init() {}
@@ -51,11 +51,11 @@ export default class DropDown extends HTMLElement {
   }
 
   toggleDrop() {
-    this.$menu.classList.toggle("dropdown_menu_open");
+    this.$menu.classList.toggle("slice_dropbox_open");
     this.$caret.classList.toggle("caret_open");
   }
   closeDrop() {
-    this.$menu.classList.remove("dropdown_menu_open");
+    this.$menu.classList.remove("slice_dropbox_open");
     this.$caret.classList.remove("caret_open");
   }
 }

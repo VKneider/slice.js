@@ -15,7 +15,7 @@
   margin-left: 10px;
   border-top-color: var(--primary-color-contrast);
 }
-.slice_dropdown_menu {
+.slice_dropbox {
   border: var(--slice-border) solid var(--primary-color);
   list-style: none;
   font-family: var(--font-family);
@@ -41,17 +41,17 @@
     }
   }
 }
-.dropdown_menu_open {
+.slice_dropbox_open {
   overflow-y: scroll;
   min-height: min-content;
   max-height: 200px;
   visibility: visible;
   opacity: 1;
 }
-.dropdown_menu_open::-webkit-scrollbar {
+.slice_dropbox_open::-webkit-scrollbar {
   width: 5px;
 }
-.dropdown_menu_open::-webkit-scrollbar-thumb {
+.slice_dropbox_open::-webkit-scrollbar-thumb {
   background: var(--secondary-color);
   border-radius: var(--border-radius-slice);
 }
