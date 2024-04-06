@@ -13,11 +13,11 @@ export default class Navbar extends HTMLElement {
     this.$closeMenu = this.querySelector(".mobile_close_menu");
 
     this.$mobileButton.addEventListener("click", () => {
-      this.$mobileMenu.style.transform = "translateX(0%)";
+      this.$navBar.style.transform = "translateX(0%)";
     });
 
     this.$closeMenu.addEventListener("click", () => {
-      this.$mobileMenu.style.transform = "translateX(-100%)";
+      this.$navBar.style.transform = "translateX(100%)";
     });
 
     slice.controller.setComponentProps(this, props);
@@ -25,18 +25,11 @@ export default class Navbar extends HTMLElement {
   }
 
   async init() {
-    const mobileItems = this.items;
-    mobileItems.forEach((item) => {
-      const li = document.createElement("li");
-      const hover = document.createElement("div");
-      hover.classList.add("anim-item");
-      const a = document.createElement("a");
-      a.classList.add("item");
-      a.href = item.href;
-      a.innerText = item.text;
-      li.appendChild(a);
-      li.appendChild(hover);
-      this.$mobileMenu.appendChild(li);
+    this.items.forEach(async (item) => {
+      await this.addItem(item, this.$menu);
+    });
+    this.buttons.forEach(async (item) => {
+      await this.addButton(item, this.$buttonsContainer);
     });
   }
 
@@ -69,9 +62,6 @@ export default class Navbar extends HTMLElement {
 
   set items(values) {
     this._items = values;
-    values.forEach((value) => {
-      this.addItem(value);
-    });
   }
 
   get buttons() {
@@ -80,9 +70,6 @@ export default class Navbar extends HTMLElement {
 
   set buttons(values) {
     this._buttons = values;
-    values.forEach((value) => {
-      this.addButton(value);
-    });
   }
 
   get direction() {
@@ -96,13 +83,14 @@ export default class Navbar extends HTMLElement {
     }
   }
 
-  async addItem(value) {
+  async addItem(value, addTo) {
     if (!value.type) {
       value.type = "text";
     }
     const item = document.createElement("li");
     const hover = document.createElement("div");
     hover.classList.add("anim-item");
+    //type
     if (value.type === "text") {
       const a = document.createElement("a");
       a.textContent = value.text;
@@ -111,7 +99,6 @@ export default class Navbar extends HTMLElement {
       item.appendChild(a);
     }
     if (value.type === "dropdown") {
-      console.log(value);
       const d = await slice.build("DropDown", {
         label: value.text,
         options: value.options,
@@ -120,10 +107,10 @@ export default class Navbar extends HTMLElement {
       item.appendChild(d);
     }
     item.appendChild(hover);
-    this.$menu.appendChild(item);
+    addTo.appendChild(item);
   }
 
-  async addButton(value) {
+  async addButton(value, addTo) {
     if (!value.color) {
       value.color = {
         label: "var(--primary-color-rgb)",
@@ -133,9 +120,10 @@ export default class Navbar extends HTMLElement {
     const button = await slice.build("Button", {
       value: value.value,
       customColor: value.color,
+      icon: value.icon,
       onClickCallback: value.onClickCallback,
     });
-    this.$buttonsContainer.appendChild(button);
+    addTo.appendChild(button);
   }
 }
 window.customElements.define("slice-nav-bar", Navbar);

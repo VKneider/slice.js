@@ -18,6 +18,9 @@
   position: fixed;
 }
 .slice_nav_bar {
+  transition: transform 0.3s ease;
+  width: 100%;
+  justify-content: center;
   display: flex;
   align-items: center;
   left: 0;
@@ -27,7 +30,7 @@
   width: 100%;
   display: flex;
   align-items: center;
-  justify-content: space-around;
+  justify-content: flex-end;
   list-style: none;
 }
 .slice_nav_header .item {
@@ -64,24 +67,11 @@ li {
   max-width: 200px;
 }
 .nav_bar_buttons {
+  justify-content: flex-end;
   display: flex;
-}
-.slice_mobile_menu {
-  list-style: none;
   width: 100%;
-  height: 100%;
-  position: fixed;
-  top: 0;
-  left: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  background-color: var(--primary-color);
-  visibility: hidden;
-  transition: transform 0.3s ease;
-  transform: translateX(-100%);
 }
+
 .mobile_menu_button,
 .mobile_close_menu {
   visibility: hidden;
@@ -92,15 +82,26 @@ li {
 .mobile_close_menu {
   top: 25px;
 }
-@media only screen and (max-width: 770px) {
-  .slice_nav_bar,
+@media only screen and (max-width: 1020px) {
+  .slice_nav_bar {
+    z-index: 1;
+    list-style: none;
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    background-color: var(--primary-color);
+    transform: translateX(100%);
+  }
+  .nav_bar_menu,
   .nav_bar_buttons {
-    visibility: hidden;
+    flex-direction: column;
   }
-  .logo_container {
-    position: absolute;
-  }
-  .slice_mobile_menu,
   .mobile_menu_button,
   .mobile_close_menu {
     visibility: visible;

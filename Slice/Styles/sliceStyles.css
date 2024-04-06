@@ -21,3 +21,10 @@ body {
 .caret_open {
   transform: rotate(180deg);
 }
+*::-webkit-scrollbar {
+  width: 5px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--secondary-color);
+  border-radius: var(--border-radius-slice);
+}
