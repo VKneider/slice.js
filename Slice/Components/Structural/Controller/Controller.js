@@ -43,8 +43,8 @@ export default class Controller {
     return true;
   }
 
-  getComponent(id) {
-    return this.activeComponents.get(id);
+  getComponent(sliceId) {
+    return this.activeComponents.get(sliceId);
   }
 
   //Attach template to component
@@ -53,7 +53,7 @@ export default class Controller {
     const template = this.templates.get(className);
 
     if (!template) {
-      console.error(`Template not found for component: ${className}`);
+      slice.logger.logError(`Template not found for component: ${className}`);
       return;
     }
 
@@ -72,7 +72,10 @@ export default class Controller {
     }
 
     if(!componentBasePath && fileType !== "theme" && fileType !== "styles"){
-      if(componentCategory.includes("User")) {componentBasePath = slice.paths.userComponents} else {componentBasePath = slice.paths.components}
+      if(componentCategory.includes("User")) {componentBasePath = slice.paths.userComponents}
+      else {
+        componentBasePath = slice.paths.components
+      }
     }
 
     let path;

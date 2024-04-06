@@ -212,19 +212,7 @@ export default class Debugger extends HTMLElement {
         this.selectedComponentSliceId
       )[attributeName];
 
-      // Verificar si el valor anterior y el nuevo valor son iguales como cadenas
       if (String(newValue) !== String(oldValue)) {
-        //Verificar si es funcion para que no lo vuelva a guardar sin cambios
-        /*
-        if (typeof selectedComponent[attributeName] === 'function') {
-          try {
-            newValue = eval(`(${newValue})`);
-          } catch (error) {
-            console.error(`Error al analizar la función: ${error}`);
-            return;
-          }
-        }
-*/
         if (typeof selectedComponent[attributeName] === "function") {
           return;
         }
