@@ -39,14 +39,9 @@ export default class Slice {
       return null;
     }
 
-    let compontentCategory =
-      this.controller.componentCategories.get(componentName);
+    let componentCategory =this.controller.componentCategories.get(componentName);
 
-    //Pregunta para la posteridad: ¿Deberíamos dejar que el usuario pueda crear componentes de categoría Structural?
-    //Por ahora no lo permitimos, pero si en el futuro se decide que sí, se debe cambiar el código de abajo para que funcione
-    //con componentes de categoría Structural
-
-    if (compontentCategory === "Structural") {
+    if (componentCategory === "Structural") {
       this.logger.logError(
         "Slice",
         null,
@@ -55,14 +50,21 @@ export default class Slice {
       return null;
     }
 
-    const isVisual = compontentCategory === "Visual";
-
-    let modulePath = `${this.paths.components}/${compontentCategory}/${componentName}/${componentName}.js`;
+    let componentBasePath;
+    if(componentCategory.includes("User")) {
+      
+      componentCategory = componentCategory.replace("User", "")
+      componentBasePath = this.paths.userComponents
+      
+    } else {componentBasePath = this.paths.components}
+    
+    const isVisual = componentCategory === "Visual";
+    let modulePath = `${componentBasePath}/${componentCategory}/${componentName}/${componentName}.js`;
 
     // Load template if not loaded previously and component category is Visual
     if (!this.controller.templates.has(componentName) && isVisual) {
       try {
-        const html = await this.controller.fetchText(componentName, "html");
+        const html = await this.controller.fetchText(componentName, "html", componentBasePath, componentCategory);
         const template = document.createElement("template");
         template.innerHTML = html;
         this.controller.templates.set(componentName, template);
@@ -134,7 +136,7 @@ export default class Slice {
         return null;
       }
 
-      if (sliceConfig.debugger.enabled && compontentCategory === "Visual") {
+      if (sliceConfig.debugger.enabled && componentCategory === "Visual") {
         this.debugger.attachDebugMode(componentInstance);
       }
 
@@ -188,8 +190,6 @@ async function init() {
   await window.slice.setTheme(
     sliceConfig.stylesManager.defaultTheme || "Slice"
   );
-
-
 }
 
 await init();

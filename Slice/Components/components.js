@@ -3,6 +3,7 @@ const components = {
   "Card": "Visual",
   "Checkbox": "Visual",
   "Details": "Visual",
+  "Diego": "Visual",
   "DropDown": "Visual",
   "Icon": "Visual",
   "Input": "Visual",
@@ -18,5 +19,6 @@ const components = {
   "Controller": "Structural",
   "Debugger": "Structural",
   "Logger": "Structural",
-  "StylesManager": "Structural"
+  "StylesManager": "Structural",
+  "Victor2": "UserVisual"
 }; export default components;

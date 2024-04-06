@@ -1,3 +1,4 @@
+import Slice from "../../../Slice/Slice.js";
 import components from "../../../Slice/Components/components.js";
 
 const loading = await slice.build("Loading", {});
@@ -101,3 +102,4 @@ const button = await slice.build("Button", {
 
 document.body.appendChild(div);
 loading.stop();
+

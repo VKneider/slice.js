@@ -459,3 +459,6 @@ gridDiv.appendChild(cardDiscord);
 gridDiv.appendChild(cardHTML);
 
 document.body.appendChild(gridDiv);
+
+const victor2 = await slice.build("Victor2")
+document.body.appendChild(victor2)
