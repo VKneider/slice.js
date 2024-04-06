@@ -7,7 +7,7 @@
         "defaultTheme": "Light"
     },
     "logger": {
-        "enabled": true,
+        "enabled": false,
         "showLogs": {
             "console": {
                 "error": true,

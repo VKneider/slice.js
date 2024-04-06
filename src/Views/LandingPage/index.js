@@ -33,6 +33,21 @@ const navBar = await slice.build("Navbar", {
         },
       ],
     },
+    {
+      text: "Contact Us",
+      href: "",
+    },
+    {
+      text: "Drop",
+      href: "",
+      type: "dropdown",
+      options: [
+        {
+          text: "drop 1",
+          href: "",
+        },
+      ],
+    },
   ],
   buttons: [
     {
@@ -83,7 +98,7 @@ const compServe = await slice.build("Details", {
 });
 
 for (const name in components) {
-  console.log(`${name}: ${components[name]}`);
+  // console.log(`${name}: ${components[name]}`);
   const comp = document.createElement("div");
   const a = document.createElement("a");
   a.textContent = name;

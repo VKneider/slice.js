@@ -13,11 +13,11 @@ export default class Navbar extends HTMLElement {
     this.$closeMenu = this.querySelector(".mobile_close_menu");
 
     this.$mobileButton.addEventListener("click", () => {
-      this.$mobileMenu.style.transform = "translateX(0%)";
+      this.$navBar.style.transform = "translateX(0%)";
     });
 
     this.$closeMenu.addEventListener("click", () => {
-      this.$mobileMenu.style.transform = "translateX(-100%)";
+      this.$navBar.style.transform = "translateX(100%)";
     });
 
     slice.controller.setComponentProps(this, props);
@@ -26,10 +26,10 @@ export default class Navbar extends HTMLElement {
 
   async init() {
     this.items.forEach(async (item) => {
-      await this.addItem(item, this.$mobileMenu);
+      await this.addItem(item, this.$menu);
     });
     this.buttons.forEach(async (item) => {
-      await this.addButton(item, this.$mobileMenu);
+      await this.addButton(item, this.$buttonsContainer);
     });
   }
 
@@ -62,9 +62,6 @@ export default class Navbar extends HTMLElement {
 
   set items(values) {
     this._items = values;
-    values.forEach(async (value) => {
-      await this.addItem(value, this.$menu);
-    });
   }
 
   get buttons() {
@@ -73,9 +70,6 @@ export default class Navbar extends HTMLElement {
 
   set buttons(values) {
     this._buttons = values;
-    values.forEach(async (value) => {
-      await this.addButton(value, this.$buttonsContainer);
-    });
   }
 
   get direction() {
@@ -105,7 +99,6 @@ export default class Navbar extends HTMLElement {
       item.appendChild(a);
     }
     if (value.type === "dropdown") {
-      console.log(value);
       const d = await slice.build("DropDown", {
         label: value.text,
         options: value.options,
@@ -115,7 +108,6 @@ export default class Navbar extends HTMLElement {
     }
     item.appendChild(hover);
     addTo.appendChild(item);
-    console.log("Final item");
   }
 
   async addButton(value, addTo) {
@@ -128,10 +120,10 @@ export default class Navbar extends HTMLElement {
     const button = await slice.build("Button", {
       value: value.value,
       customColor: value.color,
+      icon: value.icon,
       onClickCallback: value.onClickCallback,
     });
     addTo.appendChild(button);
-    console.log("Final button");
   }
 }
 window.customElements.define("slice-nav-bar", Navbar);
