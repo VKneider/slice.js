@@ -65,17 +65,24 @@ export default class Controller {
     return this.componentCategories.get(componentSliceId);
   }
 
-  async fetchText(componentName, fileType) {
-    const componentCategory = this.getComponentCategory(componentName);
+  async fetchText(componentName, fileType, componentBasePath, componentCategory) {
+
+    if(!componentCategory) {
+      componentCategory = this.componentCategories.get(componentName);
+    }
+
+    if(!componentBasePath && fileType !== "theme" && fileType !== "styles"){
+      if(componentCategory.includes("User")) {componentBasePath = slice.paths.userComponents} else {componentBasePath = slice.paths.components}
+    }
 
     let path;
 
     if (fileType === "css") {
-      path = `Slice/${slice.paths.components}/${componentCategory}/${componentName}/${componentName}.css`;
+      path = `${componentBasePath}/${componentCategory}/${componentName}/${componentName}.css`;
     }
 
     if (fileType === "html") {
-      path = `Slice/${slice.paths.components}/${componentCategory}/${componentName}/${componentName}.html`;
+      path = `${componentBasePath}/${componentCategory}/${componentName}/${componentName}.html`;
     }
 
     if (fileType === "theme") {

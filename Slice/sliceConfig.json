@@ -22,7 +22,7 @@
     "paths": {
         "components": "../../../../Slice/Components",
         "themes": "../../../../Slice/Themes",
-        "styles": "../../../../Slice/Styles"
- 
+        "styles": "../../../../Slice/Styles",
+        "userComponents": "../../../../src/Components"
     }
 }
