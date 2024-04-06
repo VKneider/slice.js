@@ -3,6 +3,8 @@ export default class Menu extends HTMLElement {
     super();
     slice.attachTemplate(this);
 
+    this.classList.add("slice_menu_container");
+
     this.$menuButton = this.querySelector(".slice_menu_button");
     this.$closeButton = this.querySelector(".slice_close_menu");
     this.$container = this.querySelector(".slice_menu_container");
