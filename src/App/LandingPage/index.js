@@ -133,4 +133,3 @@ const button = await slice.build("Button", {
 
 document.body.appendChild(div);
 loading.stop();
-
