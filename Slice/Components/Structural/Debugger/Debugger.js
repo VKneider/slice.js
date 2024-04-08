@@ -89,19 +89,16 @@ export default class Debugger extends HTMLElement {
 
   handleDebugClick(event, component) {
     event.preventDefault();
+    
+    const debuggerWidth = this.debuggerContainer.offsetWidth;
+    const debuggerHeight = this.debuggerContainer.offsetHeight;
 
-    if (event.clientX > window.screen.width / 2) {
-      this.debuggerContainer.style.left = `calc(${event.clientX}px - 25%)`;
-    } else {
-      this.debuggerContainer.style.left = `${event.clientX}px`;
-    }
+    const leftOffset = (window.innerWidth - debuggerWidth) / 2;
+    const topOffset = (window.innerHeight - debuggerHeight) / 2;
 
-    if (event.clientY > window.screen.height / 2) {
-      this.debuggerContainer.style.top = `calc(${event.clientY}px - 75%)`;
-    } else {
-      this.debuggerContainer.style.top = `${event.clientY}px`;
-    }
-
+    this.debuggerContainer.style.left = `${leftOffset}px`;
+    this.debuggerContainer.style.top = `${topOffset}px`;
+    
     const sliceId = component.sliceId;
     this.isActive = true;
 
