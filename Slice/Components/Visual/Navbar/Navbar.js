@@ -25,11 +25,17 @@ export default class Navbar extends HTMLElement {
   }
 
   async init() {
-    this.items.forEach(async (item) => {
-      await this.addItem(item, this.$menu);
-    });
+    // this.items.forEach(async (item) => {
+    //   await this.addItem(item, this.$menu);
+    // });
     this.buttons.forEach(async (item) => {
       await this.addButton(item, this.$buttonsContainer);
+    });
+  }
+
+  async addItems(items) {
+    items.forEach(async (item) => {
+      await this.addItem(item, this.$menu);
     });
   }
 
@@ -84,13 +90,12 @@ export default class Navbar extends HTMLElement {
   }
 
   async addItem(value, addTo) {
-    if (!value.type) {
-      value.type = "text";
-    }
     const item = document.createElement("li");
     const hover = document.createElement("div");
     hover.classList.add("anim-item");
-    //type
+    if (!value.type) {
+      value.type = "text";
+    }
     if (value.type === "text") {
       const a = document.createElement("a");
       a.textContent = value.text;

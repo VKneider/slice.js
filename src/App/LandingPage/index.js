@@ -14,42 +14,6 @@ const navBar = await slice.build("Navbar", {
     src: "../Slice.js-logo.png",
     href: "",
   },
-  items: [
-    {
-      text: "Home",
-      href: "",
-    },
-    {
-      text: "About Us",
-      href: "",
-      type: "dropdown",
-      options: [
-        {
-          text: "Julio",
-          href: "https://www.instagram.com/juliograterolb/?hl=es",
-        },
-        {
-          text: "Victor",
-          href: "https://www.instagram.com/victorkneider/?hl=es",
-        },
-      ],
-    },
-    {
-      text: "Contact Us",
-      href: "",
-    },
-    {
-      text: "Drop",
-      href: "",
-      type: "dropdown",
-      options: [
-        {
-          text: "drop 1",
-          href: "",
-        },
-      ],
-    },
-  ],
   buttons: [
     {
       value: "Change Theme",
@@ -68,25 +32,53 @@ const navBar = await slice.build("Navbar", {
       },
     },
     {
-      value: "Change Theme",
-      // color:
+      value: "Test Button",
+      color: {
+        button: "red",
+      },
       onClickCallback: async () => {
-        if (theme === "Slice") {
-          await slice.setTheme("Light");
-          theme = "Light";
-        } else if (theme === "Light") {
-          await slice.setTheme("Dark");
-          theme = "Dark";
-        } else if (theme === "Dark") {
-          await slice.setTheme("Slice");
-          theme = "Slice";
-        }
+        console.log("Test");
       },
     },
   ],
 });
 
-let comps = [];
+navBar.addItems([
+  {
+    text: "Home",
+    href: "",
+  },
+  {
+    text: "About Us",
+    href: "",
+    type: "dropdown",
+    options: [
+      {
+        text: "Julio",
+        href: "https://www.instagram.com/juliograterolb/?hl=es",
+      },
+      {
+        text: "Victor",
+        href: "https://www.instagram.com/victorkneider/?hl=es",
+      },
+    ],
+  },
+  {
+    text: "Contact Us",
+    href: "",
+  },
+  {
+    text: "Drop",
+    href: "",
+    type: "dropdown",
+    options: [
+      {
+        text: "drop 1",
+        href: "",
+      },
+    ],
+  },
+]);
 
 const compVisual = await slice.build("Details", {
   title: "Visual",
