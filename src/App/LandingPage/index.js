@@ -1,6 +1,9 @@
 import Slice from "../../../Slice/Slice.js";
 import components from "../../../Slice/Components/components.js";
 
+
+
+
 const div = document.createElement("div");
 // div.style.height = "90vh";
 let theme = "Light";
@@ -91,7 +94,7 @@ for (const name in components) {
   const comp = document.createElement("div");
   const a = document.createElement("a");
   a.textContent = name;
-  a.href = "";
+  a.href = `#${name}`;
   comp.appendChild(a);
   if (components[name] === "Visual") {
     compVisual.addDetail(comp);
@@ -111,13 +114,13 @@ menu.add(compStruc);
 menu.add(compServe);
 
 div.appendChild(navBar);
-// div.appendChild(menu);
+ div.appendChild(menu);
 
 const button = await slice.build("Button", {
   value: "Slice",
   onClickCallback: () => {
     layOut.showing(form);
-  },
+  }
 });
 
 const form = document.createElement("div");
@@ -182,9 +185,28 @@ form.appendChild(confirmPassword);
 
 //form test
 
+const divView = document.createElement("div");
+divView.id = "view";
+
 const layOut = await slice.build("Layout", {
   layout: div,
-  view: button,
+  view: divView
 });
 
 document.body.appendChild(layOut);
+
+if(window.location.hash !== "") {
+  await loadComponentFromHash();
+}
+
+//create an event that every time the hash changes, the component changes
+window.addEventListener("hashchange", async () => {
+  await loadComponentFromHash();
+});
+
+async function loadComponentFromHash() {
+  let hash = window.location.hash;
+  hash = hash.substring(1);
+  let myComponent = await slice.build(hash, {});
+  layOut.showing(myComponent);
+}
