@@ -9,7 +9,9 @@ export default class Layout extends HTMLElement {
   }
 
   async init() {
-    await this.onLayOut(this.layout);
+    if(this.layout){
+      await this.onLayOut(this.layout);
+    }
     if (this.view) {
       await this.showing(this.view);
     }
@@ -32,21 +34,31 @@ export default class Layout extends HTMLElement {
   }
 
   async showing(view) {
-    const loading = await slice.build("Loading", {});
-    loading.start();
+
+    if(slice.loading){
+      slice.loading.start();
+    }else {
+      const loading = await slice.build("Loading", {});
+      loading.start();
+    }
+    
     if (this.currentView) {
       document.body.removeChild(this.currentView);
     }
     document.body.appendChild(view);
     this.currentView = view;
-    loading.stop();
+    slice.loading.stop();
   }
 
   async onLayOut(view) {
-    const loading = await slice.build("Loading", {});
-    loading.start();
+    if(slice.loading){
+      slice.loading.start();
+    }else {
+      const loading = await slice.build("Loading", {});
+      loading.start();
+    }
     document.body.appendChild(view);
-    loading.stop();
+    slice.loading.stop();
   }
 }
 
