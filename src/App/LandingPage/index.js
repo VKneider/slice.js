@@ -1,11 +1,8 @@
 import Slice from "../../../Slice/Slice.js";
 import components from "../../../Slice/Components/components.js";
 
-const loading = await slice.build("Loading", {});
-loading.start();
-
 const div = document.createElement("div");
-div.style.height = "90vh";
+// div.style.height = "90vh";
 let theme = "Light";
 
 const navBar = await slice.build("Navbar", {
@@ -115,13 +112,24 @@ menu.add(compStruc);
 menu.add(compServe);
 
 div.appendChild(navBar);
-div.appendChild(menu);
+// div.appendChild(menu);
 
 const button = await slice.build("Button", {
   value: "Slice",
+  onClickCallback: () => {
+    layOut.onView(button2);
+  },
+});
+const button2 = await slice.build("Button", {
+  value: "Another Button",
+  customColor: {
+    button: "#008080",
+  },
 });
 
-// div.appendChild(button);
+const layOut = await slice.build("Layout", {
+  layout: div,
+  view: button,
+});
 
-document.body.appendChild(div);
-loading.stop();
+document.body.appendChild(layOut);
