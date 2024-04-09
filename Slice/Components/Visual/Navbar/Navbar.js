@@ -25,16 +25,13 @@ export default class Navbar extends HTMLElement {
   }
 
   async init() {
-    // this.items.forEach(async (item) => {
-    //   await this.addItem(item, this.$menu);
-    // });
+    await this.addItems(this.items);
     this.buttons.forEach(async (item) => {
       await this.addButton(item, this.$buttonsContainer);
     });
   }
 
   async addItems(items) {
- 
     for (let i = 0; i < items.length; i++) {
       await this.addItem(items[i], this.$menu);
     }
@@ -91,7 +88,7 @@ export default class Navbar extends HTMLElement {
   }
 
   async addItem(value, addTo) {
-    console.log(value, addTo)
+    console.log(value, addTo);
     const item = document.createElement("li");
     const hover = document.createElement("div");
     hover.classList.add("anim-item");
@@ -104,7 +101,7 @@ export default class Navbar extends HTMLElement {
       a.href = value.href;
       a.classList.add("item");
       item.appendChild(a);
-      console.log("text")
+      console.log("text");
     }
     if (value.type === "dropdown") {
       const d = await slice.build("DropDown", {
@@ -113,7 +110,7 @@ export default class Navbar extends HTMLElement {
       });
       d.classList.add("item");
       item.appendChild(d);
-      console.log("dropdown")
+      console.log("dropdown");
     }
     item.appendChild(hover);
     addTo.appendChild(item);

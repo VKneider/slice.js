@@ -14,6 +14,42 @@ const navBar = await slice.build("Navbar", {
     src: "../Slice.js-logo.png",
     href: "",
   },
+  items: [
+    {
+      text: "Home",
+      href: "",
+    },
+    {
+      text: "About Us",
+      href: "",
+      type: "dropdown",
+      options: [
+        {
+          text: "Julio",
+          href: "https://www.instagram.com/juliograterolb/?hl=es",
+        },
+        {
+          text: "Victor",
+          href: "https://www.instagram.com/victorkneider/?hl=es",
+        },
+      ],
+    },
+    {
+      text: "Contact Us",
+      href: "",
+    },
+    {
+      text: "Drop",
+      href: "",
+      type: "dropdown",
+      options: [
+        {
+          text: "drop 1",
+          href: "",
+        },
+      ],
+    },
+  ],
   buttons: [
     {
       value: "Change Theme",
@@ -42,43 +78,6 @@ const navBar = await slice.build("Navbar", {
     },
   ],
 });
-
-await navBar.addItems([
-  {
-    text: "Home",
-    href: "",
-  },
-  {
-    text: "About Us",
-    href: "",
-    type: "dropdown",
-    options: [
-      {
-        text: "Julio",
-        href: "https://www.instagram.com/juliograterolb/?hl=es",
-      },
-      {
-        text: "Victor",
-        href: "https://www.instagram.com/victorkneider/?hl=es",
-      },
-    ],
-  },
-  {
-    text: "Contact Us",
-    href: "",
-  },
-  {
-    text: "Drop",
-    href: "",
-    type: "dropdown",
-    options: [
-      {
-        text: "drop 1",
-        href: "",
-      },
-    ],
-  },
-]);
 
 const compVisual = await slice.build("Details", {
   title: "Visual",
