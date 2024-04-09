@@ -43,7 +43,7 @@ const navBar = await slice.build("Navbar", {
   ],
 });
 
-navBar.addItems([
+await navBar.addItems([
   {
     text: "Home",
     href: "",
