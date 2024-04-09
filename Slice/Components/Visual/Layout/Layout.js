@@ -9,13 +9,10 @@ export default class Layout extends HTMLElement {
   }
 
   async init() {
-    const loading = await slice.build("Loading", {});
-    loading.start();
     await this.onLayOut(this.layout);
     if (this.view) {
-      await this.onView(this.view);
+      await this.showing(this.view);
     }
-    loading.stop();
   }
 
   get layout() {
@@ -34,16 +31,22 @@ export default class Layout extends HTMLElement {
     this._view = value;
   }
 
-  async onView(view) {
+  async showing(view) {
+    const loading = await slice.build("Loading", {});
+    loading.start();
     if (this.currentView) {
       document.body.removeChild(this.currentView);
     }
     document.body.appendChild(view);
     this.currentView = view;
+    loading.stop();
   }
 
   async onLayOut(view) {
+    const loading = await slice.build("Loading", {});
+    loading.start();
     document.body.appendChild(view);
+    loading.stop();
   }
 }
 

@@ -116,15 +116,71 @@ div.appendChild(navBar);
 const button = await slice.build("Button", {
   value: "Slice",
   onClickCallback: () => {
-    layOut.onView(button2);
+    layOut.showing(form);
   },
 });
+
+const form = document.createElement("div");
+
 const button2 = await slice.build("Button", {
   value: "Another Button",
   customColor: {
     button: "#008080",
   },
+  onClickCallback: () => {
+    layOut.showing(button);
+  },
 });
+
+form.appendChild(button2);
+
+//form test
+
+const name1 = await slice.build("Input", {
+  id: "nombre",
+  placeholder: "Name",
+  required: true,
+  sliceId: "myInput",
+});
+
+const lastname = await slice.build("Input", {
+  placeholder: "Last Name",
+});
+
+const password = await slice.build("Input", {
+  placeholder: "Password",
+  type: "password",
+  required: true,
+  secret: true,
+});
+
+const confirmPassword = await slice.build("Input", {
+  placeholder: "Confirm Password",
+  type: "password",
+  required: true,
+  secret: false,
+  disabled: true,
+  conditions: {
+    // regex: "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[\\W_]).{8,}$",
+    minLength: 8,
+    maxLength: 10,
+    minMinusc: 1,
+    maxMinusc: 4,
+    minMayusc: 1,
+    maxMayusc: 6,
+    minNumber: 1,
+    maxNumber: 6,
+    minSymbol: 1,
+    maxSymbol: 10,
+  },
+});
+
+form.appendChild(name1);
+form.appendChild(lastname);
+form.appendChild(password);
+form.appendChild(confirmPassword);
+
+//form test
 
 const layOut = await slice.build("Layout", {
   layout: div,
