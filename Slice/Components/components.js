@@ -6,6 +6,7 @@ const components = {
   "DropDown": "Visual",
   "Icon": "Visual",
   "Input": "Visual",
+  "Layout": "Visual",
   "Loading": "Visual",
   "Menu": "Visual",
   "Navbar": "Visual",
