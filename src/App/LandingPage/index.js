@@ -8,7 +8,7 @@ let theme = "Light";
 const navBar = await slice.build("Navbar", {
   // position: "fixed",
   logo: {
-    src: "../Slice.js-logo.png",
+    src: "../../images/Slice.js-logo.png",
     href: "",
   },
   items: [

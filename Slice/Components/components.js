@@ -19,5 +19,7 @@ const components = {
   "Controller": "Structural",
   "Debugger": "Structural",
   "Logger": "Structural",
-  "StylesManager": "Structural"
+  "StylesManager": "Structural",
+  "MainMenu": "UserVisual",
+  "MyLayout": "UserVisual"
 }; export default components;
