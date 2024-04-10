@@ -3,20 +3,16 @@ export default class Menu extends HTMLElement {
     super();
     slice.attachTemplate(this);
 
-
     this.$menuButton = this.querySelector(".slice_menu_button");
     this.$closeButton = this.querySelector(".slice_close_menu");
     this.$container = this.querySelector(".slice_menu_container");
     this.$menu = this.querySelector(".slice_menu");
 
     this.$menuButton.addEventListener("click", () => {
-      this.$container.style.width = "100%";
-      this.$menu.style = "transform: translateX(0%); width: 100%;";
+      this.showMenu();
     });
     this.$closeButton.addEventListener("click", () => {
-      this.$container.style.width = "0%";
-      this.$menu.style = "transform: translateX(-100%);";
-      // this.$menu.classList.toggle("slice_menu");
+      this.hideMenu();
     });
 
     slice.controller.setComponentProps(this, props);
@@ -27,6 +23,16 @@ export default class Menu extends HTMLElement {
 
   add(value) {
     this.$menu.appendChild(value);
+  }
+
+  hideMenu() {
+    this.$container.style.width = "0%";
+    this.$menu.classList.remove("slice_menu_open");
+  }
+
+  showMenu() {
+    this.$container.style.width = "100%";
+    this.$menu.classList.add("slice_menu_open");
   }
 }
 

@@ -5,7 +5,8 @@
   display: flex;
   align-items: center;
   height: 100%;
-  width: 18%;
+  overflow-y: scroll;
+  /* width: 18%; */
 }
 .slice_menu {
   width: 100%;
@@ -38,9 +39,11 @@
 }
 @media only screen and (max-width: 770px) {
   .slice_menu_container {
+    width: auto;
     z-index: 100000;
     display: flex;
-    width: 0%;
+    justify-content: center;
+    height: 100%;
   }
   .slice_menu_button {
     visibility: visible;
@@ -49,11 +52,18 @@
     visibility: visible;
   }
   .slice_menu {
+    height: 100%;
+    width: auto;
+    display: flex;
+    /* justify-content: center; */
     transform: translateX(-100%);
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: var(--secondary-background-color);
   }
   .slice_menu_open {
     transform: translateX(0%);
-    width: 100%;
   }
   .slice_close_menu {
     visibility: visible;
