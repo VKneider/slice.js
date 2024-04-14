@@ -2,7 +2,8 @@ import Slice from "../../../Slice/Slice.js";
 import components from "../../../Slice/Components/components.js";
 
 
-
+const loading = await slice.build("Loading", {});
+loading.start();
 
 const div = document.createElement("div");
 // div.style.height = "90vh";
@@ -192,7 +193,7 @@ const layOut = await slice.build("Layout", {
   layout: div,
   view: divView
 });
-
+loading.stop();
 document.body.appendChild(layOut);
 
 if(window.location.hash !== "") {
