@@ -1,9 +1,6 @@
 import Slice from "../../../Slice/Slice.js";
 import components from "../../../Slice/Components/components.js";
 
-
-
-
 const div = document.createElement("div");
 // div.style.height = "90vh";
 let theme = "Light";
@@ -107,21 +104,26 @@ for (const name in components) {
   }
 }
 
-const menu = await slice.build("Menu", {});
-
-menu.add(compVisual);
-menu.add(compStruc);
-menu.add(compServe);
-
-div.appendChild(navBar);
- div.appendChild(menu);
+// div.appendChild(navBar);
 
 const button = await slice.build("Button", {
   value: "Slice",
   onClickCallback: () => {
-    layOut.showing(form);
-  }
+    // layOut.showing(form);
+  },
 });
+
+button.width = "50px";
+
+const grid = await slice.build("Grid", {
+  columns: 3,
+  rows: 1,
+  items: [button],
+});
+
+div.appendChild(grid);
+
+// grid.setItem(button);
 
 const form = document.createElement("div");
 
@@ -190,12 +192,12 @@ divView.id = "view";
 
 const layOut = await slice.build("Layout", {
   layout: div,
-  view: divView
+  view: divView,
 });
 
 document.body.appendChild(layOut);
 
-if(window.location.hash !== "") {
+if (window.location.hash !== "") {
   await loadComponentFromHash();
 }
 
