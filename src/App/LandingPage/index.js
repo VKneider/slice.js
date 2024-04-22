@@ -76,35 +76,35 @@ const navBar = await slice.build("Navbar", {
   ],
 });
 
-const compVisual = await slice.build("Details", {
-  title: "Visual",
-});
-const compStruc = await slice.build("Details", {
-  title: "Structural",
-});
-const compServe = await slice.build("Details", {
-  title: "Service",
-});
+let compVisual = {
+  value: "Visual",
+  items: [],
+};
+let compStruc = {
+  value: "Structural",
+  items: [],
+};
+let compServe = {
+  value: "Service",
+  items: [],
+};
 
 for (const name in components) {
   // console.log(`${name}: ${components[name]}`);
-  const comp = document.createElement("div");
-  const a = document.createElement("a");
-  a.textContent = name;
-  a.href = `#${name}`;
-  comp.appendChild(a);
+  const component = {
+    value: name,
+    href: `#${name}`,
+  };
   if (components[name] === "Visual") {
-    compVisual.addDetail(comp);
+    compVisual.items.push(component);
   }
   if (components[name] === "Structural") {
-    compStruc.addDetail(comp);
+    compStruc.items.push(component);
   }
   if (components[name] === "Service") {
-    compServe.addDetail(comp);
+    compServe.items.push(component);
   }
 }
-
-// div.appendChild(navBar);
 
 const button = await slice.build("Button", {
   value: "Slice",
@@ -113,79 +113,20 @@ const button = await slice.build("Button", {
   },
 });
 
-button.width = "50px";
-
 const grid = await slice.build("Grid", {
   columns: 3,
   rows: 1,
-  items: [button],
+  // items: [button],
 });
 
+div.appendChild(navBar);
 div.appendChild(grid);
 
-// grid.setItem(button);
-
-const form = document.createElement("div");
-
-const button2 = await slice.build("Button", {
-  value: "Another Button",
-  customColor: {
-    button: "#008080",
-  },
-  onClickCallback: () => {
-    layOut.showing(button);
-  },
+const treeview = await slice.build("TreeView", {
+  items: [compVisual, compStruc, compServe],
 });
 
-form.appendChild(button2);
-
-//form test
-
-const name1 = await slice.build("Input", {
-  id: "nombre",
-  placeholder: "Name",
-  required: true,
-  sliceId: "myInput",
-});
-
-const lastname = await slice.build("Input", {
-  placeholder: "Last Name",
-});
-
-const password = await slice.build("Input", {
-  placeholder: "Password",
-  type: "password",
-  required: true,
-  secret: true,
-});
-
-const confirmPassword = await slice.build("Input", {
-  placeholder: "Confirm Password",
-  type: "password",
-  required: true,
-  secret: false,
-  disabled: true,
-  conditions: {
-    // regex: "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[\\W_]).{8,}$",
-    minLength: 8,
-    maxLength: 10,
-    minMinusc: 1,
-    maxMinusc: 4,
-    minMayusc: 1,
-    maxMayusc: 6,
-    minNumber: 1,
-    maxNumber: 6,
-    minSymbol: 1,
-    maxSymbol: 10,
-  },
-});
-
-form.appendChild(name1);
-form.appendChild(lastname);
-form.appendChild(password);
-form.appendChild(confirmPassword);
-
-//form test
+grid.setItem(treeview);
 
 const divView = document.createElement("div");
 divView.id = "view";

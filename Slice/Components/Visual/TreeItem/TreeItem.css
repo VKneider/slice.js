@@ -1,0 +1,31 @@
+.slice_tree_item {
+  color: var(--font-primary-color);
+  user-select: none;
+  /* cursor: pointer; */
+  width: fit-content;
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: center;
+  padding: 10px;
+  border-radius: var(--border-radius-slice);
+}
+.slice_tree_item .caret {
+  color: var(--primary-color);
+  margin-right: 5px;
+  transform: rotate(-90deg);
+}
+.slice_tree_item .caret_open {
+  transform: rotate(0deg);
+}
+.container {
+  /* padding-left: 10px; */
+  margin-left: 14px;
+  border-left: 2px solid var(--primary-color);
+  display: none;
+}
+.container_open {
+  display: block;
+}
+.slice_tree_item:hover {
+  background-color: #ffffff25;
+}

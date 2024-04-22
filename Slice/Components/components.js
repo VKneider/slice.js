@@ -12,6 +12,8 @@ const components = {
   "Navbar": "Visual",
   "Select": "Visual",
   "Switch": "Visual",
+  "TreeItem": "Visual",
+  "TreeView": "Visual",
   "FetchManager": "Service",
   "IndexedDbManager": "Service",
   "LocalStorageManager": "Service",
