@@ -14,6 +14,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "slicejs-cli": "^1.0.52"
+    "slicejs-cli": "1.0.54"
   }
 }
