@@ -1,0 +1,7 @@
+.simple_treeview {
+  font-family: var(--font-family);
+  display: flex;
+  flex-direction: column;
+  max-height: 100vh;
+  overflow-y: scroll;
+}

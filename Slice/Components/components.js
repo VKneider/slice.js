@@ -4,14 +4,16 @@ const components = {
   "Checkbox": "Visual",
   "Details": "Visual",
   "DropDown": "Visual",
+  "Grid": "Visual",
   "Icon": "Visual",
   "Input": "Visual",
   "Layout": "Visual",
   "Loading": "Visual",
-  "Menu": "Visual",
   "Navbar": "Visual",
   "Select": "Visual",
   "Switch": "Visual",
+  "TreeItem": "Visual",
+  "TreeView": "Visual",
   "FetchManager": "Service",
   "IndexedDbManager": "Service",
   "LocalStorageManager": "Service",
@@ -19,7 +21,5 @@ const components = {
   "Controller": "Structural",
   "Debugger": "Structural",
   "Logger": "Structural",
-  "StylesManager": "Structural",
-  "MainMenu": "UserVisual",
-  "MyLayout": "UserVisual"
+  "StylesManager": "Structural"
 }; export default components;

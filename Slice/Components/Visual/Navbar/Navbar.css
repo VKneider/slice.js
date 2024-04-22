@@ -30,7 +30,7 @@
   width: 100%;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: center;
   list-style: none;
 }
 .slice_nav_header .item {
@@ -69,7 +69,6 @@ li {
 .nav_bar_buttons {
   justify-content: flex-end;
   display: flex;
-  width: 100%;
 }
 
 .mobile_menu_button,

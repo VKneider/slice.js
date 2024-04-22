@@ -9,7 +9,7 @@ export default class Layout extends HTMLElement {
   }
 
   async init() {
-    if(this.layout){
+    if (this.layout) {
       await this.onLayOut(this.layout);
     }
     if (this.view) {
@@ -34,26 +34,25 @@ export default class Layout extends HTMLElement {
   }
 
   async showing(view) {
-
-    if(slice.loading){
+    if (slice.loading) {
       slice.loading.start();
-    }else {
+    } else {
       const loading = await slice.build("Loading", {});
       loading.start();
     }
-    
+
     if (this.currentView) {
-      document.body.removeChild(this.currentView);
+      this.removeChild(this.currentView);
     }
-    document.body.appendChild(view);
+    this.appendChild(view);
     this.currentView = view;
     slice.loading.stop();
   }
 
   async onLayOut(view) {
-    if(slice.loading){
+    if (slice.loading) {
       slice.loading.start();
-    }else {
+    } else {
       const loading = await slice.build("Loading", {});
       loading.start();
     }

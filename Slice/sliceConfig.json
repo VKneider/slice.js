@@ -7,12 +7,12 @@
         "defaultTheme": "Light"
     },
     "logger": {
-        "enabled": false,
+        "enabled": true,
         "showLogs": {
             "console": {
                 "error": true,
                 "warning": true,
-                "info": true
+                "info": false
             }
         }
     },

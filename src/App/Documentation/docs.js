@@ -67,7 +67,54 @@ const navBar = await slice.build("Navbar", {
   ],
 });
 
+let compVisual = {
+  value: "Visual",
+  items: [],
+};
+let compStruc = {
+  value: "Structural",
+  items: [],
+};
+let compServe = {
+  value: "Service",
+  items: [],
+};
+
+for (const name in components) {
+  // console.log(`${name}: ${components[name]}`);
+  const component = {
+    value: name,
+    href: `#${name}`,
+  };
+  if (components[name] === "Visual") {
+    compVisual.items.push(component);
+  }
+  if (components[name] === "Structural") {
+    compStruc.items.push(component);
+  }
+  if (components[name] === "Service") {
+    compServe.items.push(component);
+  }
+}
+
+const grid = await slice.build("Grid", {
+  columns: 3,
+  rows: 1,
+});
+
 div.appendChild(navBar);
+div.appendChild(grid);
+
+const treeview = await slice.build("TreeView", {
+  items: [
+    {
+      value: "Components",
+      items: [compVisual, compStruc, compServe],
+    },
+  ],
+});
+
+grid.setItem(treeview);
 
 const divView = document.createElement("div");
 divView.id = "view";
