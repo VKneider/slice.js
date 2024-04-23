@@ -6,7 +6,7 @@
     "stylesManager": {
         "defaultTheme": "Light",
         "saveThemeLocally": true,
-        "useBrowserPreferredTheme": true
+        "useBrowserTheme": true
     },
     "logger": {
         "enabled": false,
