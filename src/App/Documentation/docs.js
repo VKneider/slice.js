@@ -84,7 +84,7 @@ let compServe = {
 };
 
 for (const name in components) {
-  // console.log(`${name}: ${components[name]}`);
+
   const component = {
     value: name,
     href: `#${name}`,

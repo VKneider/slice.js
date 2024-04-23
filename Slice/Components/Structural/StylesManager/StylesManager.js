@@ -17,7 +17,6 @@ export default class StylesManager {
     this.componentStyles.innerText += sliceStyles;
     slice.logger.logInfo("StylesManager", "sliceStyles loaded");
 
-    console.log(slice.themeConfig)
     let theme = slice.themeConfig.defaultTheme;
 
     if(slice.themeConfig.saveThemeLocally){
