@@ -108,7 +108,7 @@ export default class Slice {
     //Load css if not loaded previously and component category is Visual
     if (!this.controller.requestedStyles.has(componentName) && isVisual) {
       try {
-        const css = await this.controller.fetchText(componentName, "css");
+        const css = await this.controller.fetchText(componentName, "css", componentBasePath, componentCategory);
         this.stylesManager.registerComponentStyles(componentName, css);
         this.logger.logInfo("Slice", `CSS ${componentName} loaded`);
       } catch (error) {
