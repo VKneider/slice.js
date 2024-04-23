@@ -26,6 +26,11 @@ export default class StylesManager {
       }
     }
 
+    if(slice.themeConfig.useBrowserTheme){
+      const browserTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? "Dark" : "Light";
+      theme = browserTheme;
+    }
+
     await slice.setTheme(theme);
 
   }
