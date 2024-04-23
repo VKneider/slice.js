@@ -5,6 +5,9 @@ const div = document.createElement("div");
 // div.style.height = "90vh";
 let theme = "Light";
 
+const loading = await slice.build("Loading", {});
+loading.start();
+
 const navBar = await slice.build("Navbar", {
   // position: "fixed",
   logo: {
@@ -141,3 +144,8 @@ async function loadComponentFromHash() {
   let myComponent = await slice.build(hash, {});
   layOut.showing(myComponent);
 }
+
+
+const myMenu = await slice.build("MainMenu", {});
+div.appendChild(myMenu);
+loading.stop();
