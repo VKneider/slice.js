@@ -9,6 +9,7 @@ export default class Slice {
     this.controller = new Controller();
     this.stylesManager = new StylesManager();
     this.paths = sliceConfig.paths;
+    this.themeConfig= sliceConfig.stylesManager;
   }
 
   async getClass(module) {
@@ -168,9 +169,15 @@ export default class Slice {
     }
   }
 
-  setTheme(themeName) {
-    this.stylesManager.themeManager.applyTheme(themeName);
+  async setTheme(themeName) {
+    await this.stylesManager.themeManager.applyTheme(themeName);
   }
+
+  get theme(){
+    return this.stylesManager.themeManager.currentTheme;
+  }
+
+
 
   attachTemplate(componentInstance) {
     this.controller.loadTemplateToComponent(componentInstance);
@@ -196,10 +203,6 @@ async function init() {
   }
 
   await window.slice.stylesManager.init();
-
-  await window.slice.setTheme(
-    sliceConfig.stylesManager.defaultTheme || "Slice"
-  );
 }
 
 await init();

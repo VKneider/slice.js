@@ -16,6 +16,19 @@ export default class StylesManager {
     );
     this.componentStyles.innerText += sliceStyles;
     slice.logger.logInfo("StylesManager", "sliceStyles loaded");
+
+    console.log(slice.themeConfig)
+    let theme = slice.themeConfig.defaultTheme;
+
+    if(slice.themeConfig.saveThemeLocally){
+      theme = localStorage.getItem("sliceTheme");
+      if(!theme){
+        theme = slice.themeConfig.defaultTheme;
+      }
+    }
+
+    await slice.setTheme(theme);
+
   }
 
   //add a method that will add css as text to the componentStyles element

@@ -6,6 +6,7 @@ export default class ThemeManager {
     document.head.appendChild(this.themeStyle);
   }
 
+
   async applyTheme(themeName) {
     if (!this.themeStyles.has(themeName)) {
       await this.loadThemeCSS(themeName);
@@ -15,8 +16,20 @@ export default class ThemeManager {
   }
 
   async loadThemeCSS(themeName) {
-    const themeCss = await slice.controller.fetchText(themeName, "theme");
-    this.themeStyles.set(themeName, themeCss);
+    let themeContent;
+    themeContent = localStorage.getItem(`sliceTheme-${themeName}`);
+
+    if (!themeContent) {
+      themeContent = await slice.controller.fetchText(themeName, "theme");
+    }
+
+    if(slice.themeConfig.saveThemeLocally){
+      localStorage.setItem("sliceTheme", themeName);
+      localStorage.setItem(`sliceTheme-${themeName}`, themeContent);
+      slice.logger.logInfo("ThemeManager", `Theme ${themeName} saved locally`);
+    }
+
+    this.themeStyles.set(themeName, themeContent);
     this.removeCurrentTheme(); // Elimina el estilo del tema anterior si existe
     this.setThemeStyle(themeName);
   }
@@ -30,5 +43,6 @@ export default class ThemeManager {
   setThemeStyle(themeName) {
     this.themeStyle.textContent = this.themeStyles.get(themeName);
     this.currentTheme = themeName;
+    slice.logger.logInfo("ThemeManager", `Theme ${themeName} applied`);
   }
 }
