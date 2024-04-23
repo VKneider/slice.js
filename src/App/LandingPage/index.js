@@ -1,6 +1,8 @@
 import Slice from "../../../Slice/Slice.js";
 import components from "../../../Slice/Components/components.js";
 
+const loading = await slice.build("Loading", {});
+loading.start();
 const div = document.createElement("div");
 // div.style.height = "90vh";
 let theme = "Light";
@@ -78,6 +80,7 @@ const layOut = await slice.build("Layout", {
 });
 
 grid.setItem(layOut);
+loading.stop();
 
 if (window.location.hash !== "") {
   await loadComponentFromHash();
