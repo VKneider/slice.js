@@ -145,7 +145,4 @@ async function loadComponentFromHash() {
   layOut.showing(myComponent);
 }
 
-
-const myMenu = await slice.build("MainMenu", {});
-div.appendChild(myMenu);
 loading.stop();
