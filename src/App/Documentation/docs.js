@@ -138,6 +138,16 @@ window.addEventListener("hashchange", async () => {
 async function loadComponentFromHash() {
   let hash = window.location.hash;
   hash = hash.substring(1);
+
   let myComponent = await slice.build(hash, {});
-  layOut.showing(myComponent);
+  let componentCode = await slice.build("CodeVisualizer", {
+    value: myComponent,
+  });
+
+  const componentContainer = document.createElement("div");
+
+  componentContainer.appendChild(myComponent);
+  componentContainer.appendChild(componentCode);
+
+  layOut.showing(componentContainer);
 }
