@@ -18,6 +18,19 @@ export default class CodeVisualizer extends HTMLElement {
         color: "White",
         button: "#1E1E1E",
       },
+      onClickCallback: () => {
+        this.language = "html";
+      },
+    });
+    const jsButton = await slice.build("Button", {
+      value: "JS",
+      customColor: {
+        color: "White",
+        button: "#1E1E1E",
+      },
+      onClickCallback: () => {
+        this.language = "javascript";
+      },
     });
     const cssButton = await slice.build("Button", {
       value: "CSS",
@@ -25,8 +38,12 @@ export default class CodeVisualizer extends HTMLElement {
         color: "White",
         button: "#1E1E1E",
       },
+      onClickCallback: () => {
+        this.language = "css";
+      },
     });
     this.$buttons.appendChild(htmlButton);
+    this.$buttons.appendChild(jsButton);
     this.$buttons.appendChild(cssButton);
   }
 
@@ -69,14 +86,7 @@ export default class CodeVisualizer extends HTMLElement {
         theme: "vs-dark",
         minimap: { enabled: false },
       });
-      var monacoEditor = self.$container.querySelector(".monaco-editor");
-      var monacoGuard = monacoEditor.querySelector(".overflow-guard");
-      monacoEditor.style.borderRadius = "10px";
-      monacoGuard.style.borderRadius = "10px";
-      monacoEditor.style.paddingTop = "10px";
     });
-
-    self.$container.style.height = "30vh";
   }
 }
 

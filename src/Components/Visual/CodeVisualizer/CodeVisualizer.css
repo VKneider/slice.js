@@ -1,10 +1,17 @@
-.code_styles {
-  height: 50vh;
+.code_visualizer {
+  height: 30vh;
 }
-.monaco-editor .overflow-guard {
+.monaco-editor,
+.overflow-guard {
   border-radius: 10px;
+}
+.view-lines {
+  pointer-events: none;
 }
 .code_language {
   display: flex;
   margin-top: 10px;
+  slice-button {
+    width: 100%;
+  }
 }

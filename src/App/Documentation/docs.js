@@ -84,7 +84,6 @@ let compServe = {
 };
 
 for (const name in components) {
-
   const component = {
     value: name,
     href: `#${name}`,
@@ -146,6 +145,8 @@ async function loadComponentFromHash() {
   let componentCode = await slice.build("CodeVisualizer", {
     value: myComponent,
   });
+
+  componentCode.visualize();
 
   const componentContainer = document.createElement("div");
 
