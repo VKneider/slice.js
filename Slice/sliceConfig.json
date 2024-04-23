@@ -1,6 +1,6 @@
 {
     "debugger": {
-        "enabled": true,
+        "enabled": false,
         "click": "right"
     },
     "stylesManager": {
@@ -8,7 +8,7 @@
         "saveThemeLocally": true
     },
     "logger": {
-        "enabled": true,
+        "enabled": false,
         "showLogs": {
             "console": {
                 "error": true,
@@ -18,7 +18,7 @@
         }
     },
     "translator": {
-        "enabled": true
+        "enabled": false
     },
     "paths": {
         "components": "../../../../Slice/Components",
