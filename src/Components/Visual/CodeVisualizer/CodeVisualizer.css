@@ -1,0 +1,10 @@
+.code_styles {
+  height: 50vh;
+}
+.monaco-editor .overflow-guard {
+  border-radius: 10px;
+}
+.code_language {
+  display: flex;
+  margin-top: 10px;
+}
