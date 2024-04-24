@@ -22,6 +22,7 @@ const components = {
   "Debugger": "Structural",
   "Logger": "Structural",
   "StylesManager": "Structural",
+  "ButtonDocumentation": "UserVisual",
   "CodeVisualizer": "UserVisual",
   "MainMenu": "UserVisual",
   "MyLayout": "UserVisual"

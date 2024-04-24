@@ -141,7 +141,9 @@ async function loadComponentFromHash() {
   let hash = window.location.hash;
   hash = hash.substring(1);
 
-  let myComponent = await slice.build(hash, {});
+  console.log(`${hash}Documentation`);
+
+  let myComponent = await slice.build(`${hash}Documentation`, {});
 
   let componentCode = await slice.build("CodeVisualizer", {
     value: `const my${hash} = await slice.build("${hash}", {})`,
@@ -153,7 +155,7 @@ async function loadComponentFromHash() {
   const componentContainer = document.createElement("div");
 
   componentContainer.appendChild(myComponent);
-  componentContainer.appendChild(componentCode);
+  // componentContainer.appendChild(componentCode);
 
   layOut.showing(componentContainer);
 }
