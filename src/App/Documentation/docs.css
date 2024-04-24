@@ -1,0 +1,17 @@
+:root {
+  --padding-page: 300px;
+}
+.docs_container {
+  margin-top: 100px;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  padding-left: var(--padding-page);
+  padding-right: var(--padding-page);
+  height: 200vh;
+}
+
+@media only screen and (max-width: 770px) {
+  :root {
+    --padding-page: 10px;
+  }
+}

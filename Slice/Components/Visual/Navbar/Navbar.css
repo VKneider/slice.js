@@ -12,6 +12,7 @@
   flex-direction: row-reverse;
 }
 .nav_bar_fixed {
+  z-index: 100;
   width: 100%;
   left: 0;
   top: 0;

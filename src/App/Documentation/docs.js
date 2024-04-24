@@ -9,7 +9,7 @@ const loading = await slice.build("Loading", {});
 loading.start();
 
 const navBar = await slice.build("Navbar", {
-  // position: "fixed",
+  position: "fixed",
   logo: {
     src: "../../images/Slice.js-logo.png",
     href: "",
@@ -105,7 +105,7 @@ const grid = await slice.build("Grid", {
 });
 
 div.appendChild(navBar);
-div.appendChild(grid);
+// div.appendChild(grid);
 
 const treeview = await slice.build("TreeView", {
   items: [
@@ -116,17 +116,22 @@ const treeview = await slice.build("TreeView", {
   ],
 });
 
-grid.setItem(treeview);
+const mainMenu = await slice.build("MainMenu", {});
+
+// grid.setItem(treeview);
 
 const divView = document.createElement("div");
 divView.id = "view";
+
+mainMenu.add(treeview);
+div.appendChild(mainMenu);
 
 const layOut = await slice.build("Layout", {
   layout: div,
   view: divView,
 });
 
-grid.setItem(layOut);
+document.body.appendChild(layOut);
 
 if (window.location.hash !== "") {
   await loadComponentFromHash();
@@ -145,17 +150,10 @@ async function loadComponentFromHash() {
 
   let myComponent = await slice.build(`${hash}Documentation`, {});
 
-  let componentCode = await slice.build("CodeVisualizer", {
-    value: `const my${hash} = await slice.build("${hash}", {})`,
-    language: "javascript",
-  });
-
-  componentCode.visualize();
-
   const componentContainer = document.createElement("div");
+  componentContainer.classList.add("docs_container");
 
   componentContainer.appendChild(myComponent);
-  // componentContainer.appendChild(componentCode);
 
   layOut.showing(componentContainer);
 }
