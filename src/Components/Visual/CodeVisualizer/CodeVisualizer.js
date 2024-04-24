@@ -87,7 +87,7 @@ export default class CodeVisualizer extends HTMLElement {
         minimap: { enabled: false },
       });
       const contentHeight = self.editor.getContentHeight();
-      self.$container.style.height = contentHeight + "px";
+      self.$container.style.height = contentHeight / 2 + "px";
     });
   }
 }

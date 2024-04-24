@@ -9,14 +9,29 @@ export default class ButtonDocumentation extends HTMLElement {
 
   async init() {
     await this.createButton({ value: "Slice Button" });
+    await this.createButton({
+      value: "Color Button",
+      customColor: { color: "black", button: "red" },
+    });
+    const clickButton = await this.createButton({
+      value: "Click",
+      onClickCallback: () => {
+        clickButton.value = "Clicked";
+      },
+    });
   }
 
   async createButton(buttonProps) {
     const myButton = await slice.build("Button", buttonProps);
 
-    const componentCode = await slice.build("CodeVisualizer", {
-      value: `const myButton = await slice.build("Button", ${JSON.stringify(buttonProps)})`,
+    const formattedValue = JSON.stringify(buttonProps, null, 2).replace(
+      /,(\s*)/g,
+      ",\n$1"
+    );
 
+    const componentCode = await slice.build("CodeVisualizer", {
+      value: `const myButton = await slice.build("Button", 
+${formattedValue});`,
       language: "javascript",
     });
 
