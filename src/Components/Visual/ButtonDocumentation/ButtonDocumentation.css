@@ -1,0 +1,9 @@
+h1,
+h2,
+div {
+  font-family: var(--font-family);
+}
+.buttons {
+  /* display: flex; */
+  width: 100%;
+}
