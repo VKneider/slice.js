@@ -142,8 +142,10 @@ async function loadComponentFromHash() {
   hash = hash.substring(1);
 
   let myComponent = await slice.build(hash, {});
+
   let componentCode = await slice.build("CodeVisualizer", {
-    value: myComponent,
+    value: `const my${hash} = await slice.build("${hash}", {})`,
+    language: "javascript",
   });
 
   componentCode.visualize();

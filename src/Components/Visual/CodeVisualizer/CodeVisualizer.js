@@ -42,9 +42,9 @@ export default class CodeVisualizer extends HTMLElement {
         this.language = "css";
       },
     });
-    this.$buttons.appendChild(htmlButton);
-    this.$buttons.appendChild(jsButton);
-    this.$buttons.appendChild(cssButton);
+    // this.$buttons.appendChild(htmlButton);
+    // this.$buttons.appendChild(jsButton);
+    // this.$buttons.appendChild(cssButton);
   }
 
   set value(value) {
@@ -81,11 +81,13 @@ export default class CodeVisualizer extends HTMLElement {
       }
 
       self.editor = monaco.editor.create(self.$container, {
-        value: self.value.innerHTML,
+        value: self.value,
         language: self.language,
         theme: "vs-dark",
         minimap: { enabled: false },
       });
+      const contentHeight = self.editor.getContentHeight();
+      self.$container.style.height = contentHeight + "px";
     });
   }
 }
