@@ -150,14 +150,17 @@ async function loadComponentFromHash() {
   hash = hash.substring(1);
 
   let myComponent;
-  if(slice.controller.getComponent(`${hash}Documentation`)){
-    myComponent=slice.controller.getComponent(`${hash}Documentation`);
-    
+  
+  myComponent=slice.controller.getComponent(`${hash}Documentation`);
+  
+  if(!myComponent){
+    myComponent = await slice.build(`${hash}Documentation`, {sliceId:`${hash}Documentation` });
   }
-  myComponent = await slice.build(`${hash}Documentation`, {sliceId:`${hash}Documentation` });
+
   if(!myComponent){
     return;
   }
+
   componentContainer.innerHTML = "";
   componentContainer.appendChild(myComponent);
   layOut.showing(componentContainer);
