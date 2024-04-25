@@ -2,6 +2,7 @@
   --padding-page: 300px;
 }
 .docs_container {
+  color: var(--font-primary-color);
   margin-top: 100px;
   overflow-y: scroll;
   overflow-x: hidden;
