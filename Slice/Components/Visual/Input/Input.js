@@ -6,6 +6,10 @@ export default class Input extends HTMLElement {
     this.$input = this.querySelector(".input_area");
     this.$placeholder = this.querySelector(".slice_input_placeholder");
 
+    this.$inputContainer.addEventListener("click", () => {
+      this.$input.focus(); // Hacer que el input obtenga el foco al hacer clic en el contenedor
+    });
+
     slice.controller.setComponentProps(this, props);
     this.debuggerProps = [
       "value",

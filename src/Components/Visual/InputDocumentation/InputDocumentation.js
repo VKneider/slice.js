@@ -9,31 +9,79 @@ export default class InputDocumentation extends HTMLElement {
 
   async init() {
     await this.createInput(this.querySelector(".myInput"), {});
+    //Props
+    await this.createInput(
+      this.querySelector(".inputPlaceholder"),
+      { placeholder: "Enter text here" },
+      `{
+        placeholder: "Enter text here"
+      }`
+    );
+    await this.createInput(
+      this.querySelector(".requiredProp"),
+      {
+        placeholder: "Enter text here",
+        required: true,
+      },
+      `{
+        placeholder: "Enter text here",
+        required: true
+      }`
+    );
+    await this.createInput(
+      this.querySelector(".disabledProp"),
+      {
+        placeholder: "Enter text here",
+        disabled: true,
+      },
+      `{
+        placeholder: "Enter text here",
+        disabled: true
+      }`
+    );
+    //Types
     await this.createInput(
       this.querySelector(".typeText"),
-      { type: "text" },
+      {
+        placeholder: "Enter text here",
+        type: "text",
+      },
       `{
+        placeholder: "Enter text here",
         type: "text"
       }`
     );
     await this.createInput(
       this.querySelector(".typeNumber"),
-      { type: "number" },
+      {
+        placeholder: "Enter numbers here",
+        type: "number",
+      },
       `{
+        placeholder: "Enter numbers here",
         type: "number"
       }`
     );
     await this.createInput(
       this.querySelector(".typePassword"),
-      { type: "password" },
+      {
+        placeholder: "Password",
+        type: "password",
+      },
       `{
+        placeholder: "Password",
         type: "password"
       }`
     );
     await this.createInput(
       this.querySelector(".secretProp"),
-      { type: "password", secret: true },
+      {
+        placeholder: "Password",
+        type: "password",
+        secret: true,
+      },
       `{
+        placeholder: "Password",
         type: "password", 
         secret: true
       }`
