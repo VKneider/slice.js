@@ -85,6 +85,7 @@ export default class CodeVisualizer extends HTMLElement {
         language: self.language,
         theme: "vs-dark",
         minimap: { enabled: false },
+        lineNumbers: false,
       });
       const contentHeight = self.editor.getContentHeight();
       self.$container.style.height = contentHeight / 2 + "px";

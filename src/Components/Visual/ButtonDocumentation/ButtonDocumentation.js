@@ -12,48 +12,71 @@ export default class ButtonDocumentation extends HTMLElement {
     grid.classList.add("buttons");
 
     const simpleButton = await this.createButton(null, {});
-    const myButton = await this.createButton(null, {
-      value: "Slice Button",
-    });
+    const myButton = await this.createButton(
+      null,
+      {
+        value: "Slice Button",
+      },
+      `{
+        value: "Slice Button",
+      }`
+    );
+
+    if (window.screen.width <= 770) {
+      grid.columns = 1;
+    }
 
     await grid.setItem(simpleButton);
     await grid.setItem(myButton);
 
     this.querySelector(".myButton").appendChild(grid);
 
-    await this.createButton(this.querySelector(".colorButton"), {
-      value: "Color Button",
-      customColor: { color: "black", button: "red" },
-    });
+    await this.createButton(
+      this.querySelector(".colorButton"),
+      {
+        value: "Color Button",
+        customColor: { label: "black", button: "red" },
+      },
+      `{
+        value: "Color Button",
+        customColor: { label: "black", button: "red" },
+      }`
+    );
     const clickButton = await this.createButton(
       this.querySelector(".onClick"),
       {
         value: "Click",
-        onClickCallback:
-          '() => { if (clickButton.value === "Click") { clickButton.value = "Clicked"; } else { clickButton.value = "Click"; }}',
-        click: () => {
+        onClickCallback: () => {
           if (clickButton.value === "Click") {
             clickButton.value = "Clicked";
           } else {
             clickButton.value = "Click";
           }
         },
-      }
+      },
+      `{
+        value: "Click",
+        onClickCallback: () => {
+          if (clickButton.value === "Click") {
+            clickButton.value = "Clicked";
+          } else {
+            clickButton.value = "Click";
+          }
+        },
+      }`
     );
   }
 
-  async createButton(appendTo, buttonProps) {
-    const formattedValue = JSON.stringify(buttonProps, null, 2).replace(
-      /,(\s*)/g,
-      ",\n$1"
-    );
-
-    buttonProps.onClickCallback = buttonProps.click;
+  async createButton(appendTo, buttonProps, codeProps) {
+    if (!codeProps) {
+      codeProps = "{}";
+    }
     const myButton = await slice.build("Button", buttonProps);
 
     const componentCode = await slice.build("CodeVisualizer", {
-      value: `const myButton = await slice.build("Button", 
-${formattedValue});`,
+      value: `const myButton = await slice.build("Button", ${codeProps});
+
+`,
       language: "javascript",
     });
 

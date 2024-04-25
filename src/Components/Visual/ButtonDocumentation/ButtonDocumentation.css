@@ -7,3 +7,6 @@ div {
   /* display: flex; */
   width: 100%;
 }
+p {
+  text-align: justify;
+}

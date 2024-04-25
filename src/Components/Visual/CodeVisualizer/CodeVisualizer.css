@@ -2,13 +2,17 @@
   height: 30vh;
 } */
 .monaco-editor {
-  padding: 10px;
+  padding-top: 10px;
+  padding-bottom: 10px;
   border-radius: 10px;
 }
 /* .monaco-editor,
 .overflow-guard {
   width: 100%;
 } */
+.monaco-scrollable-element {
+  overflow-y: hidden;
+}
 .view-lines {
   pointer-events: none;
 }

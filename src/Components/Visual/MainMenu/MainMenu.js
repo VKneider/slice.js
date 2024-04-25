@@ -9,13 +9,10 @@ export default class MainMenu extends HTMLElement {
     this.$menu = this.querySelector(".slice_menu");
 
     this.$menuButton.addEventListener("click", () => {
-      this.$container.style.width = "90%";
-      this.$menu.style = "transform: translateX(0%); width: 90%;";
+      this.$container.classList.add("slice_menu_open");
     });
     this.$closeButton.addEventListener("click", () => {
-      this.$container.style.width = "0%";
-      this.$menu.style = "transform: translateX(-100%);";
-      // this.$menu.classList.toggle("slice_menu");
+      this.$container.classList.remove("slice_menu_open");
     });
 
     slice.controller.setComponentProps(this, props);

@@ -7,7 +7,7 @@
   overflow-x: hidden;
   padding-left: var(--padding-page);
   padding-right: var(--padding-page);
-  height: 200vh;
+  padding-bottom: 25px;
 }
 
 @media only screen and (max-width: 770px) {

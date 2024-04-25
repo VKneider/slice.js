@@ -49,6 +49,12 @@ export default class TreeItem extends HTMLElement {
       caret.classList.toggle("caret_open");
       this.$container.classList.toggle("container_open");
     });
+    if (!this.href) {
+      this.$item.addEventListener("click", () => {
+        caret.classList.toggle("caret_open");
+        this.$container.classList.toggle("container_open");
+      });
+    }
     this.$item.appendChild(caret);
   }
 
