@@ -164,6 +164,5 @@ async function loadComponentFromHash() {
   componentContainer.innerHTML = "";
   componentContainer.appendChild(myComponent);
   layOut.showing(componentContainer);
+  loading.stop();
 }
-
-loading.stop();
