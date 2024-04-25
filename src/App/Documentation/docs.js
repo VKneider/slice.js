@@ -146,9 +146,11 @@ async function loadComponentFromHash() {
   let hash = window.location.hash;
   hash = hash.substring(1);
 
-  console.log(`${hash}Documentation`);
-
-  let myComponent = await slice.build(`${hash}Documentation`, {});
+  if(slice.controller.getComponent(`${hash}Documentation`)){
+    layOut.showing(slice.controller.getComponent(`${hash}Documentation`));
+    return;
+  }
+  let myComponent = await slice.build(`${hash}Documentation`, {sliceId:`${hash}Documentation` });
 
   const componentContainer = document.createElement("div");
   componentContainer.classList.add("docs_container");
