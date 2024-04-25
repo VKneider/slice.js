@@ -57,10 +57,10 @@ export default class ButtonDocumentation extends HTMLElement {
       `{
         value: "Click",
         onClickCallback: () => {
-          if (clickButton.value === "Click") {
-            clickButton.value = "Clicked";
+          if (myButton.value === "Click") {
+            myButton.value = "Clicked";
           } else {
-            clickButton.value = "Click";
+            myButton.value = "Click";
           }
         },
       }`
