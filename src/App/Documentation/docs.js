@@ -5,6 +5,9 @@ const div = document.createElement("div");
 // div.style.height = "90vh";
 let theme = "Light";
 
+const componentContainer = document.createElement("div");
+  componentContainer.classList.add("docs_container");
+
 const loading = await slice.build("Loading", {});
 loading.start();
 
@@ -146,17 +149,17 @@ async function loadComponentFromHash() {
   let hash = window.location.hash;
   hash = hash.substring(1);
 
+  let myComponent;
   if(slice.controller.getComponent(`${hash}Documentation`)){
-    layOut.showing(slice.controller.getComponent(`${hash}Documentation`));
+    myComponent=slice.controller.getComponent(`${hash}Documentation`);
+    
+  }
+  myComponent = await slice.build(`${hash}Documentation`, {sliceId:`${hash}Documentation` });
+  if(!myComponent){
     return;
   }
-  let myComponent = await slice.build(`${hash}Documentation`, {sliceId:`${hash}Documentation` });
-
-  const componentContainer = document.createElement("div");
-  componentContainer.classList.add("docs_container");
-
+  componentContainer.innerHTML = "";
   componentContainer.appendChild(myComponent);
-
   layOut.showing(componentContainer);
 }
 
