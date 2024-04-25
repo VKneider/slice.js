@@ -91,6 +91,9 @@ export default class ButtonDocumentation extends HTMLElement {
     if (appendTo) {
       appendTo.appendChild(div);
     }
+    if (buttonProps.onClickCallback) {
+      return myButton;
+    }
 
     return div;
   }
