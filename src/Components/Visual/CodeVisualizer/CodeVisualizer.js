@@ -2,16 +2,32 @@ export default class CodeVisualizer extends HTMLElement {
   constructor(props) {
     super();
     slice.attachTemplate(this);
-    this.$container = this.querySelector(".code_visualizer");
-    this.$buttons = this.querySelector(".code_language");
+    this.$container = null;
+    this.$buttons = null; // Corregir la inicialización de this.$buttons
 
     slice.controller.setComponentProps(this, props);
     this.debuggerProps = ["language"];
-    this.editor = null; // Mantén una referencia al editor de Monaco
+    this.editor = null;
   }
 
-  async init() {
-    await this.visualize();
+  connectedCallback() {
+    this.createVisualizer();
+  }
+
+  async createVisualizer() {
+    this.containerId = `code_visualizer_${Math.random()
+      .toString(36)
+      .substring(7)}`;
+    this.$container = this.querySelector(`.${this.containerId}`);
+    this.$buttons = this.querySelector(".code_language"); // Inicializar this.$buttons
+
+    if (!this.$container) {
+      this.innerHTML = "";
+      this.$container = document.createElement("div");
+      this.$container.classList.add(this.containerId);
+      this.appendChild(this.$container);
+    }
+
     const htmlButton = await slice.build("Button", {
       value: "HTML",
       customColor: {
@@ -42,9 +58,14 @@ export default class CodeVisualizer extends HTMLElement {
         this.language = "css";
       },
     });
-    // this.$buttons.appendChild(htmlButton);
-    // this.$buttons.appendChild(jsButton);
-    // this.$buttons.appendChild(cssButton);
+    // Agregar los botones al contenedor de botones (this.$buttons)
+    // if (this.$buttons) {
+    //   this.$buttons.appendChild(htmlButton);
+    //   this.$buttons.appendChild(jsButton);
+    //   this.$buttons.appendChild(cssButton);
+    // }
+
+    await this.visualize();
   }
 
   set value(value) {
@@ -72,10 +93,14 @@ export default class CodeVisualizer extends HTMLElement {
     const self = this;
 
     require.config({
-      paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor@latest/min/vs" },
+      paths: {
+        vs: "https://cdn.jsdelivr.net/npm/monaco-editor@latest/min/vs",
+      },
     });
 
     require(["vs/editor/editor.main"], function () {
+      console.log("Container element:", self.$container);
+      self.$container.innerHTML = "";
       if (self.editor) {
         self.editor.dispose();
       }
