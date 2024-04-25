@@ -15,6 +15,9 @@ slice-layout {
   padding: 10px;
   padding-bottom: 25px;
 }
+p {
+  text-align: justify;
+}
 
 @media only screen and (max-width: 770px) {
   :root {
