@@ -15,7 +15,7 @@ export default class Switch extends HTMLElement {
       "disabled",
       "label",
       "customColor",
-      "position",
+      "labelPlacement",
     ];
   }
 
@@ -23,8 +23,8 @@ export default class Switch extends HTMLElement {
     if (this._checked === undefined) {
       this.checked = false;
     }
-    if (this.position === undefined) {
-      this.position = "right";
+    if (this.labelPlacement === undefined) {
+      this.labelPlacement = "right";
     }
 
     if(!this.disabled){
@@ -70,11 +70,11 @@ export default class Switch extends HTMLElement {
     this.style = `--success-color: ${value};`;
   }
 
-  get position() {
-    return this._position;
+  get labelPlacement() {
+    return this._labelPlacement;
   }
 
-  set position(value) {
+  set labelPlacement(value) {
     if (value === "left") {
       this.$switch.style = ` flex-direction: row-reverse;`;
     }
@@ -87,7 +87,7 @@ export default class Switch extends HTMLElement {
     if (value === "bottom") {
       this.$switch.style = `flex-direction: column;`;
     }
-    this._position = value;
+    this._labelPlacement = value;
   }
 
   get disabled() {
