@@ -23,7 +23,7 @@ h1 {
   border-bottom: 1px solid var(--secondary-background-color);
 }
 h2 {
-  margin-top: 10px;
+  padding-top: 10px;
 }
 
 @media only screen and (max-width: 770px) {
