@@ -3,9 +3,7 @@
   position: absolute;
   user-select: none;
   cursor: pointer;
-  padding: 10px;
-  right: 0;
-  top: 0;
+  right: 10px;
 }
 .input_area {
   color: var(--font-primary-color);
@@ -15,6 +13,8 @@
   border: none;
 }
 .slice_input {
+  display: flex;
+  align-items: center;
   padding: 10px;
   max-width: 100%;
   border-radius: var(--border-radius-slice);

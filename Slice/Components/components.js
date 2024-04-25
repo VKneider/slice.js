@@ -25,6 +25,7 @@ const components = {
   "ButtonDocumentation": "UserVisual",
   "CardDocumentation": "UserVisual",
   "CodeVisualizer": "UserVisual",
+  "InputDocumentation": "UserVisual",
   "MainMenu": "UserVisual",
   "MyLayout": "UserVisual"
 }; export default components;
