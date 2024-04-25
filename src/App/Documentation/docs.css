@@ -1,18 +1,23 @@
 :root {
-  --padding-page: 300px;
+  --docs-width: 64%;
+}
+slice-layout {
+  display: flex;
+  justify-content: center;
 }
 .docs_container {
+  font-family: var(--font-family);
   color: var(--font-primary-color);
   margin-top: 100px;
   overflow-y: scroll;
   overflow-x: hidden;
-  padding-left: var(--padding-page);
-  padding-right: var(--padding-page);
+  width: var(--docs-width);
+  padding: 10px;
   padding-bottom: 25px;
 }
 
 @media only screen and (max-width: 770px) {
   :root {
-    --padding-page: 10px;
+    --docs-width: 100%;
   }
 }

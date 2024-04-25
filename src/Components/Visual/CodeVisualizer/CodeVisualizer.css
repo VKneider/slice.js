@@ -6,10 +6,12 @@
   padding-bottom: 10px;
   border-radius: 10px;
 }
-/* .monaco-editor,
-.overflow-guard {
-  width: 100%;
-} */
+/* Estilo para ocultar las líneas de código en Monaco Editor */
+.monaco-editor .margin,
+.monaco-editor .margin-view-overlays {
+  background-color: transparent !important;
+}
+
 .view-lines {
   pointer-events: none;
 }

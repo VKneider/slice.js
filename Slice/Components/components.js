@@ -23,6 +23,7 @@ const components = {
   "Logger": "Structural",
   "StylesManager": "Structural",
   "ButtonDocumentation": "UserVisual",
+  "CardDocumentation": "UserVisual",
   "CodeVisualizer": "UserVisual",
   "MainMenu": "UserVisual",
   "MyLayout": "UserVisual"

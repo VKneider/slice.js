@@ -8,7 +8,7 @@
   display: flex;
   align-items: center;
   height: 100%;
-  width: 18%;
+  width: 17%;
   transition: transform 0.3s ease, width 0.3s ease;
   overflow-x: hidden;
 }
