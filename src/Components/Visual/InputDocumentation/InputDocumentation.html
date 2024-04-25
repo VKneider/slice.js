@@ -58,21 +58,38 @@
   <p>This type allows the user to enter a specific date of the calendar.</p>
 </div>
 <h1>Slice Input Conditions</h1>
-<div class="inputConditions">
+<div class="conditions">
   <p>
     The Slice Input cand have conditions set up by the developers. This is highly recomended for emails and passwords, but also can by used in the default text type.
     <ul>
-      <li>regex = string</li>
-      <li>minLength = number</li>
-      <li>maxLength = number</li>
-      <li>minMinusc = number</li>
-      <li>maxMinusc = number</li>
-      <li>minMayusc = number</li>
-      <li>maxMayusc = number</li>
-      <li>minNumber = number</li>
-      <li>maxNumber = number</li>
-      <li>minSymbol = number,</li>
-      <li>maxSymbol = number</li>
+      <li>regex <span>=</span> string <span>(optional)</span></li>
+      <li>minLength <span>=</span> number <span>(optional)</span></li>
+      <li>maxLength <span>=</span> number</li>
+      <li>minMinusc <span>=</span> number <span>(optional)</span></li>
+      <li>maxMinusc <span>=</span> number</li>
+      <li>minMayusc <span>=</span> number <span>(optional)</span></li>
+      <li>maxMayusc <span>=</span> number</li>
+      <li>minNumber <span>=</span> number <span>(optional)</span></li>
+      <li>maxNumber <span>=</span> number</li>
+      <li>minSymbol <span>=</span> number <span>(optional)</span></li>
+      <li>maxSymbol <span>=</span> number</li>
+    </ul>
+    The usage of "regex" makes the rest of conditions useless because it has to specify all conditions. Regex is only recomended for those who have the proper knowledge.
+  </p>
+  <div class="validateConditions"></div>
+  <div class="inputGrid">
+    <div class="inputConditions"></div>
+    <div class="inputRegex"></div>
+  </div>
+</div>
+<h1>Methods</h1>
+<div class="inputMethods">
+  <p>The Slice Input has it's own methods to validate if the entered data match the conditions, to trigger error (and success), and to clear the input.
+    <ul>
+      <li>validateValue();</li>
+      <li>clear();</li>
+      <li>triggerError();</li>
+      <li>triggerSuccess();</li>
     </ul>
   </p>
 </div>

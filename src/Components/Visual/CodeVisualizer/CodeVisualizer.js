@@ -99,7 +99,6 @@ export default class CodeVisualizer extends HTMLElement {
     });
 
     require(["vs/editor/editor.main"], function () {
-      console.log("Container element:", self.$container);
       self.$container.innerHTML = "";
       if (self.editor) {
         self.editor.dispose();
