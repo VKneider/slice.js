@@ -10,9 +10,6 @@
 .overflow-guard {
   width: 100%;
 } */
-.monaco-scrollable-element {
-  overflow-y: hidden;
-}
 .view-lines {
   pointer-events: none;
 }

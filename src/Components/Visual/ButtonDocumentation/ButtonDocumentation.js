@@ -9,7 +9,7 @@ export default class ButtonDocumentation extends HTMLElement {
 
   async init() {
     const grid = await slice.build("Grid", { columns: 2, rows: 1 });
-    grid.classList.add("buttons");
+    grid.classList.add("buttonsGrid");
 
     const simpleButton = await this.createButton(null, {});
     const myButton = await this.createButton(
@@ -81,7 +81,11 @@ export default class ButtonDocumentation extends HTMLElement {
     });
 
     const div = document.createElement("div");
-    div.appendChild(myButton);
+    const buttonDiv = document.createElement("div");
+    buttonDiv.classList.add("buttons");
+    buttonDiv.appendChild(myButton);
+    div.classList.add("buttonsContainer");
+    div.appendChild(buttonDiv);
     div.appendChild(componentCode);
 
     if (appendTo) {
