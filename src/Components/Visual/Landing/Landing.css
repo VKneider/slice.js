@@ -14,7 +14,7 @@ h1 {
   align-items: center;
   justify-content: center;
 }
-.intro .info h1 {
+.intro h1 {
   font-family: "Ubuntu", sans-serif;
   font-weight: bold;
   font-style: normal;
