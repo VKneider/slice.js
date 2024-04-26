@@ -4,7 +4,6 @@ import components from "../../../Slice/Components/components.js";
 const loading = await slice.build("Loading", {});
 loading.start();
 const div = document.createElement("div");
-// div.style.height = "90vh";
 let theme = "Light";
 
 const navBar = await slice.build("Navbar", {
@@ -72,28 +71,15 @@ const navBar = await slice.build("Navbar", {
 div.appendChild(navBar);
 
 const divView = document.createElement("div");
-divView.id = "view";
+divView.classList.add("landing_page");
+
+const landingPage = await slice.build("Landing", {});
+divView.appendChild(landingPage);
 
 const layOut = await slice.build("Layout", {
   layout: div,
   view: divView,
 });
 
-grid.setItem(layOut);
+document.body.appendChild(layOut);
 loading.stop();
-
-if (window.location.hash !== "") {
-  await loadComponentFromHash();
-}
-
-//create an event that every time the hash changes, the component changes
-window.addEventListener("hashchange", async () => {
-  await loadComponentFromHash();
-});
-
-async function loadComponentFromHash() {
-  let hash = window.location.hash;
-  hash = hash.substring(1);
-  let myComponent = await slice.build(hash, {});
-  layOut.showing(myComponent);
-}

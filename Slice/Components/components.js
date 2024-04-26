@@ -27,6 +27,7 @@ const components = {
   "CodeVisualizer": "UserVisual",
   "Documentation": "UserVisual",
   "InputDocumentation": "UserVisual",
+  "Landing": "UserVisual",
   "MainMenu": "UserVisual",
   "MyLayout": "UserVisual",
   "MyNavBar": "UserVisual"
