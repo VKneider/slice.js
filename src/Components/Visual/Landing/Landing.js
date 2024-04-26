@@ -20,6 +20,13 @@ export default class Landing extends HTMLElement {
     });
     sliceLogo.classList.add("sliceLogo");
     this.querySelector(".intro").appendChild(sliceLogo);
+    const goToDocs = await slice.build("Button", {
+      value: "Go to Documentation",
+      onClickCallback: () => {
+        window.location.href = "/src/App/Documentation/";
+      },
+    });
+    this.querySelector(".goToDocs").appendChild(goToDocs);
   }
 }
 

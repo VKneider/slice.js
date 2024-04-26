@@ -25,10 +25,14 @@ export default class Navbar extends HTMLElement {
   }
 
   async init() {
-    await this.addItems(this.items);
-    this.buttons.forEach(async (item) => {
-      await this.addButton(item, this.$buttonsContainer);
-    });
+    if (this.items) {
+      await this.addItems(this.items);
+    }
+    if (this.buttons) {
+      this.buttons.forEach(async (item) => {
+        await this.addButton(item, this.$buttonsContainer);
+      });
+    }
   }
 
   async addItems(items) {
