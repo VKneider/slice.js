@@ -1,5 +1,5 @@
 import Slice from "../../../Slice/Slice.js";
-import components from "../../../Slice/Components/components.js";
+import components from "../docComponents.js";
 
 const div = document.createElement("div");
 // div.style.height = "90vh";
@@ -43,6 +43,10 @@ const navBar = await slice.build("Navbar", {
       text: "Documentation",
       href: "/src/App/Documentation/",
     },
+    {
+      text: "Playground",
+      href: "/src/App/Playground/",
+    },
   ],
   buttons: [
     {
@@ -68,14 +72,14 @@ let compVisual = {
   value: "Visual",
   items: [],
 };
-let compStruc = {
-  value: "Structural",
-  items: [],
-};
-let compServe = {
-  value: "Service",
-  items: [],
-};
+// let compStruc = {
+//   value: "Structural",
+//   items: [],
+// };
+// let compServe = {
+//   value: "Service",
+//   items: [],
+// };
 
 for (const name in components) {
   const component = {
@@ -85,12 +89,12 @@ for (const name in components) {
   if (components[name] === "Visual") {
     compVisual.items.push(component);
   }
-  if (components[name] === "Structural") {
-    compStruc.items.push(component);
-  }
-  if (components[name] === "Service") {
-    compServe.items.push(component);
-  }
+  // if (components[name] === "Structural") {
+  //   compStruc.items.push(component);
+  // }
+  // if (components[name] === "Service") {
+  //   compServe.items.push(component);
+  // }
 }
 
 div.appendChild(navBar);
@@ -99,7 +103,7 @@ const treeview = await slice.build("TreeView", {
   items: [
     {
       value: "Components",
-      items: [compVisual, compStruc, compServe],
+      items: [compVisual /*compStruc, compServe*/],
     },
   ],
 });
