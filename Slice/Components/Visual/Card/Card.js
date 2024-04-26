@@ -37,7 +37,7 @@ export default class Card extends HTMLElement {
     }
 
     if (!this._icon) {
-      this.icon = { name: "youtube", iconStyle: "filled" };
+      this.icon = { name: "sliceJs", iconStyle: "filled" };
     }
 
     this.$icon = await slice.build("Icon", {
