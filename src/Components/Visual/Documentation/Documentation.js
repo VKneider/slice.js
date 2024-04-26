@@ -24,7 +24,7 @@ export default class Documentation extends HTMLElement {
       title: "JS",
       text: "JavaScript is a lightweight interpreted (or just-in-time compiled) programming language with first-class functions.",
       icon: {
-        name: "file-code",
+        name: "javascript",
         iconStyle: "filled",
       },
       customColor: {

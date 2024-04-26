@@ -34,30 +34,15 @@ export default class Layout extends HTMLElement {
   }
 
   async showing(view) {
-    if (slice.loading) {
-      slice.loading.start();
-    } else {
-      const loading = await slice.build("Loading", {});
-      loading.start();
-    }
-
     if (this.currentView) {
       this.removeChild(this.currentView);
     }
     this.appendChild(view);
     this.currentView = view;
-    slice.loading.stop();
   }
 
   async onLayOut(view) {
-    if (slice.loading) {
-      slice.loading.start();
-    } else {
-      const loading = await slice.build("Loading", {});
-      loading.start();
-    }
     document.body.appendChild(view);
-    slice.loading.stop();
   }
 }
 
