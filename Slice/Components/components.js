@@ -25,6 +25,7 @@ const components = {
   "ButtonDocumentation": "UserVisual",
   "CardDocumentation": "UserVisual",
   "CodeVisualizer": "UserVisual",
+  "ComponentDoc": "UserVisual",
   "Documentation": "UserVisual",
   "InputDocumentation": "UserVisual",
   "Landing": "UserVisual",
