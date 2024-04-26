@@ -1,4 +1,4 @@
-export default class CheckboxDocumentation extends HTMLElement {
+export default class SwitchDocumentation extends HTMLElement {
   constructor(props) {
     super();
     slice.attachTemplate(this);
@@ -8,24 +8,24 @@ export default class CheckboxDocumentation extends HTMLElement {
   }
 
   async init() {
-    await this.createCheckbox(this.querySelector(".myCheckbox"), {}, `{}`);
-    await this.createCheckbox(
-      this.querySelector(".colorCheckbox"),
+    await this.createSwitch(this.querySelector(".mySwitch"), {}, `{}`);
+    await this.createSwitch(
+      this.querySelector(".colorSwitch"),
       { customColor: "gold" },
       `{ 
         customColor: "gold" 
       }`
     );
-    await this.createCheckbox(
+    await this.createSwitch(
       this.querySelector(".label"),
       {
-        label: "Checkbox",
+        label: "Switch",
       },
       `{
-        label: "Checkbox",
+        label: "Switch",
       }`
     );
-    await this.createCheckbox(
+    await this.createSwitch(
       this.querySelector(".labelLeft"),
       {
         label: "Left",
@@ -36,7 +36,7 @@ export default class CheckboxDocumentation extends HTMLElement {
         labelPlacement: "left",
       }`
     );
-    await this.createCheckbox(
+    await this.createSwitch(
       this.querySelector(".labelTop"),
       {
         label: "Top",
@@ -47,7 +47,7 @@ export default class CheckboxDocumentation extends HTMLElement {
         labelPlacement: "top",
       }`
     );
-    await this.createCheckbox(
+    await this.createSwitch(
       this.querySelector(".labelRight"),
       {
         label: "Right",
@@ -58,7 +58,7 @@ export default class CheckboxDocumentation extends HTMLElement {
         labelPlacement: "right",
       }`
     );
-    await this.createCheckbox(
+    await this.createSwitch(
       this.querySelector(".labelBottom"),
       {
         label: "Bottom",
@@ -71,25 +71,25 @@ export default class CheckboxDocumentation extends HTMLElement {
     );
   }
 
-  async createCheckbox(appendTo, checkboxProps, codeProps) {
+  async createSwitch(appendTo, switchProps, codeProps) {
     if (!codeProps) {
       codeProps = "{}";
     }
-    const myCheckbox = await slice.build("Checkbox", checkboxProps);
+    const mySwitch = await slice.build("Switch", switchProps);
 
     const componentCode = await slice.build("CodeVisualizer", {
-      value: `const myCheckbox = await slice.build("Checkbox", ${codeProps});
+      value: `const mySwitch = await slice.build("Switch", ${codeProps});
 
 `,
       language: "javascript",
     });
 
     const div = document.createElement("div");
-    const checkboxDiv = document.createElement("div");
-    checkboxDiv.classList.add("checkboxs");
-    checkboxDiv.appendChild(myCheckbox);
-    div.classList.add("checkboxs_container");
-    div.appendChild(checkboxDiv);
+    const switchDiv = document.createElement("div");
+    switchDiv.classList.add("switchs");
+    switchDiv.appendChild(mySwitch);
+    div.classList.add("switchs_container");
+    div.appendChild(switchDiv);
     div.appendChild(componentCode);
 
     if (appendTo) {
@@ -100,4 +100,4 @@ export default class CheckboxDocumentation extends HTMLElement {
   }
 }
 
-customElements.define("slice-checkboxdocumentation", CheckboxDocumentation);
+customElements.define("slice-switchdocumentation", SwitchDocumentation);

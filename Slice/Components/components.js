@@ -31,5 +31,6 @@ const components = {
   "Landing": "UserVisual",
   "MainMenu": "UserVisual",
   "MyLayout": "UserVisual",
-  "MyNavBar": "UserVisual"
+  "MyNavBar": "UserVisual",
+  "SwitchDocumentation": "UserVisual"
 }; export default components;
