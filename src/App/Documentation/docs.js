@@ -17,7 +17,7 @@ const navBar = await slice.build("Navbar", {
   position: "fixed",
   logo: {
     src: "../../images/Slice.js-logo.png",
-    href: "",
+    href: "/src/App/LandingPage/",
   },
   items: [
     {
@@ -31,11 +31,11 @@ const navBar = await slice.build("Navbar", {
       options: [
         {
           text: "Julio",
-          href: "https://www.instagram.com/juliograterolb/?hl=es",
+          href: "https://github.com/juliograterol",
         },
         {
           text: "Victor",
-          href: "https://www.instagram.com/victorkneider/?hl=es",
+          href: "https://github.com/VKneider",
         },
       ],
     },

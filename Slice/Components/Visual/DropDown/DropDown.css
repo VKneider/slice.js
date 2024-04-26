@@ -46,3 +46,15 @@
   background: var(--secondary-color);
   border-radius: var(--border-radius-slice);
 }
+.slice_dropbox {
+  width: 100%;
+}
+.slice_dropbox_open div a {
+  text-decoration: none;
+  color: var(--primary-color-contrast);
+  width: 100%;
+}
+.slice_dropbox_open div {
+  width: 100%;
+  padding: 5px;
+}
