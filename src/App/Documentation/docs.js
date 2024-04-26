@@ -3,7 +3,7 @@ import components from "../../../Slice/Components/components.js";
 
 const div = document.createElement("div");
 // div.style.height = "90vh";
-let theme = "Light";
+let theme = slice.stylesManager.themeManager.currentTheme;
 
 const componentContainer = document.createElement("div");
 componentContainer.classList.add("docs_container");

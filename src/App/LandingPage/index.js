@@ -4,7 +4,7 @@ import components from "../../../Slice/Components/components.js";
 const loading = await slice.build("Loading", {});
 loading.start();
 const div = document.createElement("div");
-let theme = "Light";
+let theme = slice.stylesManager.themeManager.currentTheme;
 
 const navBar = await slice.build("Navbar", {
   // position: "fixed",

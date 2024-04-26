@@ -1,4 +1,4 @@
-let theme = "Light";
+let theme = slice.stylesManager.themeManager.currentTheme;
 
 async function hola() {
   if (theme === "Slice") {
