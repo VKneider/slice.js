@@ -6,7 +6,9 @@ const div = document.createElement("div");
 let theme = "Light";
 
 const componentContainer = document.createElement("div");
-  componentContainer.classList.add("docs_container");
+componentContainer.classList.add("docs_container");
+const divView = document.createElement("div");
+divView.classList.add("docs_container");
 
 const loading = await slice.build("Loading", {});
 loading.start();
@@ -40,17 +42,6 @@ const navBar = await slice.build("Navbar", {
     {
       text: "Documentation",
       href: "/src/App/Documentation/",
-    },
-    {
-      text: "Drop",
-      href: "",
-      type: "dropdown",
-      options: [
-        {
-          text: "drop 1",
-          href: "",
-        },
-      ],
     },
   ],
   buttons: [
@@ -102,13 +93,7 @@ for (const name in components) {
   }
 }
 
-const grid = await slice.build("Grid", {
-  columns: 3,
-  rows: 1,
-});
-
 div.appendChild(navBar);
-// div.appendChild(grid);
 
 const treeview = await slice.build("TreeView", {
   items: [
@@ -120,14 +105,11 @@ const treeview = await slice.build("TreeView", {
 });
 
 const mainMenu = await slice.build("MainMenu", {});
-
-// grid.setItem(treeview);
-
-const divView = document.createElement("div");
-divView.id = "view";
-
 mainMenu.add(treeview);
 div.appendChild(mainMenu);
+
+const documentationPage = await slice.build("Documentation", {});
+divView.appendChild(documentationPage);
 
 const layOut = await slice.build("Layout", {
   layout: div,
@@ -150,14 +132,16 @@ async function loadComponentFromHash() {
   hash = hash.substring(1);
 
   let myComponent;
-  
-  myComponent=slice.controller.getComponent(`${hash}Documentation`);
-  
-  if(!myComponent){
-    myComponent = await slice.build(`${hash}Documentation`, {sliceId:`${hash}Documentation` });
+
+  myComponent = slice.controller.getComponent(`${hash}Documentation`);
+
+  if (!myComponent) {
+    myComponent = await slice.build(`${hash}Documentation`, {
+      sliceId: `${hash}Documentation`,
+    });
   }
 
-  if(!myComponent){
+  if (!myComponent) {
     return;
   }
 

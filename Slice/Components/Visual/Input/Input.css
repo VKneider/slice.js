@@ -40,7 +40,7 @@
 .required label,
 .required input {
   border-color: var(--danger-color);
-  color: var(--danger-color);
+  --primary-color: var(--danger-color);
 }
 
 .disabled,
@@ -82,6 +82,6 @@
 }
 
 .error {
-  color: red; /* o cualquier otro estilo que desees aplicar a la clase error */
+  --primary-color: var(--danger-color);
   animation: shake 0.5s infinite; /* Establece la animación y su duración */
 }
