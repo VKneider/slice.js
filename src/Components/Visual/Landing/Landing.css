@@ -1,0 +1,71 @@
+@import url("https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap");
+
+h1 {
+  font-size: 100px;
+  z-index: 1;
+}
+.sliceLogo {
+  position: absolute;
+  z-index: -1;
+}
+.intro {
+  height: 90vh;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.intro .info h1 {
+  font-family: "Ubuntu", sans-serif;
+  font-weight: 700;
+  font-style: normal;
+  color: var(--font-primary-color);
+  animation: fade-in 3s ease;
+  text-shadow: black 1px 0 100px;
+}
+.intro .sliceLogo {
+  opacity: 0.75;
+  color: var(--primary-color);
+  animation: fade-in-logo 5s ease, beat 10s ease infinite 5s;
+}
+.info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+@media screen and (max-width: 770px) {
+  h1 {
+    font-size: 40px;
+  }
+}
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+    scale: 0.5;
+  }
+  100% {
+    opacity: 1;
+    scale: 1;
+  }
+}
+@keyframes fade-in-logo {
+  0% {
+    opacity: 0;
+    scale: 0.5;
+  }
+  100% {
+    opacity: 0.75;
+    scale: 1;
+  }
+}
+@keyframes beat {
+  0% {
+    scale: 1;
+  }
+  50% {
+    scale: 0.9;
+  }
+  100% {
+    scale: 1;
+  }
+}
