@@ -62,6 +62,14 @@ document.body.appendChild(navBar);
 
 const sliceButton = await slice.build("Button", {
   value: "Slice",
+  onClickCallback:()=>{
+    if(slice.translator.currentLanguage=="es"){
+      slice.translator.changeLanguage('en')
+    }else{
+      slice.translator.changeLanguage('es')
+
+    }
+  }
 });
 const sliceInput = await slice.build("Input", {
   placeholder: "Enter text here...",
@@ -90,7 +98,9 @@ const select = await slice.build("Select", {
   label: "Elige una opcion",
   multiple: true,
 });
-const sliceCard = await slice.build("Card", {});
+const sliceCard = await slice.build("Card", {
+  sliceId:"prueba"
+});
 const details = await slice.build("Details", {
   title: "Slice",
   text: "Slice details text",

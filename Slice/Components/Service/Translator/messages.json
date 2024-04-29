@@ -21,6 +21,10 @@
         },
         "buttonLanguage": {
             "value": "Change language"
+        },
+        "prueba":{
+            "title":"Card in English",
+            "text":"Text in english"
         }
     },
     "es": {
@@ -45,6 +49,10 @@
         },
         "buttonLanguage": {
             "value": "Cambiar idioma"
+        },
+        "prueba":{
+            "title":"Card en espanol",
+            "text":"Text en espanol"
         }
     }
 }
