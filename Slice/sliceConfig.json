@@ -1,10 +1,10 @@
 {
     "debugger": {
-        "enabled": true,
+        "enabled": false,
         "click": "right"
     },
     "stylesManager": {
-        "defaultTheme": "Light",
+        "defaultTheme": "Dark",
         "saveThemeLocally": true,
         "useBrowserTheme": false
     },
@@ -19,7 +19,7 @@
         }
     },
     "translator": {
-        "enabled": true
+        "enabled": false
     },
     "paths": {
         "components": "../../../../Slice/Components",
