@@ -1,5 +1,5 @@
 import Log from "./Log.js";
-import sliceConfig from "../../../sliceConfig.json" assert { type: "json" };
+import sliceConfig from "../../../sliceConfig.json" with { type: "json" };
 
 
 export default class Logger {
@@ -51,7 +51,7 @@ export default class Logger {
 
 
         let componentCategory = slice.controller.getComponentCategory(componentName);
-        if (componentSliceId === "Slice" || componentSliceId==="ThemeManager") componentCategory = "Structural"
+        if (componentSliceId === "Slice" || componentSliceId === "ThemeManager") componentCategory = "Structural"
         const log = new Log(logType, componentCategory, componentSliceId, message, error);
         this.logs.push(log);
         this.showLog(log);

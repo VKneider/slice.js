@@ -1,4 +1,4 @@
-import sliceConfig from "../../../sliceConfig.json" assert { type: "json" };
+import sliceConfig from "../../../sliceConfig.json" with { type: "json" };
 
 export default class Debugger extends HTMLElement {
   constructor() {
@@ -89,7 +89,7 @@ export default class Debugger extends HTMLElement {
 
   handleDebugClick(event, component) {
     event.preventDefault();
-    
+
     const debuggerWidth = this.debuggerContainer.offsetWidth;
     const debuggerHeight = this.debuggerContainer.offsetHeight;
 
@@ -98,7 +98,7 @@ export default class Debugger extends HTMLElement {
 
     this.debuggerContainer.style.left = `${leftOffset}px`;
     this.debuggerContainer.style.top = `${topOffset}px`;
-    
+
     const sliceId = component.sliceId;
     this.isActive = true;
 

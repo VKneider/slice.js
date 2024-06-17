@@ -1,7 +1,7 @@
 import Logger from "./Components/Structural/Logger/Logger.js";
 import Controller from "./Components/Structural/Controller/Controller.js";
 import StylesManager from "./Components/Structural/StylesManager/StylesManager.js";
-import sliceConfig from "./sliceConfig.json" assert { type: "json" };
+import sliceConfig from "./sliceConfig.json" with { type: "json" };
 
 export default class Slice {
   constructor() {
@@ -9,7 +9,7 @@ export default class Slice {
     this.controller = new Controller();
     this.stylesManager = new StylesManager();
     this.paths = sliceConfig.paths;
-    this.themeConfig= sliceConfig.stylesManager;
+    this.themeConfig = sliceConfig.stylesManager;
   }
 
   async getClass(module) {
@@ -31,7 +31,7 @@ export default class Slice {
       return null;
     }
 
-    if(typeof componentName !== "string") {
+    if (typeof componentName !== "string") {
       this.logger.logError(
         "Slice",
         null,
@@ -49,7 +49,7 @@ export default class Slice {
       return null;
     }
 
-    let componentCategory =this.controller.componentCategories.get(componentName);
+    let componentCategory = this.controller.componentCategories.get(componentName);
 
     if (componentCategory === "Structural") {
       this.logger.logError(
@@ -61,14 +61,14 @@ export default class Slice {
     }
 
     let componentBasePath;
-    
-    if(componentCategory.includes("User")) {
+
+    if (componentCategory.includes("User")) {
       componentCategory = componentCategory.replace("User", "")
       componentBasePath = this.paths.userComponents
     } else {
       componentBasePath = this.paths.components
     }
-    
+
     const isVisual = componentCategory === "Visual";
     let modulePath = `${componentBasePath}/${componentCategory}/${componentName}/${componentName}.js`;
 
@@ -173,7 +173,7 @@ export default class Slice {
     await this.stylesManager.themeManager.applyTheme(themeName);
   }
 
-  get theme(){
+  get theme() {
     return this.stylesManager.themeManager.currentTheme;
   }
 
