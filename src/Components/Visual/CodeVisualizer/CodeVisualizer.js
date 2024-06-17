@@ -27,7 +27,7 @@ export default class CodeVisualizer extends HTMLElement {
       this.$container.classList.add(this.containerId);
       this.appendChild(this.$container);
     }
-
+    /*
     const htmlButton = await slice.build("Button", {
       value: "HTML",
       customColor: {
@@ -58,6 +58,8 @@ export default class CodeVisualizer extends HTMLElement {
         this.language = "css";
       },
     });
+
+    */
     // Agregar los botones al contenedor de botones (this.$buttons)
     // if (this.$buttons) {
     //   this.$buttons.appendChild(htmlButton);
