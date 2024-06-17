@@ -27,7 +27,7 @@ export default class CodeVisualizer extends HTMLElement {
       this.$container.classList.add(this.containerId);
       this.appendChild(this.$container);
     }
-    /*
+    //Cuando se borra esto, la linea 83 hace que todo se vaya a la mierda. Probablemente es un problema de asincronía
     const htmlButton = await slice.build("Button", {
       value: "HTML",
       customColor: {
@@ -38,28 +38,7 @@ export default class CodeVisualizer extends HTMLElement {
         this.language = "html";
       },
     });
-    const jsButton = await slice.build("Button", {
-      value: "JS",
-      customColor: {
-        color: "White",
-        button: "#1E1E1E",
-      },
-      onClickCallback: () => {
-        this.language = "javascript";
-      },
-    });
-    const cssButton = await slice.build("Button", {
-      value: "CSS",
-      customColor: {
-        color: "White",
-        button: "#1E1E1E",
-      },
-      onClickCallback: () => {
-        this.language = "css";
-      },
-    });
 
-    */
     // Agregar los botones al contenedor de botones (this.$buttons)
     // if (this.$buttons) {
     //   this.$buttons.appendChild(htmlButton);
