@@ -112,8 +112,12 @@ const mainMenu = await slice.build("MainMenu", {});
 mainMenu.add(treeview);
 div.appendChild(mainMenu);
 
-const documentationPage = await slice.build("Documentation", {});
-divView.appendChild(documentationPage);
+let hash = window.location.hash;
+hash = hash.substring(1);
+if(!hash){
+  const documentationPage = await slice.build("Documentation", {});
+  divView.appendChild(documentationPage);
+}
 
 const layOut = await slice.build("Layout", {
   layout: div,
