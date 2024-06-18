@@ -1,11 +1,9 @@
-import Logger from "./Components/Structural/Logger/Logger.js";
 import Controller from "./Components/Structural/Controller/Controller.js";
 import StylesManager from "./Components/Structural/StylesManager/StylesManager.js";
 import sliceConfig from "./sliceConfig.json" with { type: "json" };
 
 export default class Slice {
   constructor() {
-    this.logger = new Logger();
     this.controller = new Controller();
     this.stylesManager = new StylesManager();
     this.paths = sliceConfig.paths;
@@ -186,6 +184,17 @@ export default class Slice {
 
 async function init() {
   window.slice = new Slice();
+
+  if(sliceConfig.logger.enabled){
+    const LoggerModule = await window.slice.getClass( `${sliceConfig.paths.components}/Structural/Logger/Logger.js`);
+    window.slice.logger = new LoggerModule();
+  }else {
+    window.slice.logger = {
+      logError: () => {},
+      logWarning: () => {},
+      logInfo: () => {},
+  };
+  }
 
   if (sliceConfig.debugger.enabled) {
     const DebuggerModule = await window.slice.getClass(
