@@ -19,6 +19,10 @@ export default class Slice {
     }
   }
 
+  getComponent(componentSliceId) {
+    return this.controller.activeComponents.get(componentSliceId);
+  }
+
   async build(componentName, props = {}) {
     if (!componentName) {
       this.logger.logError(
