@@ -23,7 +23,7 @@ export default class LandingMenu extends HTMLElement {
     const goToDocs = await slice.build("Button", {
       value: "Go to Documentation",
       onClickCallback: () => {
-        window.location.href = "/src/App/Documentation/";
+        window.location.href = "/Documentation";
       },
     });
     this.querySelector(".goToDocs").appendChild(goToDocs);
