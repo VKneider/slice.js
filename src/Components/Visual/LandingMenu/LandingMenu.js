@@ -1,4 +1,4 @@
-export default class Landing extends HTMLElement {
+export default class LandingMenu extends HTMLElement {
   constructor(props) {
     super();
     slice.attachTemplate(this);
@@ -30,4 +30,4 @@ export default class Landing extends HTMLElement {
   }
 }
 
-customElements.define("slice-landing", Landing);
+customElements.define("slice-landing-menu", LandingMenu);
