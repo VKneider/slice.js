@@ -51,7 +51,12 @@ export default class Router {
   }
 
   matchRoute(path) {
-    return this.routes.find(r => r.path === path);
+    const matchedRoute = this.routes.find(r => r.path === path);
+    if (!matchedRoute) {
+      // Redirect to the notFound route
+      return this.routes.find(r => r.path === '/404');
+    }
+    return matchedRoute;
   }
 }
 
