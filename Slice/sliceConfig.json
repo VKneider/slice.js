@@ -14,7 +14,7 @@
             "console": {
                 "error": true,
                 "warning": true,
-                "info": false
+                "info": true
             }
         }
     },
@@ -25,6 +25,11 @@
         "components": "../../../../Slice/Components",
         "themes": "../../../../Slice/Themes",
         "styles": "../../../../Slice/Styles",
-        "userComponents": "../../../../src/Components"
+        "userComponents": "/Components"
+    },
+    "router":{
+        "defaultRoute": "home",
+        "enabled": true
+        
     }
 }
