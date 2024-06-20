@@ -211,6 +211,12 @@ async function init() {
     window.slice.logger.logInfo("Slice", "Translator succesfuly enabled");
   }
 
+  if(sliceConfig.router.enabled){
+    const RouterModule = await window.slice.getClass(`${sliceConfig.paths.components}/Structural/Router/Router.js`);
+    window.slice.router = new RouterModule();
+    //await window.slice.router.init();
+  }
+
   await window.slice.stylesManager.init();
 }
 
