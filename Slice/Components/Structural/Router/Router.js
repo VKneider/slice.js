@@ -34,12 +34,19 @@ export default class Router {
   async handleRoute(route) {
     if (route.component) {
       const component = await slice.build(route.component, {});
+      
+      if (route.callback) {
+        route.callback(component);
+      }
+      
+      if(route.target === 'none'){
+        return;
+      }
+      
       const targetElement = route.target ? document.querySelector(route.target) : document.querySelector('#app');
       targetElement.innerHTML = '';
       targetElement.appendChild(component);
-    } else if (route.callback) {
-      route.callback(route.path);
-    }
+    }  
   }
 
   async loadInitialRoute() {
