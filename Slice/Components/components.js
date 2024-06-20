@@ -28,11 +28,13 @@ const components = {
   "CheckboxDocumentation": "UserVisual",
   "CodeVisualizer": "UserVisual",
   "Documentation": "UserVisual",
+  "DocumentationPage": "UserVisual",
   "InputDocumentation": "UserVisual",
   "LandingMenu": "UserVisual",
   "LandingPage": "UserVisual",
   "MainMenu": "UserVisual",
   "MyLayout": "UserVisual",
   "NotFound": "UserVisual",
+  "Playground": "UserVisual",
   "SwitchDocumentation": "UserVisual"
 }; export default components;
