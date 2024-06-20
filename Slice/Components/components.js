@@ -21,6 +21,7 @@ const components = {
   "Controller": "Structural",
   "Debugger": "Structural",
   "Logger": "Structural",
+  "Router": "Structural",
   "StylesManager": "Structural",
   "ButtonDocumentation": "UserVisual",
   "CardDocumentation": "UserVisual",
@@ -28,9 +29,9 @@ const components = {
   "CodeVisualizer": "UserVisual",
   "Documentation": "UserVisual",
   "InputDocumentation": "UserVisual",
-  "Landing": "UserVisual",
+  "LandingMenu": "UserVisual",
+  "LandingPage": "UserVisual",
   "MainMenu": "UserVisual",
   "MyLayout": "UserVisual",
-  "MyNavBar": "UserVisual",
   "SwitchDocumentation": "UserVisual"
 }; export default components;
