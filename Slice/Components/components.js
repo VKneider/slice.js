@@ -33,5 +33,6 @@ const components = {
   "LandingPage": "UserVisual",
   "MainMenu": "UserVisual",
   "MyLayout": "UserVisual",
+  "NotFound": "UserVisual",
   "SwitchDocumentation": "UserVisual"
 }; export default components;
