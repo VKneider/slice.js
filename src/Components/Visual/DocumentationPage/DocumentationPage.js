@@ -5,30 +5,23 @@ export default class DocumentationPage extends HTMLElement {
 
     slice.controller.setComponentProps(this, props);
     this.debuggerProps = [];
+
+    this.components = ["Button", "Card", "Checkbox", "Input", "Switch"]
   }
 
   async init() {
 
-    const components = {
-      Button: "Visual",
-      Card: "Visual",
-      Checkbox: "Visual",
-      Input: "Visual",
-      Switch: "Visual",
-    };
+    const loading = await slice.build("Loading", {});
+    loading.start();
 
+    console.log(this.params);
     const div = document.createElement("div");
-    // div.style.height = "90vh";
-    let theme = slice.stylesManager.themeManager.currentTheme;
-
     const componentContainer = document.createElement("div");
     componentContainer.classList.add("docs_container");
     componentContainer.id = "componentContainer";
+
     const divView = document.createElement("div");
     divView.classList.add("docs_container");
-
-    const loading = await slice.build("Loading", {});
-    loading.start();
 
     const navBar = await slice.build("Navbar", {
       position: "fixed",
@@ -85,42 +78,35 @@ export default class DocumentationPage extends HTMLElement {
       ],
     });
 
+    const components = {
+      Button: "Visual",
+      Card: "Visual",
+      Checkbox: "Visual",
+      Input: "Visual",
+      Switch: "Visual",
+    };
+
     let compVisual = {
       value: "Visual",
       items: [],
     };
-    // let compStruc = {
-    //   value: "Structural",
-    //   items: [],
-    // };
-    // let compServe = {
-    //   value: "Service",
-    //   items: [],
-    // };
 
     for (const name in components) {
       const component = {
         value: name,
-        href: `Documentation/${name}`,
+        href: `/Documentation/${name}/`,
       };
       if (components[name] === "Visual") {
         compVisual.items.push(component);
       }
-      // if (components[name] === "Structural") {
-      //   compStruc.items.push(component);
-      // }
-      // if (components[name] === "Service") {
-      //   compServe.items.push(component);
-      // }
-    }
 
-    div.appendChild(navBar);
+    }
 
     const treeview = await slice.build("TreeView", {
       items: [
         {
           value: "Components",
-          items: [compVisual /*compStruc, compServe*/],
+          items: [compVisual],
         },
       ],
     });
@@ -129,55 +115,50 @@ export default class DocumentationPage extends HTMLElement {
     mainMenu.add(treeview);
     div.appendChild(mainMenu);
 
-    let hash = window.location.hash;
-    hash = hash.substring(1);
-    if (!hash) {
-      const documentationPage = await slice.build("Documentation", {});
-      divView.appendChild(documentationPage);
-    }
+    div.appendChild(navBar);
 
     const layOut = await slice.build("Layout", {
       layout: div,
       view: divView,
     });
 
+
+
+   
+
+    let theme = slice.stylesManager.themeManager.currentTheme;
+
+    
+
+    
+
+
     document.body.appendChild(layOut);
 
-    if (window.location.hash !== "") {
-      await loadComponentFromHash();
-    }
 
-    //create an event that every time the hash changes, the component changes
-    window.addEventListener("hashchange", async () => {
-      await loadComponentFromHash();
-    });
 
-    async function loadComponentFromHash() {
-      let hash = window.location.hash;
-      hash = hash.substring(1);
+    if(this.params){
+      this.params = this.params.replace("/", ""); 
 
-      let myComponent;
-
-      myComponent = slice.controller.getComponent(`${hash}Documentation`);
-
-      if (!myComponent) {
-        myComponent = await slice.build(`${hash}Documentation`, {
-          sliceId: `${hash}Documentation`,
+      if (this.components.includes(this.params)) {
+        const component = await slice.build(`${this.params}Documentation`, {
+          sliceId: `${this.params}Documentation`,
         });
-      }
-
-      if (!myComponent) {
-        return;
-      }
-
-      componentContainer.innerHTML = "";
-      componentContainer.appendChild(myComponent);
-      layOut.showing(componentContainer);
+        componentContainer.innerHTML = "";
+        componentContainer.appendChild(component);
+        loading.stop();
+        return layOut.showing(component);
+      }  
     }
+    
+      const documentationPage = await slice.build("Documentation", {});
+      divView.appendChild(documentationPage);
+    
+
     loading.stop();
   }
 
 
 }
 
-customElements.define("slice-documentationpage", DocumentationPage);
+customElements.define("slice-documentation-page", DocumentationPage);
