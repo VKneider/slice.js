@@ -7,7 +7,7 @@ export default class Router {
     window.addEventListener('popstate', this.onRouteChange.bind(this));
   }
 
-  init(){
+  init() {
     document.addEventListener('DOMContentLoaded', () => {
       document.querySelectorAll('a[data-route]').forEach(anchor => {
         anchor.addEventListener('click', function (event) {
@@ -20,9 +20,9 @@ export default class Router {
 
   async onRouteChange() {
     const path = window.location.pathname;
-    const route = this.matchRoute(path);
+    const { route, params } = this.matchRoute(path);
     if (route) {
-      await this.handleRoute(route);
+      await this.handleRoute(route, params);
     }
   }
 
@@ -31,39 +31,56 @@ export default class Router {
     await this.onRouteChange();
   }
 
-  async handleRoute(route) {
+  async handleRoute(route, params) {
     if (route.component) {
-      const component = await slice.build(route.component, {});
-      
-      if (route.callback) {
-        route.callback(component);
-      }
-      
-      if(route.target === 'none'){
-        return;
-      }
-      
+      const component = await slice.build(route.component, { params });
       const targetElement = route.target ? document.querySelector(route.target) : document.querySelector('#app');
       targetElement.innerHTML = '';
       targetElement.appendChild(component);
-    }  
+    } else if (route.callback) {
+      route.callback(route.path, params);
+    }
+  }
+
+  async navigateAndGetComponent(path) {
+    window.history.pushState({}, path, window.location.origin + path);
+    const { route, params } = this.matchRoute(path);
+    if (route && route.component) {
+      return await slice.build(route.component, { params });
+    } else {
+      this.navigate('/404');
+      return null;
+    }
   }
 
   async loadInitialRoute() {
     const path = window.location.pathname;
-    const route = this.matchRoute(path);
+    const { route, params } = this.matchRoute(path);
     if (route) {
-      await this.handleRoute(route);
+      await this.handleRoute(route, params);
     }
   }
 
   matchRoute(path) {
-    const matchedRoute = this.routes.find(r => r.path === path);
-    if (!matchedRoute) {
-      // Redirect to the notFound route
-      return this.routes.find(r => r.path === '/404');
+    // 1. Verificar si la ruta exacta está definida en routes
+    let matchedRoute = this.routes.find(r => r.path === path);
+    if (matchedRoute) {
+      return { route: matchedRoute, params: null };
     }
-    return matchedRoute;
+
+    // 2. Verificar si hay una ruta con comodín que coincida con el inicio del path
+    for (let route of this.routes) {
+      if (route.path.includes('*')) {
+        const basePath = route.path.split('*')[0];
+        if (path.startsWith(basePath)) {
+          const param = path.replace(basePath, '');
+          return { route, params: param };
+        }
+      }
+    }
+
+    // 3. Si no se encuentra ninguna coincidencia, redirigir a la ruta de notFound
+    matchedRoute = this.routes.find(r => r.path === '/404');
+    return { route: matchedRoute, params: null };
   }
 }
-
