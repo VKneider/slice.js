@@ -9,7 +9,7 @@
         "useBrowserTheme": false
     },
     "logger": {
-        "enabled": true,
+        "enabled": false,
         "showLogs": {
             "console": {
                 "error": true,
