@@ -10,12 +10,15 @@ const components = {
   "Layout": "Visual",
   "Loading": "Visual",
   "Navbar": "Visual",
+  "NotFound": "Visual",
+  "RouteTarget": "Visual",
   "Select": "Visual",
   "Switch": "Visual",
   "TreeItem": "Visual",
   "TreeView": "Visual",
   "FetchManager": "Service",
   "IndexedDbManager": "Service",
+  "Link": "Service",
   "LocalStorageManager": "Service",
   "Translator": "Service",
   "Controller": "Structural",
@@ -34,7 +37,9 @@ const components = {
   "LandingPage": "UserVisual",
   "MainMenu": "UserVisual",
   "MyLayout": "UserVisual",
-  "NotFound": "UserVisual",
   "Playground": "UserVisual",
-  "SwitchDocumentation": "UserVisual"
+  "SwitchDocumentation": "UserVisual",
+  "Test1": "UserVisual",
+  "Test2": "UserVisual",
+  "Test3": "UserVisual"
 }; export default components;
