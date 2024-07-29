@@ -8,7 +8,8 @@
     "slice:create": "node node_modules/slicejs-cli/client.js create",
     "slice:modify": "node node_modules/slicejs-cli/client.js modify",
     "slice:list": "node node_modules/slicejs-cli/client.js list",
-    "slice:delete": "node node_modules/slicejs-cli/client.js delete"
+    "slice:delete": "node node_modules/slicejs-cli/client.js delete",
+    "build": "node ./Slice/server.js"
   },
   "keywords": [],
   "author": "",
