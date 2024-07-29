@@ -18,6 +18,7 @@ app.use('/slice', express.static(path.join(__dirname,'..', 'Slice')));
 
 // Ruta para servir el index.html desde la carpeta 'App'
 app.get('*', (req, res) => {
+  console.log("requesting index.html", req.url);
   const filePath = path.join(__dirname, '..', 'src', 'App', 'index.html');
   res.sendFile(filePath);
 });
@@ -25,3 +26,6 @@ app.get('*', (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
+export default app;
+
