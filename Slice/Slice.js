@@ -141,7 +141,7 @@ export default class Slice {
         componentInstance.sliceId = componentIds.sliceId;
 
 
-      if (!this.controller.registerComponent(componentInstance)) {
+      if (!this.controller.verifyComponentIds(componentInstance)) {
         this.logger.logError(
           "Slice",
           `Error registering instance ${componentName} ${componentInstance.sliceId}`
@@ -156,6 +156,9 @@ export default class Slice {
       //if the component has a method called init, call it
       if (componentInstance.init) await componentInstance.init();
 
+      this.controller.registerComponent(componentInstance);
+      this.controller.registerComponentsRecursively(componentInstance);
+      
       this.logger.logInfo(
         "Slice",
         `Instance ${componentInstance.sliceId} created`
@@ -214,14 +217,15 @@ async function init() {
     window.slice.translator = translator;
     window.slice.logger.logInfo("Slice", "Translator succesfuly enabled");
   }
-
+  
+  await window.slice.stylesManager.init();
+  
   if(sliceConfig.router.enabled){
     const RouterModule = await window.slice.getClass(`${sliceConfig.paths.components}/Structural/Router/Router.js`);
     window.slice.router = new RouterModule();
-    //await window.slice.router.init();
+    await window.slice.router.init();
   }
 
-  await window.slice.stylesManager.init();
 }
 
 await init();
