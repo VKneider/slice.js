@@ -14,7 +14,6 @@ export default class DocumentationPage extends HTMLElement {
     const loading = await slice.build("Loading", {});
     loading.start();
 
-    console.log(this.params);
     const div = document.createElement("div");
     const componentContainer = document.createElement("div");
     componentContainer.classList.add("docs_container");
