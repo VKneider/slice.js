@@ -9,7 +9,7 @@
     "slice:modify": "node node_modules/slicejs-cli/client.js modify",
     "slice:list": "node node_modules/slicejs-cli/client.js list",
     "slice:delete": "node node_modules/slicejs-cli/client.js delete",
-    "build": "node ./Slice/server.js"
+    "slice:start": "node ./Slice/server.js"
   },
   "keywords": [],
   "author": "",
