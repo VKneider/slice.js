@@ -3,19 +3,32 @@ import routes from "./routes.js";
 export default class Router {
   constructor() {
     this.routes = routes;
-    this.loadInitialRoute();
-    window.addEventListener('popstate', this.onRouteChange.bind(this));
+    
   }
 
-  init() {
-    document.addEventListener('DOMContentLoaded', () => {
-      document.querySelectorAll('a[data-route]').forEach(anchor => {
-        anchor.addEventListener('click', function (event) {
-          event.preventDefault();
-          slice.router.navigate(this.getAttribute('href'));
-        });
-      });
-    });
+  async init() {
+
+    await this.loadInitialRoute();
+    window.addEventListener('popstate', this.onRouteChange.bind(this));
+    const originalAppendChild = document.body.appendChild;
+
+    // Sobrescribir appendChild
+    /*
+    document.body.appendChild = function (element) {
+      const appElement = document.querySelector('#app');
+      console.log('Elemento a agregar:', element);
+      if (appElement) {
+        appElement.appendChild(element);
+        console.log('Elemento agregado al #app')
+      } else {
+        // Si por alguna razón el #app no existe, usar el comportamiento original
+        console.log('Elemento agregado al body')
+        originalAppendChild.call(document.body, element);
+      }
+    };
+    */
+    
+   
   }
 
   async onRouteChange() {
@@ -32,24 +45,24 @@ export default class Router {
   }
 
   async handleRoute(route, params) {
-    if (route.component) {
-      const component = await slice.build(route.component, { params });
-      const targetElement = route.target ? document.querySelector(route.target) : document.querySelector('#app');
+    const existingComponent = slice.controller.getComponent(`route-${route.component}`);
+
+    if (route.reuse && existingComponent) {
+      // Reutilizar el componente
+      const targetElement = document.querySelector('#app');
+      targetElement.innerHTML = '';
+      targetElement.appendChild(existingComponent);
+      console.log('Reutilizando componente', existingComponent);
+    } else {
+      // Destruir el componente existente si no se debe reutilizar
+      if (existingComponent) {
+        slice.controller.destroyComponent(existingComponent);
+      }
+      // Crear y montar el nuevo componente
+      const component = await slice.build(route.component, { params, sliceId: `route-${route.component}` });
+      const targetElement = document.querySelector('#app');
       targetElement.innerHTML = '';
       targetElement.appendChild(component);
-    } else if (route.callback) {
-      route.callback(route.path, params);
-    }
-  }
-
-  async navigateAndGetComponent(path) {
-    window.history.pushState({}, path, window.location.origin + path);
-    const { route, params } = this.matchRoute(path);
-    if (route && route.component) {
-      return await slice.build(route.component, { params });
-    } else {
-      this.navigate('/404');
-      return null;
     }
   }
 
