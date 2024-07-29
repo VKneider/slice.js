@@ -99,11 +99,12 @@ export default class Navbar extends HTMLElement {
       value.type = "text";
     }
     if (value.type === "text") {
-      const a = document.createElement("a");
-      a.textContent = value.text;
-      a.href = value.href;
-      a.classList.add("item");
-      item.appendChild(a);
+      const link = await slice.build("Link", {
+        text: value.text,
+        href: value.href,
+        classes: "item",
+      })
+      item.appendChild(link);
     }
     if (value.type === "dropdown") {
       const d = await slice.build("DropDown", {
