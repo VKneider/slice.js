@@ -22,9 +22,9 @@
         "enabled": false
     },
     "paths": {
-        "components": "../../../../Slice/Components",
-        "themes": "../../../../Slice/Themes",
-        "styles": "../../../../Slice/Styles",
+        "components": "/Slice/Components",
+        "themes": "../../../Slice/Themes",
+        "styles": "../../Slice/Styles",
         "userComponents": "/Components"
     },
     "router":{
