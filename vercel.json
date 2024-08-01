@@ -2,7 +2,7 @@
     "version":2,
     "builds":[
         {
-            "src":"Slice/server.js",
+            "src":"/Slice/server.js",
             "use":"@vercel/node"
         }
     ],
