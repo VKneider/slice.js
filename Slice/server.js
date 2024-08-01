@@ -19,11 +19,7 @@ app.get('/test', (req, res) => {
 app.use('/Slice', express.static(path.join(__dirname,'..', 'Slice')));
 // Servir archivos estáticos desde la carpeta 'Slice'
 
-app.get('/Slice', (req, res) => {
-  console.log("requesting Slice", req.url);
-  const filePath = path.join(__dirname, 'Slice.js');
-  res.sendFile(filePath);
-})
+
 
 
 
