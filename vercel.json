@@ -5,5 +5,11 @@
             "src":"/Slice/server.js",
             "use":"@vercel/node"
         }
+    ],
+    "routes":[
+        {
+            "src":"/(.*)",
+            "dest":"/Slice/server.js"
+        }
     ]
 }
