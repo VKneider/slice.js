@@ -7,6 +7,11 @@ export default class Test1 extends HTMLElement {
     this.debuggerProps = [];
   }
 
+  
+  update(){
+    alert("andres es marico")
+  }
+
   async init() {
     const navBar = await slice.build("Navbar", {
       // position: "fixed",
@@ -65,12 +70,7 @@ export default class Test1 extends HTMLElement {
 
     this.appendChild(navBar);
 
-    const RouteTarget = await slice.build("RouteTarget", {
-      href: "/LandingMenu",
-      component:"LandingMenu"
-    });
-
-    this.appendChild(RouteTarget);
+    
 
     const goTo2Button = await slice.build("Button", {
       value: "Go to Test2",
@@ -80,7 +80,41 @@ export default class Test1 extends HTMLElement {
       },
     });
 
+    const goToTestViewButton = await slice.build("Button", {
+      value: "Go to TestView",
+      // color:
+      onClickCallback: async () => {
+        await slice.router.navigate("/TestView");
+      },
+    });
     this.appendChild(goTo2Button)
+
+    const Link = await slice.build("Link", {
+      href: "/TestView/Hola",
+      text: "Render TestView",
+    });
+
+    const LinkTest2 = await slice.build("Link", {
+      href: "/2",
+      text: "Render Test2",
+    });
+
+    const routeTest2 = await slice.build("Route", {
+      href: "/2",
+      component:"Test2",
+    });
+
+
+    this.appendChild(LinkTest2)
+    this.appendChild(routeTest2)
+    this.appendChild(Link);
+
+    const RouteTarget = await slice.build("Route", {
+      href: "/TestView/Hola",
+      component:"TestView",
+    });
+
+    this.appendChild(RouteTarget);
   }
 
 

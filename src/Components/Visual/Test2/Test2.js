@@ -7,6 +7,12 @@ export default class Test2 extends HTMLElement {
     this.debuggerProps = [];
   }
 
+   async update(){
+    const request = await fetch("https://jsonplaceholder.typicode.com/users")
+    const response = await request.json()
+    console.log(response)
+   }
+   
   async init() {
 
     const theme = slice.theme;
@@ -15,18 +21,13 @@ export default class Test2 extends HTMLElement {
       value: "Change Theme",
       // color:
       onClickCallback: async () => {
-        if (theme === "Slice") {
+        if (slice.theme === "Slice") {
           await slice.setTheme("Light");
-          theme = "Light";
-        } else if (theme === "Light") {
+        } else if (slice.theme === "Light") {
           await slice.setTheme("Dark");
-          theme = "Dark";
-        } else if (theme === "Dark") {
+        } else if (slice.theme === "Dark") {
           await slice.setTheme("Slice");
-          theme = "Slice";
         }
-
-
       },
     });
 
