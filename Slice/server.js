@@ -12,6 +12,10 @@ const PORT = 3000;
 // Servir archivos estáticos desde la carpeta 'App'
 app.use(express.static(path.join(__dirname, '..', 'src')));
 
+app.get('/test', (req, res) => {
+  res.send('Hello World');
+});
+
 app.use('/slice', express.static(path.join(__dirname,'..', 'Slice')));
 // Servir archivos estáticos desde la carpeta 'Slice'
 
