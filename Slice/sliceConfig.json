@@ -4,17 +4,17 @@
         "click": "right"
     },
     "stylesManager": {
-        "defaultTheme": "Dark",
+        "defaultTheme": "Slice",
         "saveThemeLocally": true,
         "useBrowserTheme": false
     },
     "logger": {
-        "enabled": true,
+        "enabled": false,
         "showLogs": {
             "console": {
                 "error": true,
                 "warning": true,
-                "info": true
+                "info": false
             }
         }
     },
@@ -28,8 +28,11 @@
         "userComponents": "/Components"
     },
     "router":{
-        "defaultRoute": "home",
+        "defaultRoute": "/",
         "enabled": true
         
     }
 }
+
+
+
