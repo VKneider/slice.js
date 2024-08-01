@@ -13,7 +13,7 @@ const PORT = 3000;
 app.use(express.static(path.join(__dirname, '..', 'src')));
 
 app.get('/test', (req, res) => {
-  res.send('Hello World');
+  res.send(`${__dirname}`)
 });
 
 app.use('/slice', express.static(path.join(__dirname,'..', 'Slice')));
