@@ -16,12 +16,8 @@ app.get('/test', (req, res) => {
   res.send(`${__dirname} , ruta static: ${path.join(__dirname, '..', 'src')} y la ruta final para el index.html: ${path.join(__dirname, '..', 'src', 'App', 'index.html')}` )
 });
 
-app.use('/Slice', express.static(path.join(__dirname,'..', 'Slice')));
+//app.use('/Slice', express.static(path.join(__dirname,'..', 'Slice')));
 // Servir archivos estáticos desde la carpeta 'Slice'
-
-
-
-
 
 // Ruta para servir el index.html desde la carpeta 'App'
 app.get('*', (req, res) => {
