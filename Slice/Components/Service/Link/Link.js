@@ -7,26 +7,14 @@ export default class Link extends HTMLElement {
   }
 
   init() {
-    this.addEventListener('click', this.onClick.bind(this));
+    this.addEventListener('click', this.onClick);
   }
 
   async onClick(event) {
     event.preventDefault();
     const href = this.querySelector('a').getAttribute('href');
     const routeTargets = document.querySelectorAll('slice-routetarget');
-    let handled = false;
-
-    for (const target of routeTargets) {
-      if (href.startsWith(target.getAttribute('href'))) {
-        await target.render(href);
-        handled = true;
-        break;
-      }
-    }
-
-    if (!handled) {
-      slice.router.navigate(href);
-    }
+    slice.router.navigate(href);
   }
 
   getTemplate(props = {}) {
