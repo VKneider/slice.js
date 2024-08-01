@@ -3,36 +3,49 @@ import routes from "./routes.js";
 export default class Router {
   constructor() {
     this.routes = routes;
-    
+    this.activeRoute = null;
   }
 
   async init() {
-
     await this.loadInitialRoute();
-    window.addEventListener('popstate', this.onRouteChange.bind(this));
-    const originalAppendChild = document.body.appendChild;
+    this.pathToRouteMap = this.createPathToRouteMap(routes);
+    window.addEventListener('popstate', this.onRouteChange.bind(this)); 
 
-    // Sobrescribir appendChild
-    /*
-    document.body.appendChild = function (element) {
-      const appElement = document.querySelector('#app');
-      console.log('Elemento a agregar:', element);
-      if (appElement) {
-        appElement.appendChild(element);
-        console.log('Elemento agregado al #app')
-      } else {
-        // Si por alguna razón el #app no existe, usar el comportamiento original
-        console.log('Elemento agregado al body')
-        originalAppendChild.call(document.body, element);
-      }
-    };
-    */
-    
-   
   }
+
+  createPathToRouteMap(routes, basePath = "") {
+    const pathToRouteMap = new Map();
+    for (const route of routes) {
+      const fullPath = basePath + route.path;
+      pathToRouteMap.set(fullPath, route);
+
+      if (route.children) {
+        const childPathToRouteMap = this.createPathToRouteMap(route.children, fullPath);
+        for (const [childPath, childRoute] of childPathToRouteMap.entries()) {
+          pathToRouteMap.set(childPath, childRoute);
+        }
+      }
+    }
+    return pathToRouteMap;
+  }
+
 
   async onRouteChange() {
     const path = window.location.pathname;
+    const routeContainers = document.querySelectorAll('slice-route');
+    //Verify if the routeContainers have the same path of the path
+    let routerContainersFlag = false;
+    for (const routeContainer of routeContainers) {
+     let response = await routeContainer.updateHTML() 
+        if(response){
+          routerContainersFlag = true
+        }
+    }
+
+    if(routerContainersFlag){
+        return
+    }
+
     const { route, params } = this.matchRoute(path);
     if (route) {
       await this.handleRoute(route, params);
@@ -51,8 +64,11 @@ export default class Router {
       // Reutilizar el componente
       const targetElement = document.querySelector('#app');
       targetElement.innerHTML = '';
+
+      if(existingComponent.update){await existingComponent.update();} 
+      
       targetElement.appendChild(existingComponent);
-      console.log('Reutilizando componente', existingComponent);
+      slice.router.activeRoute = route;
     } else {
       // Destruir el componente existente si no se debe reutilizar
       if (existingComponent) {
@@ -63,6 +79,7 @@ export default class Router {
       const targetElement = document.querySelector('#app');
       targetElement.innerHTML = '';
       targetElement.appendChild(component);
+      slice.router.activeRoute = route;
     }
   }
 
@@ -96,4 +113,6 @@ export default class Router {
     matchedRoute = this.routes.find(r => r.path === '/404');
     return { route: matchedRoute, params: null };
   }
+
+  
 }
