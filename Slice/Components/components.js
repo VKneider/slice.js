@@ -11,7 +11,7 @@ const components = {
   "Loading": "Visual",
   "Navbar": "Visual",
   "NotFound": "Visual",
-  "RouteTarget": "Visual",
+  "Route": "Visual",
   "Select": "Visual",
   "Switch": "Visual",
   "TreeItem": "Visual",
@@ -41,5 +41,6 @@ const components = {
   "SwitchDocumentation": "UserVisual",
   "Test1": "UserVisual",
   "Test2": "UserVisual",
-  "Test3": "UserVisual"
+  "Test3": "UserVisual",
+  "TestView": "UserVisual"
 }; export default components;
