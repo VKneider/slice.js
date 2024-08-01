@@ -1,2 +1,2 @@
-import Slice from 'Slice.js';
+import Slice from './Slice.js';
 
