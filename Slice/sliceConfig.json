@@ -22,10 +22,10 @@
         "enabled": false
     },
     "paths": {
-        "components": "Components",
-        "themes": "Themes",
-        "styles": "Styles",
-        "userComponents": "Components"
+        "components": "../../../../Slice/Components",
+        "themes": "../../../../Slice/Themes",
+        "styles": "../../../../Slice/Styles",
+        "userComponents": "/Components"
     },
     "router":{
         "defaultRoute": "/",
