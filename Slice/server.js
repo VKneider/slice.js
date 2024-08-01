@@ -13,7 +13,7 @@ const PORT = 3000;
 app.use(express.static(path.join(__dirname, '..', 'src')));
 
 app.get('/test', (req, res) => {
-  res.send(`${__dirname}`)
+  res.send(`${__dirname} , ruta static: ${path.join(__dirname, '..', 'src')} y la ruta final para el index.html: ${path.join(__dirname, '..', 'src', 'App', 'index.html')}` )
 });
 
 app.use('/slice', express.static(path.join(__dirname,'..', 'Slice')));
