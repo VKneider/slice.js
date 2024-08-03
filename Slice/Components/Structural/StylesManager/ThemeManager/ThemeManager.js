@@ -6,32 +6,39 @@ export default class ThemeManager {
     document.head.appendChild(this.themeStyle);
   }
 
-
   async applyTheme(themeName) {
+    if (!themeName) {
+      slice.logger.logError("ThemeManager", "Invalid theme name");
+      return;
+    }
+
     if (!this.themeStyles.has(themeName)) {
       await this.loadThemeCSS(themeName);
     } else {
       this.setThemeStyle(themeName);
+      this.saveThemeLocally(themeName, this.themeStyles.get(themeName));
     }
   }
 
   async loadThemeCSS(themeName) {
-    let themeContent;
-    themeContent = localStorage.getItem(`sliceTheme-${themeName}`);
+    let themeContent = localStorage.getItem(`sliceTheme-${themeName}`) || await slice.controller.fetchText(themeName, "theme");
 
     if (!themeContent) {
-      themeContent = await slice.controller.fetchText(themeName, "theme");
+      slice.logger.logError("ThemeManager", `Failed to load theme: ${themeName}`);
+      return;
     }
 
-    if(slice.themeConfig.saveThemeLocally){
+    this.themeStyles.set(themeName, themeContent);
+    this.setThemeStyle(themeName);
+    this.saveThemeLocally(themeName, themeContent);
+  }
+
+  saveThemeLocally(themeName, themeContent) {
+    if (slice.themeConfig.saveThemeLocally) {
       localStorage.setItem("sliceTheme", themeName);
       localStorage.setItem(`sliceTheme-${themeName}`, themeContent);
       slice.logger.logInfo("ThemeManager", `Theme ${themeName} saved locally`);
     }
-
-    this.themeStyles.set(themeName, themeContent);
-    this.removeCurrentTheme(); // Elimina el estilo del tema anterior si existe
-    this.setThemeStyle(themeName);
   }
 
   removeCurrentTheme() {
