@@ -17,6 +17,22 @@ export default class Route extends HTMLElement {
     this.props.innerHTML = this.innerHTML;
   }
 
+  get href() {
+    return this.props.href;
+  }
+
+  set href(value) {
+    this.props.href = value;
+  }
+
+  get component() {
+    return this.props.component;
+  }
+
+  set component(value) {
+    this.props.component = value;
+  }
+
   async render() {
     if (Route.componentCache[this.props.component]) {
       const cachedComponent = Route.componentCache[this.props.component];
@@ -39,10 +55,8 @@ export default class Route extends HTMLElement {
   async updateHTML() {
     if (this.props.href === window.location.pathname) {
       if (this.rendered) {
-        console.log("Already rendered", this.props.href);
         return true;
       }
-      console.log("Rendered", this.props.href);
       await this.render();
       return true;
     }
