@@ -89,6 +89,7 @@ export default class Debugger extends HTMLElement {
 
   handleDebugClick(event, component) {
     event.preventDefault();
+    event.stopPropagation();
 
     const debuggerWidth = this.debuggerContainer.offsetWidth;
     const debuggerHeight = this.debuggerContainer.offsetHeight;
