@@ -42,7 +42,7 @@ export default class Layout extends HTMLElement {
   }
 
   async onLayOut(view) {
-    document.body.appendChild(view);
+    this.appendChild(view);
   }
 }
 
