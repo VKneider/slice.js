@@ -68,7 +68,7 @@ export default class Playground extends HTMLElement {
       ],
     });
 
-    document.body.appendChild(navBar);
+    this.appendChild(navBar);
 
     const sliceButton = await slice.build("Button", {
       value: "Slice",
@@ -134,7 +134,7 @@ export default class Playground extends HTMLElement {
     grid.appendChild(sliceCard);
     grid.appendChild(details);
 
-    document.body.appendChild(grid);
+    this.appendChild(grid);
 
     loading.stop();
   }

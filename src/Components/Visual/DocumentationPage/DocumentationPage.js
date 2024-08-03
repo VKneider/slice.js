@@ -121,20 +121,9 @@ export default class DocumentationPage extends HTMLElement {
       view: divView,
     });
 
-
-
-   
-
     let theme = slice.stylesManager.themeManager.currentTheme;
 
-    
-
-    
-
-
-    document.body.appendChild(layOut);
-
-
+    this.appendChild(layOut);
 
     if(this.params){
       this.params = this.params.replace("/", ""); 
@@ -147,7 +136,7 @@ export default class DocumentationPage extends HTMLElement {
         componentContainer.appendChild(component);
         loading.stop();
         return layOut.showing(component);
-      }  
+      }   
     }
     
       const documentationPage = await slice.build("Documentation", {});

@@ -48,7 +48,10 @@ export default class LandingPage extends HTMLElement {
       view: divView,
     });
 
-    document.body.appendChild(layOut);
+    this.appendChild(layOut);
+
+
+
     loading.stop();
   }
 
