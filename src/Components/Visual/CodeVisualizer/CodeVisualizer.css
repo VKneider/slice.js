@@ -1,24 +1,9 @@
-/* .code_visualizer {
-  height: 30vh;
-} */
-.monaco-editor {
-  padding-top: 10px;
-  padding-bottom: 10px;
+.codevisualizer_container {
+  font-size: smaller;
+  max-width: 100%;
+  background-color: whitesmoke;
+  border: 1px solid var(--primary-color);
+  padding: 10px;
   border-radius: 10px;
-}
-/* Estilo para ocultar las líneas de código en Monaco Editor */
-.monaco-editor .margin,
-.monaco-editor .margin-view-overlays {
-  background-color: transparent !important;
-}
-
-.view-lines {
-  pointer-events: none;
-}
-.code_language {
-  display: flex;
-  margin-top: 10px;
-  slice-button {
-    width: 100%;
-  }
+  overflow-x: scroll;
 }
