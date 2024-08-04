@@ -25,7 +25,7 @@ body {
   width: 5px;
 }
 *::-webkit-scrollbar:horizontal {
-  height: 3px; /* Grosor para scroll horizontal */
+  height: 3px;
 }
 *::-webkit-scrollbar-thumb {
   background: var(--secondary-color);
