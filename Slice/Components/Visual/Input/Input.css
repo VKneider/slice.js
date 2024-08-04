@@ -5,6 +5,10 @@
   cursor: pointer;
   right: 10px;
 }
+.input_area::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
 .input_area {
   color: var(--font-primary-color);
   width: 100%;
