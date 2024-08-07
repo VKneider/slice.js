@@ -25,9 +25,10 @@ h2 {
     --docs-width: 100%;
   }
 }
-
-.docs_container {
+* {
   font-family: var(--font-family);
+}
+.docs_container {
   color: var(--font-primary-color);
   margin-top: 100px;
   overflow-y: scroll;
@@ -36,4 +37,4 @@ h2 {
   padding-left: 10px;
   padding-right: 10px;
   padding-bottom: 25px;
-} 
+}
