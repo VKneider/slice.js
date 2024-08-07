@@ -57,18 +57,18 @@ export default class Documentation extends HTMLElement {
     this.querySelector(".visualComponents").appendChild(grid);
 
     //Q & A
-    const build = await this.createQuestion(
-      "How can i build a component?",
-      "To build a component you need to call the slice.build method with it's required props."
-    );
-  }
+    const buildQuestion = await slice.build("Details", {
+      title: "How can i build a component?",
+      text: "To build a component you need to call the slice.build method with it's required props.",
+    });
+    const buildExample = await slice.build("CodeVisualizer", {
+      value: `const mySliceComponent = await slice.build("MySliceComponentName", props)`,
+      language: "javascript",
+    });
 
-  async createQuestion(question, answer) {
-    const qna = await slice.build("Details", { title: question, text: answer });
+    buildQuestion.addDetail(buildExample);
 
-    this.querySelector(".qna").appendChild(qna);
-
-    return qna;
+    this.querySelector(".qna").appendChild(buildQuestion);
   }
 }
 

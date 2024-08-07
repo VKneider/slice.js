@@ -4,7 +4,8 @@
   left: 0;
   font-family: var(--font-family);
   background-color: var(--primary-background-color);
-  box-shadow: 10px 0 10px 0px #00000020;
+  border-right: 1px solid var(--primary-color-shade);
+  /* box-shadow: 10px 0 10px 0px #00000020; */
   display: flex;
   align-items: center;
   height: 100%;

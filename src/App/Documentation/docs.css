@@ -27,7 +27,9 @@ h1 {
 h2 {
   padding-top: 10px;
 }
-
+.grid-container {
+  overflow-x: auto;
+}
 @media only screen and (max-width: 770px) {
   :root {
     --docs-width: 100%;

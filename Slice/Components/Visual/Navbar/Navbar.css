@@ -35,14 +35,15 @@
   list-style: none;
 }
 .slice_nav_header .item {
+  cursor: pointer;
   font-weight: bold;
-  padding: 25px;
-  color: var(--primary-color-contrast);
   text-decoration: none;
+  color: var(--primary-color-contrast);
   border-radius: var(--border-radius-slice);
 }
 .anim-item {
   position: absolute;
+  top: 100%;
   left: 50%;
   width: 0%;
   height: 2.5px;
@@ -50,7 +51,10 @@
   background-color: var(--primary-color-contrast);
   transition: width 0.3s ease, left 0.3s ease;
 }
-li {
+.slice_nav_header li {
+  margin: 25px;
+  display: flex;
+  justify-content: center;
   position: relative;
 }
 

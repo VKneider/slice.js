@@ -1,5 +1,5 @@
 .slice_dropdown_label {
-  cursor: default;
+  cursor: pointer;
 }
 .slice_dropdown {
   cursor: pointer;
