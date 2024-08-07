@@ -17,13 +17,14 @@ export default class StylesManager {
     this.componentStyles.innerText += sliceStyles;
     slice.logger.logInfo("StylesManager", "sliceStyles loaded");
 
-    let theme = slice.themeConfig.defaultTheme;
+    let theme;
 
     if(slice.themeConfig.saveThemeLocally){
       theme = localStorage.getItem("sliceTheme");
-      if(!theme){
-        theme = slice.themeConfig.defaultTheme;
-      }
+    }
+
+    if(!theme){
+      theme = slice.themeConfig.defaultTheme;
     }
 
     if(slice.themeConfig.useBrowserTheme){

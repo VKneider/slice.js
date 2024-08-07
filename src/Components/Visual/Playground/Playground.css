@@ -1,0 +1,12 @@
+.indexGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(1, 1fr);
+    gap: 10px;
+    margin: 0 auto;
+  }
+  .indexGridItem {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }

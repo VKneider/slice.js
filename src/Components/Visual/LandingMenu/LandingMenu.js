@@ -1,4 +1,4 @@
-export default class Landing extends HTMLElement {
+export default class LandingMenu extends HTMLElement {
   constructor(props) {
     super();
     slice.attachTemplate(this);
@@ -22,12 +22,12 @@ export default class Landing extends HTMLElement {
     this.querySelector(".intro").appendChild(sliceLogo);
     const goToDocs = await slice.build("Button", {
       value: "Go to Documentation",
-      onClickCallback: () => {
-        window.location.href = "/src/App/Documentation/";
+      onClickCallback: async () => {
+        await slice.router.navigate("/Documentation");
       },
     });
     this.querySelector(".goToDocs").appendChild(goToDocs);
   }
 }
 
-customElements.define("slice-landing", Landing);
+customElements.define("slice-landing-menu", LandingMenu);

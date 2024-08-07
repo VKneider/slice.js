@@ -4,7 +4,7 @@
         "click": "right"
     },
     "stylesManager": {
-        "defaultTheme": "Dark",
+        "defaultTheme": "Slice",
         "saveThemeLocally": true,
         "useBrowserTheme": false
     },
@@ -25,6 +25,14 @@
         "components": "../../../../Slice/Components",
         "themes": "../../../../Slice/Themes",
         "styles": "../../../../Slice/Styles",
-        "userComponents": "../../../../src/Components"
+        "userComponents": "/Components"
+    },
+    "router":{
+        "defaultRoute": "/",
+        "enabled": true
+        
     }
 }
+
+
+

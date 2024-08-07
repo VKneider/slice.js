@@ -10,7 +10,35 @@ export default class Controller {
     this.idCounter = 0;
   }
 
-  registerComponent(component) {
+  logActiveComponents() {
+    this.activeComponents.forEach(component => {
+      let parent = component.parentComponent;
+      let parentName = parent ? parent.constructor.name : null;
+      console.log(`${component.constructor.name} - Parent: ${parentName}`);
+    });
+  }
+
+  getTopParentsLinkedToActiveComponents() {
+    let topParentsLinkedToActiveComponents = new Map();
+    this.activeComponents.forEach(component => {
+      let parent = component.parentComponent;
+      while (parent && parent.parentComponent) {
+        parent = parent.parentComponent;
+      }
+      if (!topParentsLinkedToActiveComponents.has(parent)) {
+        topParentsLinkedToActiveComponents.set(parent, []);
+      }
+      topParentsLinkedToActiveComponents.get(parent).push(component);
+    });
+    return topParentsLinkedToActiveComponents;
+  }
+  
+
+
+  
+
+
+  verifyComponentIds(component) {
     const htmlId = component.id;
 
     if (htmlId && htmlId.trim() !== "") {
@@ -19,7 +47,7 @@ export default class Controller {
           "Controller",
           `A component with the same html id attribute is already registered: ${htmlId}`
         );
-        return null;
+        return false;
       }
     }
 
@@ -31,7 +59,7 @@ export default class Controller {
           "Controller",
           `A component with the same slice id attribute is already registered: ${sliceId}`
         );
-        return null;
+        return false;
       }
     } else {
         sliceId = `${component.constructor.name[0].toLowerCase()}${component.constructor.name.slice(1)}-${this.idCounter}`;
@@ -39,8 +67,31 @@ export default class Controller {
         this.idCounter++;
     }
 
-    this.activeComponents.set(sliceId, component);
+    component.sliceId = sliceId;
     return true;
+  }
+
+  registerComponent(component, parent = null) {
+    component.parentComponent = parent;
+    this.activeComponents.set(component.sliceId, component);
+    return true;
+  }
+
+  registerComponentsRecursively(component, parent = null) {
+    // Assign parent if not already set
+    if (!component.parentComponent) {
+      component.parentComponent = parent;
+    }
+
+    // Recursively assign parent to children
+    component.querySelectorAll('*').forEach(child => {
+      if (child.tagName.startsWith('SLICE-')) {
+        if (!child.parentComponent) {
+          child.parentComponent = component;
+        }
+        this.registerComponentsRecursively(child, component);
+      }
+    });
   }
 
   getComponent(sliceId) {
@@ -66,41 +117,46 @@ export default class Controller {
   }
 
   async fetchText(componentName, fileType, componentBasePath, componentCategory) {
-
-    if(!componentCategory) {
+    if (!componentCategory) {
       componentCategory = this.componentCategories.get(componentName);
     }
-
-    if(!componentBasePath && fileType !== "theme" && fileType !== "styles"){
-      if(componentCategory.includes("User")) {componentBasePath = slice.paths.userComponents}
-      else {
-        componentBasePath = slice.paths.components
+  
+    if (!componentBasePath && fileType !== "theme" && fileType !== "styles") {
+      if (componentCategory.includes("User")) {
+        componentBasePath = slice.paths.userComponents;
+      } else {
+        componentBasePath = slice.paths.components;
       }
     }
-
+  
+    const baseUrl = window.location.origin;  // Base URL of the server
     let path;
-
+  
     if (fileType === "css") {
-      path = `${componentBasePath}/${componentCategory}/${componentName}/${componentName}.css`;
+      path = `${baseUrl}/${componentBasePath}/${componentCategory}/${componentName}/${componentName}.css`;
     }
-
+  
     if (fileType === "html") {
-      path = `${componentBasePath}/${componentCategory}/${componentName}/${componentName}.html`;
+      path = `${baseUrl}/${componentBasePath}/${componentCategory}/${componentName}/${componentName}.html`;
     }
-
+  
     if (fileType === "theme") {
-      path = `Slice/${slice.paths.themes}/${componentName}.css`;
+      path = `${baseUrl}/Slice/${slice.paths.themes}/${componentName}.css`;
     }
-
+  
     if (fileType === "styles") {
-      path = `Slice/${slice.paths.styles}/${componentName}.css`;
+      path = `${baseUrl}/Slice/${slice.paths.styles}/${componentName}.css`;
     }
-
+  
+    console.log(`Fetching: ${path}`);
     const response = await fetch(path);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch ${path}: ${response.statusText}`);
+    }
     const html = await response.text();
     return html;
   }
-
+  
   setComponentProps(component, props) {
     for (const prop in props) {
       component[`_${prop}`] = null;
@@ -113,4 +169,8 @@ export default class Controller {
     this.activeComponents.delete(sliceId);
     component.remove();
   }
+}
+
+function getRelativePath(levels) {
+  return '../'.repeat(levels);
 }

@@ -5,17 +5,7 @@ slice-layout {
   display: flex;
   justify-content: center;
 }
-.docs_container {
-  font-family: var(--font-family);
-  color: var(--font-primary-color);
-  margin-top: 100px;
-  overflow-y: scroll;
-  overflow-x: hidden;
-  width: var(--docs-width);
-  padding-left: 10px;
-  padding-right: 10px;
-  padding-bottom: 25px;
-}
+
 p {
   text-align: justify;
 }
@@ -35,3 +25,15 @@ h2 {
     --docs-width: 100%;
   }
 }
+
+.docs_container {
+  font-family: var(--font-family);
+  color: var(--font-primary-color);
+  margin-top: 100px;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  width: var(--docs-width);
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-bottom: 25px;
+} 
