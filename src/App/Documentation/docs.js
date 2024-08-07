@@ -68,6 +68,8 @@ const navBar = await slice.build("Navbar", {
   ],
 });
 
+div.appendChild(navBar);
+
 let compVisual = {
   value: "Visual",
   items: [],
@@ -80,6 +82,8 @@ let compVisual = {
 //   value: "Service",
 //   items: [],
 // };
+
+const mainMenu = await slice.build("MainMenu", {});
 
 for (const name in components) {
   const component = {
@@ -97,8 +101,6 @@ for (const name in components) {
   // }
 }
 
-div.appendChild(navBar);
-
 const treeview = await slice.build("TreeView", {
   items: [
     {
@@ -108,17 +110,19 @@ const treeview = await slice.build("TreeView", {
   ],
 });
 
-const mainMenu = await slice.build("MainMenu", {});
 mainMenu.add(treeview);
 div.appendChild(mainMenu);
 
+const myNavigation = await slice.build("MyNavigation", {});
+myNavigation.updateNavigation();
+div.appendChild(myNavigation);
+
 let hash = window.location.hash;
 hash = hash.substring(1);
-if(!hash){
+if (!hash) {
   const documentationPage = await slice.build("Documentation", {});
   divView.appendChild(documentationPage);
 }
-
 const layOut = await slice.build("Layout", {
   layout: div,
   view: divView,
@@ -132,7 +136,9 @@ if (window.location.hash !== "") {
 
 //create an event that every time the hash changes, the component changes
 window.addEventListener("hashchange", async () => {
+  console.log(window.location.hash);
   await loadComponentFromHash();
+  mainMenu.handleCloseMenu();
 });
 
 async function loadComponentFromHash() {
@@ -156,5 +162,6 @@ async function loadComponentFromHash() {
   componentContainer.innerHTML = "";
   componentContainer.appendChild(myComponent);
   layOut.showing(componentContainer);
+  myNavigation.updateNavigation();
 }
 loading.stop();

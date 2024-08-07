@@ -6,7 +6,14 @@ export default class TreeItem extends HTMLElement {
     this.$item = this.querySelector(".slice_tree_item");
 
     slice.controller.setComponentProps(this, props);
-    this.debuggerProps = ["value", "href"];
+    this.debuggerProps = ["value", "href", "onClickCallBack"];
+
+    if (props.onClickCallBack) {
+      this.onClickCallback = props.onClickCallBack;
+      this.$item.addEventListener("click", async () => {
+        await this.onClickCallback();
+      });
+    }
   }
 
   async init() {
