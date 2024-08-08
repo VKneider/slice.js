@@ -32,15 +32,15 @@ export default class CodeVisualizer extends HTMLElement {
   }
 
   visualizeCode() {
-    // if (this._value && this._language) {
-    //   this.$code.innerHTML = `<pre><code class="language-${
-    //     this._language
-    //   }">${Prism.highlight(
-    //     this._value,
-    //     Prism.languages[this._language],
-    //     this._language
-    //   )}</code></pre>`;
-    // }
+    if (this._value && this._language) {
+      this.$code.innerHTML = `<pre><code class="language-${
+        this._language
+      }">${Prism.highlight(
+        this._value,
+        Prism.languages[this._language],
+        this._language
+      )}</code></pre>`;
+    }
   }
 }
 

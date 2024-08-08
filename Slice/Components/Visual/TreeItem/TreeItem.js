@@ -19,9 +19,11 @@ export default class TreeItem extends HTMLElement {
   async init() {
     if (this._items) {
       for (let i = 0; i < this._items.length; i++) {
-        await this.setItem(this._items[i], this.$container); // Cambiado items por _items
+        await this.setItem(this._items[i], this.$container);
       }
     }
+    // Restaurar el estado del contenedor desde el localStorage
+    this.restoreState();
   }
 
   set value(value) {
@@ -46,23 +48,42 @@ export default class TreeItem extends HTMLElement {
     this._items = values;
     const caret = document.createElement("div");
     caret.classList.add("caret");
-    //create a container for items
+    // Crear un contenedor para items
     const container = document.createElement("div");
     container.classList.add("container");
     this.appendChild(container);
-    //add
+    // Añadir
     this.$container = container;
-    caret.addEventListener("click", () => {
-      caret.classList.toggle("caret_open");
+
+    const toggleContainer = () => {
+      const isOpen = caret.classList.toggle("caret_open");
       this.$container.classList.toggle("container_open");
-    });
+      // Guardar el estado en localStorage
+      localStorage.setItem(this.getContainerKey(), isOpen ? "open" : "closed");
+    };
+
+    caret.addEventListener("click", toggleContainer);
+
     if (!this.href) {
-      this.$item.addEventListener("click", () => {
-        caret.classList.toggle("caret_open");
-        this.$container.classList.toggle("container_open");
-      });
+      this.$item.addEventListener("click", toggleContainer);
     }
+
     this.$item.appendChild(caret);
+  }
+
+  getContainerKey() {
+    return `treeitem-${this._value}`;
+  }
+
+  restoreState() {
+    const state = localStorage.getItem(this.getContainerKey());
+    if (state === "open") {
+      const caret = this.$item.querySelector(".caret");
+      if (caret) {
+        caret.classList.add("caret_open");
+      }
+      this.$container.classList.add("container_open");
+    }
   }
 
   async setItem(value, addTo) {

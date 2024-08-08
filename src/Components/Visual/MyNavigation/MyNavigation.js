@@ -6,41 +6,43 @@ export default class MyNavigation extends HTMLElement {
     this.$navigation = this.querySelector(".my_navigation");
 
     slice.controller.setComponentProps(this, props);
-    this.debuggerProps = ["element"];
+    this.debuggerProps = ["page"];
   }
 
-  set element(value) {
-    this._element = value;
-  }
-
-  init() {
+  set page(value) {
+    this._page = value;
     this.updateNavigation();
   }
 
-  getHash() {
-    this.$hash = window.location.hash;
+  get page() {
+    return this._page;
+  }
+
+  init() {
+    if (this.page) {
+      this.updateNavigation();
+    }
   }
 
   updateNavigation() {
-    this.getHash();
     this.$navigation.innerHTML = "";
-    const idElements = document.body.querySelectorAll("[id]");
-    idElements.forEach((elements, index) => {
+    const idElements = this.page.querySelectorAll("[id]");
+
+    idElements.forEach((element) => {
       const a = document.createElement("a");
-      a.textContent = elements.innerHTML;
-      if (elements.id) {
-        a.href = `#${elements.id}`;
+      a.textContent = element.innerHTML;
+      if (element.id) {
+        a.href = `#${element.id}`;
+        a.addEventListener("click", (event) => {
+          event.preventDefault();
+          document
+            .getElementById(element.id)
+            .scrollIntoView({ behavior: "smooth" });
+        });
       } else {
-        a.href = `${this.$hash}`;
+        a.href = ``;
       }
       this.$navigation.appendChild(a);
-    });
-    window.addEventListener("hashchange", async () => {
-      idElements.forEach((elements) => {
-        if (window.location.hash === `#${elements.id}`) {
-          window.location.hash = this.$hash;
-        }
-      });
     });
   }
 }
