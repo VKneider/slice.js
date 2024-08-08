@@ -31,9 +31,7 @@ export default class Router {
     return pathToRouteMap;
   }
 
-
-  async onRouteChange() {
-    const path = window.location.pathname;
+  async renderRoutesComponentsInPage() {
     const routeContainers = document.querySelectorAll('slice-route');
     //Verify if the routeContainers have the same path of the path
     let routerContainersFlag = false;
@@ -44,7 +42,14 @@ export default class Router {
         }
     }
 
-    if(routerContainersFlag){
+    return routerContainersFlag
+  }
+
+  async onRouteChange() {
+    const path = window.location.pathname;
+    const routeContainersFlag = await this.renderRoutesComponentsInPage()
+
+    if(routeContainersFlag){
         return
     }
 
@@ -62,7 +67,6 @@ export default class Router {
   async handleRoute(route, params) {
     const targetElement = document.querySelector('#app');
     const existingComponent = slice.controller.getComponent(`route-${route.component}`);
-
     if (existingComponent) {
       targetElement.innerHTML = '';
       if (existingComponent.update) {
@@ -80,10 +84,18 @@ export default class Router {
 
   async loadInitialRoute() {
     const path = window.location.pathname;
-    const { route, params } = this.matchRoute(path);
-    if (route) {
-      await this.handleRoute(route, params);
+    const { matchedRoutes, params } = this.findIfChildrenRoute();
+
+    for (let route of matchedRoutes) {
+        await this.handleRoute(route, params);
     }
+
+    if (matchedRoutes.length === 0) {
+        const { route, params } = this.matchRoute(path);
+        await this.handleRoute(route, params);
+    }
+
+    await this.renderRoutesComponentsInPage();
   }
 
   matchRoute(path) {
@@ -108,6 +120,41 @@ export default class Router {
     matchedRoute = this.routes.find(r => r.path === '/404');
     return { route: matchedRoute, params: null };
   }
+
+  findIfChildrenRoute() {
+    const path = window.location.pathname;
+
+    // Separar el path en partes usando el slash
+    let pathArray = path.split('/');
+    let pathToCheck = '';
+    let matchedRoutes = [];
+    let params = null;
+
+    // Remover el primer elemento vacío del array
+    pathArray.shift();
+
+    for (let i = 0; i < pathArray.length; i++) {
+        pathToCheck += `/${pathArray[i]}`;
+        const route = this.pathToRouteMap.get(pathToCheck);
+        
+        if (route) {
+            matchedRoutes.push(route);
+        } else {
+            // Manejo de params si es necesario
+            const basePath = pathToCheck.split('*')[0];
+            if (pathToCheck.startsWith(basePath)) {
+                params = pathToCheck.replace(basePath, '');
+            }
+        }
+    }
+
+    if (matchedRoutes.length === 0) {
+        matchedRoutes.push(this.routes.find(r => r.path === '/404'));
+    }
+
+    return { matchedRoutes, params };
+}
+
 
   
 }
