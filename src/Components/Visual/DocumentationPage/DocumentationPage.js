@@ -6,11 +6,10 @@ export default class DocumentationPage extends HTMLElement {
     slice.controller.setComponentProps(this, props);
     this.debuggerProps = [];
 
-    this.components = ["Button", "Card", "Checkbox", "Input", "Switch"]
+    this.components = ["Button", "Card", "Checkbox", "Input", "Switch"];
   }
 
   async init() {
-
     const loading = await slice.build("Loading", {});
     loading.start();
 
@@ -98,7 +97,6 @@ export default class DocumentationPage extends HTMLElement {
       if (components[name] === "Visual") {
         compVisual.items.push(component);
       }
-
     }
 
     const treeview = await slice.build("TreeView", {
@@ -116,6 +114,10 @@ export default class DocumentationPage extends HTMLElement {
 
     div.appendChild(navBar);
 
+    const myNavigation = await slice.build("MyNavigation", {});
+
+    div.appendChild(myNavigation);
+
     const layOut = await slice.build("Layout", {
       layout: div,
       view: divView,
@@ -125,28 +127,31 @@ export default class DocumentationPage extends HTMLElement {
 
     this.appendChild(layOut);
 
-    if(this.params){
-      this.params = this.params.replace("/", ""); 
+    if (this.params) {
+      this.params = this.params.replace("/", "");
 
       if (this.components.includes(this.params)) {
+        if (this.querySelector("slice_nav_header")) {
+          console.log(this.querySelector("slice_nav_header"));
+        }
+
         const component = await slice.build(`${this.params}Documentation`, {
           sliceId: `${this.params}Documentation`,
         });
+        component.classList.add("docs_container");
         componentContainer.innerHTML = "";
         componentContainer.appendChild(component);
+        myNavigation.page = component;
         loading.stop();
         return layOut.showing(component);
-      }   
+      }
     }
-    
-      const documentationPage = await slice.build("Documentation", {});
-      divView.appendChild(documentationPage);
-    
+
+    const documentationPage = await slice.build("Documentation", {});
+    divView.appendChild(documentationPage);
 
     loading.stop();
   }
-
-
 }
 
 customElements.define("slice-documentation-page", DocumentationPage);
