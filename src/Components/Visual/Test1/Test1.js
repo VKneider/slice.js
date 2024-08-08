@@ -94,18 +94,14 @@ export default class Test1 extends HTMLElement {
       text: "Render TestView",
     });
 
-    const LinkTest2 = await slice.build("Link", {
-      href: "/2",
-      text: "Render Test2",
-    });
+   
 
     const routeTest2 = await slice.build("Route", {
-      href: "/2",
-      component:"Test2",
+      href: "/products/info",
+      component:"Button",
     });
 
 
-    this.appendChild(LinkTest2)
     this.appendChild(routeTest2)
     this.appendChild(Link);
 
