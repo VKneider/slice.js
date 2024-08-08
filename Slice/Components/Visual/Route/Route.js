@@ -2,7 +2,7 @@ export default class Route extends HTMLElement {
   constructor(props) {
     super();
     this.props = props;
-    this.rendered = false; // Nueva propiedad para rastrear si el componente ha sido renderizado
+    this.rendered = false; 
   }
 
   init() {
@@ -11,7 +11,7 @@ export default class Route extends HTMLElement {
     }
 
     if (!this.props.component) {
-      this.props.component = " ";
+      this.props.component = slice.router.pathToRouteMap.get(this.props.href).component || " ";
     }
 
     this.props.innerHTML = this.innerHTML;
@@ -55,17 +55,22 @@ export default class Route extends HTMLElement {
   async updateHTML() {
     if (this.props.href === window.location.pathname) {
       if (this.rendered) {
+        await Route.componentCache[this.props.component].update();
         return true;
       }
       await this.render();
       return true;
-    }
-    if (this.rendered) {
-      this.innerHTML = '';
-      this.rendered = false;
-    }
+    }  
     return false;
   }
+
+  removeComponent() {
+    delete Route.componentCache[this.props.component];
+    this.innerHTML = '';
+    this.rendered = false;
+  }
+
+
 }
 
 Route.componentCache = {};
