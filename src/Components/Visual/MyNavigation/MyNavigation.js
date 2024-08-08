@@ -37,7 +37,7 @@ export default class MyNavigation extends HTMLElement {
           event.preventDefault();
           document
             .getElementById(element.id)
-            .scrollIntoView({ behavior: "smooth" });
+            .scrollIntoView({ behavior: "smooth", block: "center" });
         });
       } else {
         a.href = ``;

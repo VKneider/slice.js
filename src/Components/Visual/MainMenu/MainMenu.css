@@ -55,7 +55,6 @@
     visibility: visible;
   }
   .slice_menu_open {
-    transform: translateX(0%);
     width: 80%;
   }
   .slice_close_menu {
