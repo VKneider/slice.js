@@ -1,5 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap");
-slice-landingpage {
+slice-landing-menu {
   h1 {
     z-index: 0;
   }
@@ -57,40 +56,40 @@ slice-landingpage {
       font-size: 100px;
     }
   }
-  @media screen and (max-width: 770px) {
-    .goToDocs {
-      padding: 10px;
-    }
+}
+@media screen and (max-width: 770px) {
+  .goToDocs {
+    padding: 10px;
   }
-  @keyframes fade-in {
-    0% {
-      opacity: 0;
-      scale: 0.5;
-    }
-    100% {
-      opacity: 1;
-      scale: 1;
-    }
+}
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+    scale: 0.5;
   }
-  @keyframes fade-in-logo {
-    0% {
-      opacity: 0;
-      scale: 0.5;
-    }
-    100% {
-      opacity: 0.75;
-      scale: 1;
-    }
+  100% {
+    opacity: 1;
+    scale: 1;
   }
-  @keyframes beat {
-    0% {
-      scale: 1;
-    }
-    50% {
-      scale: 0.9;
-    }
-    100% {
-      scale: 1;
-    }
+}
+@keyframes fade-in-logo {
+  0% {
+    opacity: 0;
+    scale: 0.5;
+  }
+  100% {
+    opacity: 0.75;
+    scale: 1;
+  }
+}
+@keyframes beat {
+  0% {
+    scale: 1;
+  }
+  50% {
+    scale: 0.9;
+  }
+  100% {
+    scale: 1;
   }
 }
