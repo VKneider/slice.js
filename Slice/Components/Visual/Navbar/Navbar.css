@@ -29,6 +29,8 @@
 }
 .nav_bar_menu {
   width: 100%;
+  overflow-y: hidden;
+  overflow-x: scroll;
   display: flex;
   align-items: center;
   justify-content: center;

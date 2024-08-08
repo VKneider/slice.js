@@ -33,6 +33,15 @@ export default class Navbar extends HTMLElement {
         await this.addButton(item, this.$buttonsContainer);
       });
     }
+
+    if (
+      window.screen.width >= 1020 &&
+      this.items &&
+      this.logo &&
+      this.buttons
+    ) {
+      this.$menu.style.maxWidth = "60%";
+    }
   }
 
   async addItems(items) {
@@ -103,7 +112,7 @@ export default class Navbar extends HTMLElement {
         text: value.text,
         href: value.href,
         classes: "item",
-      })
+      });
       item.appendChild(link);
     }
     if (value.type === "dropdown") {
