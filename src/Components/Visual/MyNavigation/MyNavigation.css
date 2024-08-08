@@ -15,13 +15,14 @@
 .my_navigation {
   display: flex;
   flex-direction: column;
+  height: 75%;
 }
 .my_navigation a {
   padding: 10px;
 }
 
 @media only screen and (max-width: 770px) {
-  .navigation_container{
+  .navigation_container {
     visibility: hidden;
   }
 }
