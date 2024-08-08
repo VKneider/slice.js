@@ -1,10 +1,10 @@
 const routes = [
-  { path: '/', component: "LandingPage", reuse: true },
+  { path: '/', component: "LandingPage"},
   {
-    path: '/3', component: "Test3", reuse: true, children: [
+    path: '/products', component: "Test1", children: [
       {
         path: "/info",
-        component: "ProductInfo"
+        component: "Button"
       },
       {
         path: "/list",
@@ -16,8 +16,8 @@ const routes = [
       }
     ]
   },
-  { path: '/Playground', component: 'Playground', reuse: true },
-  { path: '/Documentation', component: "DocumentationPage", reuse: true },
+  { path: '/Playground', component: 'Playground'},
+  { path: '/Documentation', component: "DocumentationPage"},
   { path: '/Documentation/*/', component: 'DocumentationPage' },
   { path: '/404', component: 'NotFound' },
 

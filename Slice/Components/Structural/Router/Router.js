@@ -4,28 +4,30 @@ export default class Router {
   constructor() {
     this.routes = routes;
     this.activeRoute = null;
+    this.pathToRouteMap = this.createPathToRouteMap(routes);
   }
 
   async init() {
     await this.loadInitialRoute();
-    this.pathToRouteMap = this.createPathToRouteMap(routes);
     window.addEventListener('popstate', this.onRouteChange.bind(this)); 
 
   }
 
   createPathToRouteMap(routes, basePath = "") {
     const pathToRouteMap = new Map();
+
     for (const route of routes) {
-      const fullPath = basePath + route.path;
-      pathToRouteMap.set(fullPath, route);
+      const fullPath = `${basePath}${route.path}`;
+      const routeEntry = { ...route, fullPath };
+
+      pathToRouteMap.set(fullPath, routeEntry);
 
       if (route.children) {
         const childPathToRouteMap = this.createPathToRouteMap(route.children, fullPath);
-        for (const [childPath, childRoute] of childPathToRouteMap.entries()) {
-          pathToRouteMap.set(childPath, childRoute);
-        }
+        routeEntry.children = childPathToRouteMap;
       }
     }
+
     return pathToRouteMap;
   }
 
@@ -58,29 +60,22 @@ export default class Router {
   }
 
   async handleRoute(route, params) {
+    const targetElement = document.querySelector('#app');
     const existingComponent = slice.controller.getComponent(`route-${route.component}`);
 
-    if (route.reuse && existingComponent) {
-      // Reutilizar el componente
-      const targetElement = document.querySelector('#app');
+    if (existingComponent) {
       targetElement.innerHTML = '';
-
-      if(existingComponent.update){await existingComponent.update();} 
-      
-      targetElement.appendChild(existingComponent);
-      slice.router.activeRoute = route;
-    } else {
-      // Destruir el componente existente si no se debe reutilizar
-      if (existingComponent) {
-        slice.controller.destroyComponent(existingComponent);
+      if (existingComponent.update) {
+        await existingComponent.update();
       }
-      // Crear y montar el nuevo componente
+      targetElement.appendChild(existingComponent);
+    } else {
       const component = await slice.build(route.component, { params, sliceId: `route-${route.component}` });
-      const targetElement = document.querySelector('#app');
       targetElement.innerHTML = '';
       targetElement.appendChild(component);
-      slice.router.activeRoute = route;
     }
+
+    slice.router.activeRoute = route;
   }
 
   async loadInitialRoute() {
