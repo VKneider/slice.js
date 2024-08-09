@@ -38,9 +38,11 @@ export default class Router {
     for (const routeContainer of routeContainers) {
      let response = await routeContainer.updateHTML() 
         if(response){
+          this.activeRoute = routeContainer.props;
           routerContainersFlag = true
         }
     }
+
 
     return routerContainersFlag
   }
