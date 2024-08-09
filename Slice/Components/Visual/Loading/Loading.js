@@ -2,11 +2,6 @@ export default class Loading extends HTMLElement {
   constructor(props) {
     super();
     slice.attachTemplate(this);
-    if(!slice.loading){
-      slice.loading = this;
-    }else {
-      console.error("Loading component already exists in the slice object.");
-    }
     slice.controller.setComponentProps(this, props);
     this.debuggerProps = ["isActive"];
   }
