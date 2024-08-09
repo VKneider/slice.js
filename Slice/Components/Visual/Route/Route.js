@@ -14,7 +14,7 @@ export default class Route extends HTMLElement {
       this.props.component = slice.router.pathToRouteMap.get(this.props.href).component || " ";
     }
 
-    this.props.innerHTML = this.innerHTML;
+    //this.props.innerHTML = this.innerHTML;
   }
 
   get href() {
