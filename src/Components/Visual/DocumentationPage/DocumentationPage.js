@@ -1,157 +1,171 @@
 export default class DocumentationPage extends HTMLElement {
-  constructor(props) {
-    super();
-    slice.attachTemplate(this);
+   constructor(props) {
+      super();
+      slice.attachTemplate(this);
 
-    slice.controller.setComponentProps(this, props);
-    this.debuggerProps = [];
+      slice.controller.setComponentProps(this, props);
+      this.debuggerProps = [];
 
-    this.components = ["Button", "Card", "Checkbox", "Input", "Switch"];
-  }
+      this.components = ['Button', 'Card', 'Checkbox', 'Input', 'Switch'];
+   }
 
-  async init() {
-    const loading = await slice.build("Loading", {});
-    loading.start();
+   async init() {
+      const loading = await slice.build('Loading', {});
+      loading.start();
 
-    const div = document.createElement("div");
-    const componentContainer = document.createElement("div");
-    componentContainer.classList.add("docs_container");
-    componentContainer.id = "componentContainer";
+      const div = document.createElement('div');
+      const componentContainer = document.createElement('div');
+      componentContainer.classList.add('docs_container');
+      componentContainer.id = 'componentContainer';
 
-    const divView = document.createElement("div");
-    divView.classList.add("docs_container");
+      const divView = document.createElement('div');
+      divView.classList.add('docs_container');
 
-    const navBar = await slice.build("Navbar", {
-      position: "fixed",
-      logo: {
-        src: "../../images/Slice.js-logo.png",
-        href: "/",
-      },
-      items: [
-        {
-          text: "Home",
-          href: "/",
-        },
-        {
-          text: "About Us",
-          href: "",
-          type: "dropdown",
-          options: [
+      const navBar = await slice.build('Navbar', {
+         position: 'fixed',
+         logo: {
+            src: '../../images/Slice.js-logo.png',
+            href: '/',
+         },
+         items: [
             {
-              text: "Julio",
-              href: "https://github.com/juliograterol",
+               text: 'Home',
+               href: '/',
             },
             {
-              text: "Victor",
-              href: "https://github.com/VKneider",
+               text: 'About Us',
+               href: '',
+               type: 'dropdown',
+               options: [
+                  {
+                     text: 'Julio',
+                     href: 'https://github.com/juliograterol',
+                  },
+                  {
+                     text: 'Victor',
+                     href: 'https://github.com/VKneider',
+                  },
+               ],
             },
-          ],
-        },
-        {
-          text: "Documentation",
-          href: "/Documentation",
-        },
-        {
-          text: "Playground",
-          href: "/Playground",
-        },
-      ],
-      buttons: [
-        {
-          value: "Change Theme",
-          // color:
-          onClickCallback: async () => {
-            if (theme === "Slice") {
-              await slice.setTheme("Light");
-              theme = "Light";
-            } else if (theme === "Light") {
-              await slice.setTheme("Dark");
-              theme = "Dark";
-            } else if (theme === "Dark") {
-              await slice.setTheme("Slice");
-              theme = "Slice";
-            }
-          },
-        },
-      ],
-    });
+            {
+               text: 'Documentation',
+               href: '/Documentation',
+            },
+            {
+               text: 'Playground',
+               href: '/Playground',
+            },
+            {
+               text: 'Card ',
+               href: '/Documentation/Card',
+            },
+         ],
+         buttons: [
+            {
+               value: 'Change Theme',
+               // color:
+               onClickCallback: async () => {
+                  if (theme === 'Slice') {
+                     await slice.setTheme('Light');
+                     theme = 'Light';
+                  } else if (theme === 'Light') {
+                     await slice.setTheme('Dark');
+                     theme = 'Dark';
+                  } else if (theme === 'Dark') {
+                     await slice.setTheme('Slice');
+                     theme = 'Slice';
+                  }
+               },
+            },
+            {
+               value: 'Show Card Documentation',
+               onClickCallback: async () => {
+                  myRouteContainer.href = '/Documentation/Card';
+                  myRouteContainer.component = 'CardDocumentation';
+                  await slice.router.navigate('/Documentation/Card');
+               },
+            },
+         ],
+      });
 
-    const components = {
-      Button: "Visual",
-      Card: "Visual",
-      Checkbox: "Visual",
-      Input: "Visual",
-      Switch: "Visual",
-    };
-
-    let compVisual = {
-      value: "Visual",
-      items: [],
-    };
-
-    for (const name in components) {
-      const component = {
-        value: name,
-        href: `/Documentation/${name}/`,
+      const components = {
+         Button: 'Visual',
+         Card: 'Visual',
+         Checkbox: 'Visual',
+         Input: 'Visual',
+         Switch: 'Visual',
       };
-      if (components[name] === "Visual") {
-        compVisual.items.push(component);
+
+      let compVisual = {
+         value: 'Visual',
+         items: [],
+      };
+
+      for (const name in components) {
+         const component = {
+            value: name,
+            href: `/Documentation/${name}/`,
+         };
+         if (components[name] === 'Visual') {
+            compVisual.items.push(component);
+         }
       }
-    }
 
-    const treeview = await slice.build("TreeView", {
-      items: [
-        {
-          value: "Components",
-          items: [compVisual],
-        },
-      ],
-    });
+      const treeview = await slice.build('TreeView', {
+         items: [
+            {
+               value: 'Components',
+               items: [compVisual],
+            },
+         ],
+      });
 
-    const mainMenu = await slice.build("MainMenu", {});
-    mainMenu.add(treeview);
-    div.appendChild(mainMenu);
+      const mainMenu = await slice.build('MainMenu', {});
+      mainMenu.add(treeview);
+      div.appendChild(mainMenu);
 
-    div.appendChild(navBar);
+      div.appendChild(navBar);
 
-    const myNavigation = await slice.build("MyNavigation", {});
+      const myNavigation = await slice.build('MyNavigation', {});
 
-    div.appendChild(myNavigation);
+      div.appendChild(myNavigation);
 
-    const layOut = await slice.build("Layout", {
-      layout: div,
-      view: divView,
-    });
+      const myRouteContainer = await slice.build('Route', {
+         href: '/Documentation/',
+         component: 'Documentation',
+      });
 
-    let theme = slice.stylesManager.themeManager.currentTheme;
+      const layOut = await slice.build('Layout', {
+         layout: div,
+         view: myRouteContainer,
+      });
 
-    this.appendChild(layOut);
+      let theme = slice.stylesManager.themeManager.currentTheme;
 
-    if (this.params) {
-      this.params = this.params.replace("/", "");
+      this.appendChild(layOut);
 
-      if (this.components.includes(this.params)) {
-        if (this.querySelector("slice_nav_header")) {
-          console.log(this.querySelector("slice_nav_header"));
-        }
+      if (this.params) {
+         this.params = this.params.replace('/', '');
 
-        const component = await slice.build(`${this.params}Documentation`, {
-          sliceId: `${this.params}Documentation`,
-        });
-        component.classList.add("docs_container");
-        componentContainer.innerHTML = "";
-        componentContainer.appendChild(component);
-        myNavigation.page = component;
-        loading.stop();
-        return layOut.showing(component);
+         if (this.components.includes(this.params)) {
+            if (this.querySelector('slice_nav_header')) {
+               console.log(this.querySelector('slice_nav_header'));
+            }
+
+            const component = await slice.build(`${this.params}Documentation`, {
+               sliceId: `${this.params}Documentation`,
+            });
+            component.classList.add('docs_container');
+            componentContainer.innerHTML = '';
+            componentContainer.appendChild(component);
+            myNavigation.page = component;
+            loading.stop();
+            return layOut.showing(component);
+         }
       }
-    }
 
-    const documentationPage = await slice.build("Documentation", {});
-    divView.appendChild(documentationPage);
-
-    loading.stop();
-  }
+      loading.stop();
+   }
 }
 
-customElements.define("slice-documentation-page", DocumentationPage);
+customElements.define('slice-documentation-page', DocumentationPage);

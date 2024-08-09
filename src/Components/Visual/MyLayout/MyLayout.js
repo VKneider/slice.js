@@ -1,15 +1,13 @@
 export default class MyLayout extends HTMLElement {
-  constructor(props) {
-    super();
-    slice.attachTemplate(this);
+   constructor(props) {
+      super();
+      slice.attachTemplate(this);
 
-    slice.controller.setComponentProps(this, props);
-    this.debuggerProps = [];
-  }
+      slice.controller.setComponentProps(this, props);
+      this.debuggerProps = [];
+   }
 
-  init() {}
-
-  
+   init() {}
 }
 
-customElements.define("slice-mylayout", MyLayout);
+customElements.define('slice-mylayout', MyLayout);

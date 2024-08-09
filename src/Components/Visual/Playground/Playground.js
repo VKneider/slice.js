@@ -1,145 +1,142 @@
 export default class Playground extends HTMLElement {
-  constructor(props) {
-    super();
-    slice.attachTemplate(this);
+   constructor(props) {
+      super();
+      slice.attachTemplate(this);
 
-    slice.controller.setComponentProps(this, props);
-    this.debuggerProps = [];
-  }
+      slice.controller.setComponentProps(this, props);
+      this.debuggerProps = [];
+   }
 
-  async init() {
-    const loading = await slice.build("Loading", {});
-    loading.start();
+   async init() {
+      const loading = await slice.build('Loading', {});
+      loading.start();
 
-    let theme = slice.stylesManager.themeManager.currentTheme;
+      let theme = slice.stylesManager.themeManager.currentTheme;
 
-    const navBar = await slice.build("Navbar", {
-      // position: "fixed",
-      logo: {
-        src: "../../images/Slice.js-logo.png",
-        href: "/",
-      },
-      items: [
-        {
-          text: "Home",
-          href: "/",
-        },
-        {
-          text: "About Us",
-          href: "",
-          type: "dropdown",
-          options: [
+      const navBar = await slice.build('Navbar', {
+         // position: "fixed",
+         logo: {
+            src: '../../images/Slice.js-logo.png',
+            href: '/',
+         },
+         items: [
             {
-              text: "Julio",
-              href: "https://github.com/juliograterol",
+               text: 'Home',
+               href: '/',
             },
             {
-              text: "Victor",
-              href: "https://github.com/VKneider",
+               text: 'About Us',
+               href: '',
+               type: 'dropdown',
+               options: [
+                  {
+                     text: 'Julio',
+                     href: 'https://github.com/juliograterol',
+                  },
+                  {
+                     text: 'Victor',
+                     href: 'https://github.com/VKneider',
+                  },
+               ],
             },
-          ],
-        },
-        {
-          text: "Documentation",
-          href: "/Documentation",
-        },
-        {
-          text: "Playground",
-          href: "/Playground",
-        },
-      ],
-      buttons: [
-        {
-          value: "Change Theme",
-          // color:
-          onClickCallback: async () => {
-            if (theme === "Slice") {
-              await slice.setTheme("Light");
-              theme = "Light";
-            } else if (theme === "Light") {
-              await slice.setTheme("Dark");
-              theme = "Dark";
-            } else if (theme === "Dark") {
-              await slice.setTheme("Slice");
-              theme = "Slice";
+            {
+               text: 'Documentation',
+               href: '/Documentation',
+            },
+            {
+               text: 'Playground',
+               href: '/Playground',
+            },
+         ],
+         buttons: [
+            {
+               value: 'Change Theme',
+               // color:
+               onClickCallback: async () => {
+                  if (theme === 'Slice') {
+                     await slice.setTheme('Light');
+                     theme = 'Light';
+                  } else if (theme === 'Light') {
+                     await slice.setTheme('Dark');
+                     theme = 'Dark';
+                  } else if (theme === 'Dark') {
+                     await slice.setTheme('Slice');
+                     theme = 'Slice';
+                  }
+               },
+            },
+         ],
+      });
+
+      this.appendChild(navBar);
+
+      const sliceButton = await slice.build('Button', {
+         value: 'Slice',
+         onClickCallback: () => {
+            if (slice.translator.currentLanguage == 'es') {
+               slice.translator.changeLanguage('en');
+            } else {
+               slice.translator.changeLanguage('es');
             }
-          },
-        },
-      ],
-    });
+         },
+      });
+      const sliceInput = await slice.build('Input', {
+         placeholder: 'Enter text here...',
+      });
+      const checkbox = await slice.build('Checkbox', {
+         label: 'Check',
+         position: 'top',
+      });
 
-    this.appendChild(navBar);
+      const sliceSwitch = await slice.build('Switch', {
+         label: 'Switch',
+         labelPlacement: 'left',
+      });
+      const select = await slice.build('Select', {
+         options: [
+            { value: 'Hola', id: 0 },
+            { value: 'Hello', id: 1 },
+            { value: 'Hallo', id: 2 },
+            { value: 'Hi', id: 3 },
+            { value: 'Hola', id: 4 },
+            { value: 'Hello', id: 5 },
+            { value: 'Hallo', id: 6 },
+            { value: 'Hi', id: 7 },
+         ],
+         visibleProp: 'id',
+         label: 'Elige una opcion',
+         multiple: true,
+      });
+      const sliceCard = await slice.build('Card', {
+         sliceId: 'prueba',
+      });
+      const details = await slice.build('Details', {
+         title: 'Slice',
+         text: 'Slice details text',
+      });
 
-    const sliceButton = await slice.build("Button", {
-      value: "Slice",
-      onClickCallback: () => {
-        if (slice.translator.currentLanguage == "es") {
-          slice.translator.changeLanguage('en')
-        } else {
-          slice.translator.changeLanguage('es')
+      const grid = document.createElement('div');
+      grid.classList.add('indexGrid');
 
-        }
-      }
-    });
-    const sliceInput = await slice.build("Input", {
-      placeholder: "Enter text here...",
-    });
-    const checkbox = await slice.build("Checkbox", {
-      label: "Check",
-      position: "top",
-    });
+      sliceButton.classList.add('indexGridItem');
+      sliceInput.classList.add('indexGridItem');
+      sliceSwitch.classList.add('indexGridItem');
+      select.classList.add('indexGridItem');
+      checkbox.classList.add('indexGridItem');
+      details.classList.add('indexGridItem');
 
-    const sliceSwitch = await slice.build("Switch", {
-      label: "Switch",
-      labelPlacement: "left",
-    });
-    const select = await slice.build("Select", {
-      options: [
-        { value: "Hola", id: 0 },
-        { value: "Hello", id: 1 },
-        { value: "Hallo", id: 2 },
-        { value: "Hi", id: 3 },
-        { value: "Hola", id: 4 },
-        { value: "Hello", id: 5 },
-        { value: "Hallo", id: 6 },
-        { value: "Hi", id: 7 },
-      ],
-      visibleProp: "id",
-      label: "Elige una opcion",
-      multiple: true,
-    });
-    const sliceCard = await slice.build("Card", {
-      sliceId: "prueba"
-    });
-    const details = await slice.build("Details", {
-      title: "Slice",
-      text: "Slice details text",
-    });
+      grid.appendChild(sliceButton);
+      grid.appendChild(sliceInput);
+      grid.appendChild(sliceSwitch);
+      grid.appendChild(select);
+      grid.appendChild(checkbox);
+      grid.appendChild(sliceCard);
+      grid.appendChild(details);
 
-    const grid = document.createElement("div");
-    grid.classList.add("indexGrid");
+      this.appendChild(grid);
 
-    sliceButton.classList.add("indexGridItem");
-    sliceInput.classList.add("indexGridItem");
-    sliceSwitch.classList.add("indexGridItem");
-    select.classList.add("indexGridItem");
-    checkbox.classList.add("indexGridItem");
-    details.classList.add("indexGridItem");
-
-    grid.appendChild(sliceButton);
-    grid.appendChild(sliceInput);
-    grid.appendChild(sliceSwitch);
-    grid.appendChild(select);
-    grid.appendChild(checkbox);
-    grid.appendChild(sliceCard);
-    grid.appendChild(details);
-
-    this.appendChild(grid);
-
-    loading.stop();
-  }
-
-
+      loading.stop();
+   }
 }
 
-customElements.define("slice-playground", Playground);
+customElements.define('slice-playground', Playground);

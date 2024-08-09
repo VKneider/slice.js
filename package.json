@@ -2,7 +2,7 @@
   "name": "slice-web-framework",
   "version": "1.0.0",
   "description": "",
-  "engines":{
+  "engines": {
     "node": "20.x"
   },
   "scripts": {
@@ -12,7 +12,8 @@
     "slice:modify": "node node_modules/slicejs-cli/client.js modify",
     "slice:list": "node node_modules/slicejs-cli/client.js list",
     "slice:delete": "node node_modules/slicejs-cli/client.js delete",
-    "slice:start": "node ./Slice/server.js"
+    "slice:start": "node ./Slice/server.js",
+    "format": "prettier --write \"**/*.js\""
   },
   "keywords": [],
   "author": "",
@@ -21,5 +22,15 @@
   "dependencies": {
     "express": "^4.19.2",
     "slicejs-cli": "1.0.54"
+  },
+  "devDependencies": {
+    "prettier": "3.3.3"
+  },
+  "prettier":{
+    "trailingComma": "es5",
+    "tabWidth": 3,
+    "semi": true,
+    "singleQuote": true,
+    "printWidth": 120
   }
 }
