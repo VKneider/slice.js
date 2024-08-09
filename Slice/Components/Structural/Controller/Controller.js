@@ -32,10 +32,6 @@ export default class Controller {
     });
     return topParentsLinkedToActiveComponents;
   }
-  
-
-
-  
 
 
   verifyComponentIds(component) {
@@ -117,45 +113,54 @@ export default class Controller {
   }
 
   async fetchText(componentName, fileType, componentBasePath, componentCategory) {
-    if (!componentCategory) {
-      componentCategory = this.componentCategories.get(componentName);
-    }
-  
-    if (!componentBasePath && fileType !== "theme" && fileType !== "styles") {
-      if (componentCategory.includes("User")) {
-        componentBasePath = slice.paths.userComponents;
-      } else {
-        componentBasePath = slice.paths.components;
+    try {
+      if (!componentCategory) {
+        componentCategory = this.componentCategories.get(componentName);
       }
-    }
   
-    const baseUrl = window.location.origin;  // Base URL of the server
-    let path;
+      if (!componentBasePath && fileType !== "theme" && fileType !== "styles") {
+        if (componentCategory.includes("User")) {
+          componentBasePath = slice.paths.userComponents;
+        } else {
+          componentBasePath = slice.paths.components;
+        }
+      }
   
-    if (fileType === "css") {
-      path = `${baseUrl}/${componentBasePath}/${componentCategory}/${componentName}/${componentName}.css`;
-    }
+      const baseUrl = window.location.origin;  
+      let path;
   
-    if (fileType === "html") {
-      path = `${baseUrl}/${componentBasePath}/${componentCategory}/${componentName}/${componentName}.html`;
-    }
+      if (fileType === "css") {
+        path = `${baseUrl}/${componentBasePath}/${componentCategory}/${componentName}/${componentName}.css`;
+      }
   
-    if (fileType === "theme") {
-      path = `${baseUrl}/Slice/${slice.paths.themes}/${componentName}.css`;
-    }
+      if (fileType === "html") {
+        path = `${baseUrl}/${componentBasePath}/${componentCategory}/${componentName}/${componentName}.html`;
+      }
   
-    if (fileType === "styles") {
-      path = `${baseUrl}/Slice/${slice.paths.styles}/${componentName}.css`;
-    }
+      if (fileType === "theme") {
+        path = `${baseUrl}/Slice/${slice.paths.themes}/${componentName}.css`;
+      }
   
-    console.log(`Fetching: ${path}`);
-    const response = await fetch(path);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch ${path}: ${response.statusText}`);
+      if (fileType === "styles") {
+        path = `${baseUrl}/Slice/${slice.paths.styles}/${componentName}.css`;
+      }
+  
+      const response = await fetch(path);
+  
+      if (!response.ok) {
+        throw new Error(`Failed to fetch ${path}: ${response.statusText}`);
+      }
+  
+      const html = await response.text();
+      return html;
+  
+    } catch (error) {
+      slice.logger.logError("Controller", `Error fetching ${fileType} for component ${componentName}:`, error);
+      // You can also re-throw the error if you want it to propagate
+      // throw error;
     }
-    const html = await response.text();
-    return html;
   }
+  
   
   setComponentProps(component, props) {
     for (const prop in props) {
