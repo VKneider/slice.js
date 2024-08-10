@@ -125,25 +125,28 @@ export default class Controller {
             }
          }
 
+         // no debe tener el / al final
          const baseUrl = window.location.origin;
+         
          let path;
 
          if (fileType === 'css') {
-            path = `${baseUrl}/${componentBasePath}/${componentCategory}/${componentName}/${componentName}.css`;
+            path = `${baseUrl}${componentBasePath}/${componentCategory}/${componentName}/${componentName}.css`;
          }
 
          if (fileType === 'html') {
-            path = `${baseUrl}/${componentBasePath}/${componentCategory}/${componentName}/${componentName}.html`;
+            path = `${baseUrl}${componentBasePath}/${componentCategory}/${componentName}/${componentName}.html`;
          }
 
          if (fileType === 'theme') {
-            path = `${baseUrl}/Slice/${slice.paths.themes}/${componentName}.css`;
+            path = `${baseUrl}${slice.paths.themes}/${componentName}.css`;
          }
 
          if (fileType === 'styles') {
-            path = `${baseUrl}/Slice/${slice.paths.styles}/${componentName}.css`;
+            path = `${baseUrl}${slice.paths.styles}/${componentName}.css`;
          }
 
+         console.log(`Fetching ${fileType} for component ${componentName} from ${path}`);
          const response = await fetch(path);
 
          if (!response.ok) {
