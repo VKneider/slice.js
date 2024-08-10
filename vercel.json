@@ -4,10 +4,6 @@
         {
             "src":"/Slice/server.js",
             "use":"@vercel/node"
-        },
-        {
-          "src": "/Slice/**/*",
-          "use": "@vercel/static"
         }
     ],
     "routes":[
