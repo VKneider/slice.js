@@ -2,14 +2,14 @@
     "version":2,
     "builds":[
         {
-            "src":"/Slice/server.js",
+            "src":"/src/Slice/server.js",
             "use":"@vercel/node"
         }
     ],
     "routes":[
         {
             "src":"/(.*)",
-            "dest":"/Slice/server.js"
+            "dest":"/src/Slice/server.js"
         }
     ]
 }
