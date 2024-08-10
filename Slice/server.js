@@ -20,12 +20,30 @@ app.get('/test', (req, res) => {
    );
 });
 
+function getFolderStructure(dirPath) {
+   const result = {};
+   const items = fs.readdirSync(dirPath);
+   
+   items.forEach(item => {
+       const fullPath = path.join(dirPath, item);
+       const stats = fs.statSync(fullPath);
+       if (stats.isDirectory()) {
+           result[item] = getFolderStructure(fullPath);
+       } else {
+           result[item] = 'file';
+       }
+   });
+   
+   return result;
+}
 
 // Ruta para servir el index.html desde la carpeta 'App'
 app.get('*', (req, res) => {
    console.log('requesting index.html', req.url);
-   const filePath = path.join(__dirname, '..', 'src', 'App', 'index.html');
-   res.sendFile(filePath);
+   const structure = getFolderStructure(path.join(__dirname, '..'));
+    res.json(structure);
+   //const filePath = path.join(__dirname, '..', 'src', 'App', 'index.html');
+   //res.sendFile(filePath);
 });
 
 app.listen(PORT, () => {
