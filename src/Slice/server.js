@@ -10,21 +10,22 @@ const app = express();
 const PORT = 3000;
 
 // Servir archivos estáticos desde la carpeta 'Slice'
-app.use('/Slice/', express.static(path.join(__dirname, '..', 'Slice')));
-// Servir archivos estáticos desde la carpeta 'App'
-app.use(express.static(path.join(__dirname, '..', 'src')));
-
-app.get('/test', (req, res) => {
-   res.send(
-      `${__dirname} , ruta static: ${path.join(__dirname, '..', 'src')} y la ruta final para el index.html: ${path.join(__dirname, '..', 'src', 'App', 'index.html')}`
-   );
+app.use('/Slice/', (req, res, next) => {
+   console.log(`Middleware '/Slice' ejecutado. Ruta solicitada: ${req.url}`);
+   next();
 });
-
+/*
+app.use((req, res, next) => {
+   console.log(`Middleware base ejecutado. Ruta solicitada: ${req.url}`);
+   next();
+});
+*/
+app.use(express.static(path.join(__dirname, '..', '..', 'src')));
 
 // Ruta para servir el index.html desde la carpeta 'App'
 app.get('*', (req, res) => {
-   console.log('requesting index.html', req.url);
-   const filePath = path.join(__dirname, '..', 'src', 'App', 'index.html');
+   console.log(`Requested URL: ${req.url}`)
+   const filePath = path.join(__dirname, '..', 'App', 'index.html');
    res.sendFile(filePath);
 });
 
