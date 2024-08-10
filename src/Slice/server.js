@@ -9,7 +9,7 @@ const __dirname = dirname(__filename);
 const app = express();
 const PORT = 3000;
 
-app.use(express.static(path.join(__dirname, '..')));
+app.use(express.static(path.join(__dirname, '..', '..', 'src')));
 
 console.log(`__dirname: ${__dirname}`);
 console.log(`path.join(__dirname, '..', '..','src'): ${path.join(__dirname, '..', '..','src')}`);
