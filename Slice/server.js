@@ -40,7 +40,7 @@ function getFolderStructure(dirPath) {
 // Ruta para servir el index.html desde la carpeta 'App'
 app.get('*', (req, res) => {
    console.log('requesting index.html', req.url);
-   const structure = getFolderStructure(path.join(__dirname, '..'));
+   const structure = getFolderStructure(path.join(__dirname));
     res.json(structure);
    //const filePath = path.join(__dirname, '..', 'src', 'App', 'index.html');
    //res.sendFile(filePath);
