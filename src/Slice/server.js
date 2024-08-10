@@ -20,8 +20,7 @@ app.use((req, res, next) => {
    next();
 });
 */
-app.use(express.static(path.join(__dirname, '..')));
-console.log(path.join(__dirname, '..'));
+app.use(express.static(path.join(__dirname, '..', '..','src')));
 
 // Ruta para servir el index.html desde la carpeta 'App'
 app.get('*', (req, res) => {
