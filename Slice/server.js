@@ -11,6 +11,7 @@ const PORT = 3000;
 
 // Servir archivos estáticos desde la carpeta 'Slice'
 app.use('/Slice/', express.static(path.join(__dirname, '..', 'Slice')));
+
 // Servir archivos estáticos desde la carpeta 'App'
 app.use(express.static(path.join(__dirname, '..', 'src')));
 
@@ -24,8 +25,9 @@ app.get('/test', (req, res) => {
 // Ruta para servir el index.html desde la carpeta 'App'
 app.get('*', (req, res) => {
    console.log('requesting index.html', req.url);
-   const filePath = path.join(__dirname, '..', 'src', 'App', 'index.html');
-   res.sendFile(filePath);
+  // const filePath = path.join(__dirname, '..', 'src', 'App', 'index.html');
+   //res.sendFile(filePath);
+   res.json({message: 'Not found'});
 });
 
 app.listen(PORT, () => {
