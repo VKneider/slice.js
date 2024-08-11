@@ -9,6 +9,14 @@ const __dirname = dirname(__filename);
 const app = express();
 const PORT = 3000;
 
+// create and endpoint that returns the names of the files in the slice folder
+app.get('/files', (req, res) => {
+   const fs = require('fs');
+   const files = fs.readdirSync(path.join(__dirname, '..', 'Slice'));
+   res.json(files);
+});
+
+
 // Servir archivos estáticos desde la carpeta 'Slice'
 app.use('/Slice/', express.static(path.join(__dirname, '..', 'Slice')));
 
@@ -21,12 +29,6 @@ app.get('/test', (req, res) => {
    );
 });
 
-// create and endpoint that returns the names of the files in the slice folder
-app.get('/files', (req, res) => {
-   const fs = require('fs');
-   const files = fs.readdirSync(path.join(__dirname, '..', 'Slice'));
-   res.json(files);
-});
 
 
 
