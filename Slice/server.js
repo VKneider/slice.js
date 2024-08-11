@@ -21,6 +21,14 @@ app.get('/test', (req, res) => {
    );
 });
 
+// create and endpoint that returns the names of the files in the slice folder
+app.get('/files', (req, res) => {
+   const fs = require('fs');
+   const files = fs.readdirSync(path.join(__dirname, '..', 'Slice'));
+   res.json(files);
+});
+
+
 
 // Ruta para servir el index.html desde la carpeta 'App'
 app.get('*', (req, res) => {
