@@ -10,6 +10,7 @@ const __dirname = dirname(__filename);
 const app = express();
 const PORT = 3000;
 
+
 // Servir archivos estáticos desde la carpeta 'Slice'
 app.use('/Slice/', express.static(path.join(__dirname, '..','..', 'Slice')));
 // Servir archivos estáticos desde la carpeta 'App'
@@ -33,6 +34,9 @@ app.listen(PORT, () => {
    console.log(`Server is running on port ${PORT}, http://localhost:${PORT}`);
 });
 
+const handler = ServerlessHttp(app);
 
-export const handler = ServerlessHttp(app);
- 
+module.exports.handler = async (event, context) => {
+   const result = await handler(event, context);
+   return result;
+} 

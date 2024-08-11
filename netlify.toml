@@ -5,4 +5,4 @@
   force = true
   from = "/*"
   status = 200
-  to = "/Slice/functions/server/:splat"
+  to = "/.netlify/Slice/functions/server/:splat"
