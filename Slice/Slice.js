@@ -78,7 +78,7 @@ export default class Slice {
   
           const [html, ComponentClass, css] = await Promise.all([loadTemplate, loadClass, loadCSS]);
   
-          if (html) {
+          if (html || html === '') {
               const template = document.createElement('template');
               template.innerHTML = html;
               this.controller.templates.set(componentName, template);
