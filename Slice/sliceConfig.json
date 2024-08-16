@@ -31,6 +31,9 @@
         "defaultRoute": "/",
         "enabled": true
         
+    },
+    "loading":{
+        "enabled": true
     }
 }
 
