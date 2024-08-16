@@ -166,6 +166,11 @@ async function init() {
       };
    }
 
+   if(sliceConfig.loading.enabled){
+        const loading = await window.slice.build('Loading', {});
+        window.slice.loading = loading;
+   }
+
    if (sliceConfig.debugger.enabled) {
       const DebuggerModule = await window.slice.getClass(
          `${sliceConfig.paths.components}/Structural/Debugger/Debugger.js`
