@@ -82,12 +82,23 @@ export default class TreeItem extends HTMLElement {
          if (caret) {
             caret.classList.add('caret_open');
          }
-         this.$container.classList.add('container_open');
+         if(this.$container){
+            this.$container.classList.add('container_open');
+         }
       }
    }
 
    async setItem(value, addTo) {
       const item = await slice.build('TreeItem', value);
+      if(value.href){
+         const link = await slice.build("Link", {
+            text: value.value,
+            href: value.href
+         })
+         item.innerHTML = ""
+         link.classList.add("slice_tree_item")
+         item.appendChild(link)
+      }
       addTo.appendChild(item);
    }
 }
