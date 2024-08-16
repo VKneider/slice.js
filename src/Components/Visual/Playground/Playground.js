@@ -8,8 +8,7 @@ export default class Playground extends HTMLElement {
    }
 
    async init() {
-      const loading = await slice.build('Loading', {});
-      loading.start();
+
 
       let theme = slice.stylesManager.themeManager.currentTheme;
 
@@ -135,7 +134,6 @@ export default class Playground extends HTMLElement {
 
       this.appendChild(grid);
 
-      loading.stop();
    }
 }
 

@@ -8,8 +8,7 @@ export default class LandingPage extends HTMLElement {
    }
 
    async init() {
-      const loading = await slice.build('Loading', {});
-      loading.start();
+ 
       const div = document.createElement('div');
       let theme = slice.stylesManager.themeManager.currentTheme;
 
@@ -50,7 +49,6 @@ export default class LandingPage extends HTMLElement {
 
       this.appendChild(layOut);
 
-      loading.stop();
    }
 }
 

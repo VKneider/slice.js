@@ -10,8 +10,7 @@ export default class DocumentationPage extends HTMLElement {
    }
 
    async init() {
-      const loading = await slice.build('Loading', {});
-      loading.start();
+
 
       const div = document.createElement('div');
       const componentContainer = document.createElement('div');
@@ -224,7 +223,6 @@ export default class DocumentationPage extends HTMLElement {
          }
       }
 
-      loading.stop();
    }
 }
 
