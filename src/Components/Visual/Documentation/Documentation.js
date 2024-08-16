@@ -8,6 +8,16 @@ export default class Documentation extends HTMLElement {
    }
 
    async init() {
+
+      await import("https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js")
+      await import("https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js")
+      const css = await fetch("https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css")
+      const cssText = await css.text()
+      const style = document.createElement('style')
+      style.innerHTML = cssText
+      document.head.appendChild(style)
+
+      
       const htmlCard = await slice.build('Card', {
          title: 'HTML',
          text: 'HyperText Markup Language is the most basic building block of the Web. It defines the meaning and structure of web content.',
