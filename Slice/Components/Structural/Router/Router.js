@@ -67,6 +67,11 @@ export default class Router {
    async handleRoute(route, params) {
       const targetElement = document.querySelector('#app');
       const existingComponent = slice.controller.getComponent(`route-${route.component}`);
+
+      if(slice.loading){
+         slice.loading.start();
+      }
+
       if (existingComponent) {
          targetElement.innerHTML = '';
          if (existingComponent.update) {
@@ -80,6 +85,10 @@ export default class Router {
          });
          targetElement.innerHTML = '';
          targetElement.appendChild(component);
+      }
+
+      if(slice.loading){
+         slice.loading.stop();
       }
 
       slice.router.activeRoute = route;
