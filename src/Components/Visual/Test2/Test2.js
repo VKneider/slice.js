@@ -10,7 +10,6 @@ export default class Test2 extends HTMLElement {
    async update() {
       const request = await fetch('https://jsonplaceholder.typicode.com/users');
       const response = await request.json();
-      console.log(response);
    }
 
    async init() {
