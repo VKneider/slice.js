@@ -44,9 +44,20 @@ export default class Route extends HTMLElement {
 
          this.appendChild(cachedComponent);
       } else {
+
+         if(!this.props.component){
+            return;
+         }
+
+         if (!slice.controller.componentCategories.has(this.props.component)) {
+            slice.logger.logError(`${this.sliceId}`, `Component ${this.props.component} not found`);
+            return;
+         }
+
          const component = await slice.build(this.props.component, {
             sliceId: this.props.component,
          });
+         
          this.innerHTML = '';
          this.appendChild(component);
          Route.componentCache[this.props.component] = component;
