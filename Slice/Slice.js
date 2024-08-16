@@ -170,6 +170,13 @@ async function init() {
         const loading = await window.slice.build('Loading', {});
         window.slice.loading = loading;
    }
+   await window.slice.stylesManager.init();
+   
+   if (sliceConfig.router.enabled) {
+    const RouterModule = await window.slice.getClass(`${sliceConfig.paths.components}/Structural/Router/Router.js`);
+    window.slice.router = new RouterModule();
+    await window.slice.router.init();
+ }
 
    if (sliceConfig.debugger.enabled) {
       const DebuggerModule = await window.slice.getClass(
@@ -186,13 +193,8 @@ async function init() {
       window.slice.logger.logInfo('Slice', 'Translator succesfuly enabled');
    }
 
-   await window.slice.stylesManager.init();
 
-   if (sliceConfig.router.enabled) {
-      const RouterModule = await window.slice.getClass(`${sliceConfig.paths.components}/Structural/Router/Router.js`);
-      window.slice.router = new RouterModule();
-      await window.slice.router.init();
-   }
+   
 }
 
 await init();
