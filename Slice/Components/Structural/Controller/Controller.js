@@ -14,6 +14,7 @@ export default class Controller {
       this.activeComponents.forEach((component) => {
          let parent = component.parentComponent;
          let parentName = parent ? parent.constructor.name : null;
+         console.log(`${component.constructor.name} - Parent: ${parentName}`);
       });
    }
 
@@ -145,6 +146,7 @@ export default class Controller {
             path = `${baseUrl}${slice.paths.styles}/${componentName}.css`;
          }
 
+         console.log(`Fetching ${fileType} for component ${componentName} from ${path}`);
          const response = await fetch(path);
 
          if (!response.ok) {
