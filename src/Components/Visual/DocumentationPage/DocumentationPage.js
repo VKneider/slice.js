@@ -95,7 +95,8 @@ export default class DocumentationPage extends HTMLElement {
       for (const name in components) {
          const component = {
             value: name,
-            href: `/Documentation/${name}/`,
+            href: `/Documentation/SliceComponents/${name}`,
+            component:`${name}Documentation`,
          };
          if (components[name] === 'Visual') {
             compVisual.items.push(component);
@@ -109,14 +110,12 @@ export default class DocumentationPage extends HTMLElement {
                   {
                      value: 'What is Slice.js?',
                      href: '/Documentation/What-is-Slice.js',
-                  },
-                  {
-                     value: 'Getting Started',
-                     href: '',
+                     component: 'WhatIsSlice'
                   },
                   {
                      value: 'Installation',
-                     href: '',
+                     href: '/Documentation/Installation',
+                     component: 'Installation'
                   },
                ],
             }, {
@@ -127,36 +126,45 @@ export default class DocumentationPage extends HTMLElement {
                      items:[
                         {
                            value: 'The build method',
-                           href: '',
+                           href: '/Documentation/The-build-method',
+                           component: 'TheBuildMethod'
                         },
                         {
                            value: 'Visual',
-                           href: '',
+                           href: '/Documentation/Visual',
+                           component: 'VisualDocumentation'
                         },
                         {
                            value: 'Structural',
-                           href: '',
+                           href: '/Documentation/Structural',
+                           component: 'StructuralDocumentation'
                         },
                         {
                            value: 'Services',
-                           href: '',
+                           href: '/Documentation/Services',
+                           component: 'ServicesDocumentation'
                         },
                         {
                            value: `Lifecycle methods`,
+                           href: '/Documentation/Lifecycle-methods',
+                           component: 'LifecycleMethods'
                         }
                      ]
                   },
                   {
                      value: 'Routing',
-                     href: '',
+                     href: '/Documentation/Routing',
+                     component: 'RoutingDocumentation'
                   },
                   {
                      value: 'Themes',
-                     href: '',
+                     href: '/Documentation/Themes',
+                     component: 'ThemesDocumentation'
                   },
                   {
                      value: 'Slice Styles',
-                     href: '',
+                     href: '/Documentation/Slice-Styles',
+                     component: 'SliceStylesDocumentation'
                   },
                ],
             },
@@ -166,7 +174,8 @@ export default class DocumentationPage extends HTMLElement {
                   value:'Services',
                   items:[
                      {
-                        value: 'FetchManager'
+                        value: 'FetchManager',
+                        href: '/Documentation/SliceComponents/FetchManager',
                      }
                   ]
                },
@@ -174,7 +183,13 @@ export default class DocumentationPage extends HTMLElement {
             ],
             },
 
-         ]
+         ],
+         onClickCallback: async (item) => {
+            alert("hi")
+            myRouteContainer.href = item.href;
+            myRouteContainer.component = item.component;
+            slice.router.navigate(item.href);
+         }
       });
 
 
