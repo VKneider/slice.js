@@ -193,7 +193,7 @@ export default class DocumentationPage extends HTMLElement {
          component: 'Documentation',
       });
 
-      //await myRouteContainer.render();
+      await myRouteContainer.render();
 
       const layOut = await slice.build('Layout', {
          layout: div,
