@@ -75,15 +75,7 @@ export default class DocumentationPage extends HTMLElement {
                      await slice.setTheme('Slice');
                      theme = 'Slice';
                   }
-               },
-            },
-            {
-               value: 'Show Card Documentation',
-               onClickCallback: async () => {
-                  myRouteContainer.href = '/Documentation/Card';
-                  myRouteContainer.component = 'CardDocumentation';
-                  await slice.router.navigate('/Documentation/Card');
-               },
+               }
             },
          ],
       });
@@ -113,12 +105,79 @@ export default class DocumentationPage extends HTMLElement {
 
       const treeview = await slice.build('TreeView', {
          items: [
-            {
-               value: 'Components',
-               items: [compVisual],
+            {value:'Introduction',
+               items: [
+                  {
+                     value: 'What is Slice.js?',
+                     href: '/Documentation/What-is-Slice.js',
+                  },
+                  {
+                     value: 'Getting Started',
+                     href: '',
+                  },
+                  {
+                     value: 'Installation',
+                     href: '',
+                  },
+               ],
+            }, {
+               value: 'Getting Started',
+               items: [
+                  {
+                     value: 'Components',
+                     items:[
+                        {
+                           value: 'The build method',
+                           href: '',
+                        },
+                        {
+                           value: 'Visual',
+                           href: '',
+                        },
+                        {
+                           value: 'Structural',
+                           href: '',
+                        },
+                        {
+                           value: 'Services',
+                           href: '',
+                        },
+                        {
+                           value: `Lifecycle methods`,
+                        }
+                     ]
+                  },
+                  {
+                     value: 'Routing',
+                     href: '',
+                  },
+                  {
+                     value: 'Themes',
+                     href: '',
+                  },
+                  {
+                     value: 'Slice Styles',
+                     href: '',
+                  },
+               ],
             },
-         ],
+            {
+               value: 'Components Library',
+               items: [{
+                  value:'Services',
+                  items:[
+                     {
+                        value: 'FetchManager'
+                     }
+                  ]
+               },
+               compVisual,
+            ],
+            },
+
+         ]
       });
+
 
       const mainMenu = await slice.build('MainMenu', {});
       mainMenu.add(treeview);
@@ -135,6 +194,8 @@ export default class DocumentationPage extends HTMLElement {
          component: 'Documentation',
       });
 
+      //await myRouteContainer.render();
+
       const layOut = await slice.build('Layout', {
          layout: div,
          view: myRouteContainer,
@@ -149,7 +210,6 @@ export default class DocumentationPage extends HTMLElement {
 
          if (this.components.includes(this.params)) {
             if (this.querySelector('slice_nav_header')) {
-               console.log(this.querySelector('slice_nav_header'));
             }
 
             const component = await slice.build(`${this.params}Documentation`, {
