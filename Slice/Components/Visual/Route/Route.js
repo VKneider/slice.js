@@ -6,23 +6,23 @@ export default class Route extends HTMLElement {
    }
 
    init() {
-      if (!this.props.href) {
-         this.props.href = ' ';
+      if (!this.props.path) {
+         this.props.path = ' ';
       }
 
       if (!this.props.component) {
-         this.props.component = slice.router.pathToRouteMap.get(this.props.href).component || ' ';
+         this.props.component = slice.router.pathToRouteMap.get(this.props.path).component || ' ';
       }
 
       //this.props.innerHTML = this.innerHTML;
    }
 
-   get href() {
-      return this.props.href;
+   get path() {
+      return this.props.path;
    }
 
-   set href(value) {
-      this.props.href = value;
+   set path(value) {
+      this.props.path = value;
    }
 
    get component() {
@@ -66,7 +66,7 @@ export default class Route extends HTMLElement {
    }
 
    async renderIfCurrentRoute() {
-      if (this.props.href === window.location.pathname) {
+      if (this.props.path === window.location.pathname) {
          if (this.rendered) {
             if (Route.componentCache[this.props.component]) {
                const cachedComponent = Route.componentCache[this.props.component];
