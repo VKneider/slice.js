@@ -68,8 +68,10 @@ export default class Route extends HTMLElement {
    async updateHTML() {
       if (this.props.href === window.location.pathname) {
          if (this.rendered) {
-            await Route.componentCache[this.props.component].update();
-            return true;
+            if (Route.componentCache[this.props.component].update) {
+               await Route.componentCache[this.props.component].update();
+               return true;
+            }
          }
          await this.render();
          return true;
