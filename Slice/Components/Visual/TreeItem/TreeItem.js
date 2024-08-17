@@ -2,18 +2,20 @@ export default class TreeItem extends HTMLElement {
    constructor(props) {
       super();
       slice.attachTemplate(this);
-
+      
       this.$item = this.querySelector('.slice_tree_item');
 
+      this.debuggerProps = ['value', 'href', 'onClickCallback'];
       slice.controller.setComponentProps(this, props);
-      this.debuggerProps = ['value', 'href', 'onClickCallBack'];
-
-      if (props.onClickCallBack) {
-         this.onClickCallback = props.onClickCallBack;
+      
+      if (props.onClickCallback) {
+         this.onClickCallback = props.onClickCallback;
          this.$item.addEventListener('click', async () => {
-            await this.onClickCallback();
+            await this.onClickCallback(this);
          });
       }
+      
+      
    }
 
    async init() {
@@ -89,16 +91,12 @@ export default class TreeItem extends HTMLElement {
    }
 
    async setItem(value, addTo) {
-      const item = await slice.build('TreeItem', value);
-      if(value.href){
-         const link = await slice.build("Link", {
-            text: value.value,
-            href: value.href
-         })
-         item.innerHTML = ""
-         link.classList.add("slice_tree_item")
-         item.appendChild(link)
+
+      if(this.onClickCallback){
+         value.onClickCallback = this.onClickCallback;
       }
+
+      const item = await slice.build('TreeItem', value);
       addTo.appendChild(item);
    }
 }

@@ -11,6 +11,14 @@ export default class DocumentationPage extends HTMLElement {
 
    async init() {
 
+      await import("https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js")
+      await import("https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js")
+      const css = await fetch("https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css")
+      const cssText = await css.text()
+      const style = document.createElement('style')
+      style.innerHTML = cssText
+      document.head.appendChild(style)
+
 
       const div = document.createElement('div');
       const componentContainer = document.createElement('div');
@@ -95,7 +103,7 @@ export default class DocumentationPage extends HTMLElement {
       for (const name in components) {
          const component = {
             value: name,
-            href: `/Documentation/SliceComponents/${name}`,
+            href: `/Documentation/${name}`,
             component:`${name}Documentation`,
          };
          if (components[name] === 'Visual') {
@@ -185,11 +193,12 @@ export default class DocumentationPage extends HTMLElement {
 
          ],
          onClickCallback: async (item) => {
-            console.log('item', item);
-            myRouteContainer.href = item.href;
-            myRouteContainer.component = item.component;
-            slice.router.navigate(item.href);
-         }
+            if(item.href){
+               myRouteContainer.href = item.href;
+               myRouteContainer.component = item.component;
+               await slice.router.navigate(item.href)
+            }
+         },
       });
 
 
@@ -204,11 +213,12 @@ export default class DocumentationPage extends HTMLElement {
       div.appendChild(myNavigation);
 
       const myRouteContainer = await slice.build('Route', {
-         href: '/Documentation/',
+         href: '/Documentation',
          component: 'Documentation',
       });
+      
 
-      await myRouteContainer.render();
+      
 
       const layOut = await slice.build('Layout', {
          layout: div,
