@@ -6,15 +6,10 @@ slice-landingpage slice-layout {
 .landing_page {
   font-family: var(--font-family);
   color: var(--font-primary-color);
-  /* margin-top: 100px; */
   overflow-y: scroll;
   overflow-x: hidden;
-  width: var(--docs-width);
+  width: 100%;
   padding-left: 10px;
   padding-right: 10px;
   padding-bottom: 25px;
-}
-
-:root {
-  --docs-width: 100%;
 }
