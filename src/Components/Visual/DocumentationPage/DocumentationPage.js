@@ -197,9 +197,18 @@ export default class DocumentationPage extends HTMLElement {
          },
       });
 
+      const extraRoute = {
+         path: '/Documentation',
+         component: 'Documentation'
+      }
+
+      //add extra route to the routes
+      compVisual.items.push(extraRoute)
+
       const VisualComponentsMultiRoute = await slice.build('MultiRoute', {
          routes:compVisual.items
-      });
+      })
+      
 
 
       const mainMenu = await slice.build('MainMenu', {});
