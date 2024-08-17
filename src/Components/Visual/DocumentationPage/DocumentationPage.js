@@ -185,7 +185,7 @@ export default class DocumentationPage extends HTMLElement {
 
          ],
          onClickCallback: async (item) => {
-            alert("hi")
+            console.log('item', item);
             myRouteContainer.href = item.href;
             myRouteContainer.component = item.component;
             slice.router.navigate(item.href);
@@ -218,25 +218,6 @@ export default class DocumentationPage extends HTMLElement {
       let theme = slice.stylesManager.themeManager.currentTheme;
 
       this.appendChild(layOut);
-
-      if (this.params) {
-         this.params = this.params.replace('/', '');
-
-         if (this.components.includes(this.params)) {
-            if (this.querySelector('slice_nav_header')) {
-            }
-
-            const component = await slice.build(`${this.params}Documentation`, {
-               sliceId: `${this.params}Documentation`,
-            });
-            component.classList.add('docs_container');
-            componentContainer.innerHTML = '';
-            componentContainer.appendChild(component);
-            myNavigation.page = component;
-            loading.stop();
-            return layOut.showing(component);
-         }
-      }
 
    }
 }
