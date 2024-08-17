@@ -61,11 +61,7 @@ export default class DocumentationPage extends HTMLElement {
             {
                text: 'Playground',
                path: '/Playground',
-            },
-            {
-               text: 'Card ',
-               path: '/Documentation/Card',
-            },
+            }
          ],
          buttons: [
             {

@@ -16,35 +16,35 @@ export default class Playground extends HTMLElement {
          // position: "fixed",
          logo: {
             src: '../../images/Slice.js-logo.png',
-            href: '/',
+            path: '/',
          },
          items: [
             {
                text: 'Home',
-               href: '/',
+               path: '/',
             },
             {
                text: 'About Us',
-               href: '',
+               path: '',
                type: 'dropdown',
                options: [
                   {
                      text: 'Julio',
-                     href: 'https://github.com/juliograterol',
+                     path: 'https://github.com/juliograterol',
                   },
                   {
                      text: 'Victor',
-                     href: 'https://github.com/VKneider',
+                     path: 'https://github.com/VKneider',
                   },
                ],
             },
             {
                text: 'Documentation',
-               href: '/Documentation',
+               path: '/Documentation',
             },
             {
                text: 'Playground',
-               href: '/Playground',
+               path: '/Playground',
             },
          ],
          buttons: [
