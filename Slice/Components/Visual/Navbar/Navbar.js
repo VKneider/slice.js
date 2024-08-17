@@ -65,7 +65,7 @@ export default class Navbar extends HTMLElement {
       const img = document.createElement('img');
       img.src = value.src;
       this.$logoContainer.appendChild(img);
-      this.$logoContainer.path = value.path;
+      this.$logoContainer.href = value.path;
    }
 
    get items() {
