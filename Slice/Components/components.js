@@ -9,6 +9,7 @@ const components = {
   "Input": "Visual",
   "Layout": "Visual",
   "Loading": "Visual",
+  "MultiRoute": "Visual",
   "Navbar": "Visual",
   "NotFound": "Visual",
   "Route": "Visual",

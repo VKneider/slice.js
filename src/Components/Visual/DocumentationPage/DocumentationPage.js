@@ -190,11 +190,15 @@ export default class DocumentationPage extends HTMLElement {
          ],
          onClickCallback: async (item) => {
             if(item.path){
-               myRouteContainer.path = item.path;
-               myRouteContainer.component = item.component;
+               //myRouteContainer.path = item.path;
+               //myRouteContainer.component = item.component;
                await slice.router.navigate(item.path)
             }
          },
+      });
+
+      const VisualComponentsMultiRoute = await slice.build('MultiRoute', {
+         routes:compVisual.items
       });
 
 
@@ -218,7 +222,7 @@ export default class DocumentationPage extends HTMLElement {
 
       const layOut = await slice.build('Layout', {
          layout: div,
-         view: myRouteContainer,
+         view: VisualComponentsMultiRoute,
       });
 
       let theme = slice.stylesManager.themeManager.currentTheme;
