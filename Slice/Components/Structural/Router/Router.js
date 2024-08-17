@@ -35,7 +35,7 @@ export default class Router {
       //Verify if the routeContainers have the same path of the path
       let routerContainersFlag = false;
       for (const routeContainer of routeContainers) {
-         let response = await routeContainer.updateHTML();
+         let response = await routeContainer.renderIfCurrentRoute();
          if (response) {
             this.activeRoute = routeContainer.props;
             routerContainersFlag = true;
@@ -68,7 +68,7 @@ export default class Router {
       const targetElement = document.querySelector('#app');
       const existingComponent = slice.controller.getComponent(`route-${route.component}`);
 
-      if(slice.loading){
+      if (slice.loading) {
          slice.loading.start();
       }
 
@@ -87,7 +87,7 @@ export default class Router {
          targetElement.appendChild(component);
       }
 
-      if(slice.loading){
+      if (slice.loading) {
          slice.loading.stop();
       }
 

@@ -45,7 +45,7 @@ export default class Route extends HTMLElement {
          this.appendChild(cachedComponent);
       } else {
 
-         if(!this.props.component){
+         if (!this.props.component) {
             return;
          }
 
@@ -57,7 +57,7 @@ export default class Route extends HTMLElement {
          const component = await slice.build(this.props.component, {
             sliceId: this.props.component,
          });
-         
+
          this.innerHTML = '';
          this.appendChild(component);
          Route.componentCache[this.props.component] = component;
@@ -65,13 +65,16 @@ export default class Route extends HTMLElement {
       this.rendered = true;
    }
 
-   async updateHTML() {
+   async renderIfCurrentRoute() {
       if (this.props.href === window.location.pathname) {
          if (this.rendered) {
-            //if (Route.componentCache[this.props.component].update) {
-            //   await Route.componentCache[this.props.component].update();
-               //return true;
-           // }
+            if (Route.componentCache[this.props.component]) {
+               const cachedComponent = Route.componentCache[this.props.component];
+               if (cachedComponent.update) {
+                  await cachedComponent.update();
+               }
+               return true
+            }
          }
          await this.render();
          return true;
