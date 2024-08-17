@@ -97,15 +97,6 @@ export default class TreeItem extends HTMLElement {
       }
 
       const item = await slice.build('TreeItem', value);
-      if(value.href){
-         const link = await slice.build("Link", {
-            text: value.value,
-            href: value.href
-         })
-         item.innerHTML = ""
-         link.classList.add("slice_tree_item")
-         item.appendChild(link)
-      }
       addTo.appendChild(item);
    }
 }

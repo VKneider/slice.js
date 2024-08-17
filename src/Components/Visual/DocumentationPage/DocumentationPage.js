@@ -84,16 +84,6 @@ export default class DocumentationPage extends HTMLElement {
                   }
                }
             },
-            {
-               value: 'mira julio',
-               onClickCallback: async () => {
-                  console.log(myRouteContainer.component)  
-                  myRouteContainer.href = '/Documentation/Card/';
-                  myRouteContainer.component = 'CardDocumentation';
-                  console.log(myRouteContainer.component)
-                   await slice.router.navigate('/Documentation/Card/');
-               }
-            }
          ],
       });
 
@@ -113,7 +103,7 @@ export default class DocumentationPage extends HTMLElement {
       for (const name in components) {
          const component = {
             value: name,
-            href: `/Documentation/SliceComponents/${name}`,
+            href: `/Documentation/${name}`,
             component:`${name}Documentation`,
          };
          if (components[name] === 'Visual') {
@@ -203,11 +193,12 @@ export default class DocumentationPage extends HTMLElement {
 
          ],
          onClickCallback: async (item) => {
-            console.log("help")
-            myRouteContainer.href = item.href;
-            myRouteContainer.component = item._component;
-            //slice.router.navigate('/dasdasd');
-         }
+            if(item.href){
+               myRouteContainer.href = item.href;
+               myRouteContainer.component = item.component;
+               await slice.router.navigate(item.href)
+            }
+         },
       });
 
 
