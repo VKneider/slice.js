@@ -5,7 +5,7 @@ export default class TreeItem extends HTMLElement {
       
       this.$item = this.querySelector('.slice_tree_item');
 
-      this.debuggerProps = ['value', 'href', 'onClickCallback'];
+      this.debuggerProps = ['value', 'path', 'onClickCallback'];
       slice.controller.setComponentProps(this, props);
       
       if (props.onClickCallback) {
@@ -37,13 +37,13 @@ export default class TreeItem extends HTMLElement {
       return this._value;
    }
 
-   set href(value) {
-      this.$item.href = value;
-      this._href = value;
+   set path(value) {
+      this.$item.path = value;
+      this._path = value;
    }
 
-   get href() {
-      return this._href;
+   get path() {
+      return this._path;
    }
 
    set items(values) {
@@ -66,7 +66,7 @@ export default class TreeItem extends HTMLElement {
 
       caret.addEventListener('click', toggleContainer);
 
-      if (!this.href) {
+      if (!this.path) {
          this.$item.addEventListener('click', toggleContainer);
       }
 

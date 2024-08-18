@@ -65,7 +65,7 @@ export default class Navbar extends HTMLElement {
       const img = document.createElement('img');
       img.src = value.src;
       this.$logoContainer.appendChild(img);
-      this.$logoContainer.href = value.href;
+      this.$logoContainer.href = value.path;
    }
 
    get items() {
@@ -105,7 +105,7 @@ export default class Navbar extends HTMLElement {
       if (value.type === 'text') {
          const link = await slice.build('Link', {
             text: value.text,
-            href: value.href,
+            path: value.path,
             classes: 'item',
          });
          item.appendChild(link);

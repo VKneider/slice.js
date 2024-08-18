@@ -15,7 +15,7 @@ export default class LandingPage extends HTMLElement {
       const navBar = await slice.build('Navbar', {
          logo: {
             src: '../../images/Slice.js-logo.png',
-            href: '',
+            path: '',
          },
          buttons: [
             {

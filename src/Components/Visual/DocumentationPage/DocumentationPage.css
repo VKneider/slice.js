@@ -1,0 +1,67 @@
+.visualComponents p span {
+  color: var(--primary-color);
+}
+:root {
+  --docs-width: 64%;
+}
+slice-documentation-page slice-route,
+slice-documentation-page slice-multi-route {
+  display: flex;
+  justify-content: center;
+}
+
+slice-mainmenu{
+  position: fixed;
+  top: 0;
+  left: 0;
+  font-family: var(--font-family);
+  background-color: var(--primary-background-color);
+  border-right: 1px solid var(--primary-color-shade);
+  /* box-shadow: 10px 0 10px 0px #00000020; */
+  display: flex;
+  align-items: center;
+  height: 100%;
+  width: 17%;
+  transition: transform 0.3s ease, width 0.3s ease;
+  overflow-x: hidden;
+}
+
+p {
+  text-align: justify;
+}
+h1 {
+  padding-top: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--secondary-background-color);
+}
+h2 {
+  padding-top: 10px;
+}
+.grid-container {
+  overflow-x: auto;
+}
+@media only screen and (max-width: 770px) {
+  :root {
+    --docs-width: 100%;
+  }
+}
+* {
+  font-family: var(--font-family);
+}
+
+slice-documentation,
+slice-buttondocumentation,
+slice-carddocumentation,
+slice-checkboxdocumentation,
+slice-inputdocumentation,
+slice-switchdocumentation 
+{
+  color: var(--font-primary-color);
+  margin-top: 60px;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  width: var(--docs-width);
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-bottom: 25px;
+}

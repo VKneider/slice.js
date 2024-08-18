@@ -31,11 +31,11 @@ export default class Router {
    }
 
    async renderRoutesComponentsInPage() {
-      const routeContainers = document.querySelectorAll('slice-route');
-      //Verify if the routeContainers have the same path of the path
+      const routeContainers = document.querySelectorAll('slice-route, slice-multi-route');
       let routerContainersFlag = false;
+
       for (const routeContainer of routeContainers) {
-         let response = await routeContainer.updateHTML();
+         let response = await routeContainer.renderIfCurrentRoute();
          if (response) {
             this.activeRoute = routeContainer.props;
             routerContainersFlag = true;
@@ -68,7 +68,7 @@ export default class Router {
       const targetElement = document.querySelector('#app');
       const existingComponent = slice.controller.getComponent(`route-${route.component}`);
 
-      if(slice.loading){
+      if (slice.loading) {
          slice.loading.start();
       }
 
@@ -87,7 +87,7 @@ export default class Router {
          targetElement.appendChild(component);
       }
 
-      if(slice.loading){
+      if (slice.loading) {
          slice.loading.stop();
       }
 
@@ -111,13 +111,11 @@ export default class Router {
    }
 
    matchRoute(path) {
-      // 1. Verificar si la ruta exacta está definida en routes
       let matchedRoute = this.routes.find((r) => r.path === path);
       if (matchedRoute) {
          return { route: matchedRoute, params: null };
       }
 
-      // 2. Verificar si hay una ruta con comodín que coincida con el inicio del path
       for (let route of this.routes) {
          if (route.path.includes('*')) {
             const basePath = route.path.split('*')[0];
@@ -128,7 +126,6 @@ export default class Router {
          }
       }
 
-      // 3. Si no se encuentra ninguna coincidencia, redirigir a la ruta de notFound
       matchedRoute = this.routes.find((r) => r.path === '/404');
       return { route: matchedRoute, params: null };
    }
@@ -136,13 +133,11 @@ export default class Router {
    findIfChildrenRoute() {
       const path = window.location.pathname;
 
-      // Separar el path en partes usando el slash
       let pathArray = path.split('/');
       let pathToCheck = '';
       let matchedRoutes = [];
       let params = null;
 
-      // Remover el primer elemento vacío del array
       pathArray.shift();
 
       for (let i = 0; i < pathArray.length; i++) {
@@ -152,7 +147,6 @@ export default class Router {
          if (route) {
             matchedRoutes.push(route);
          } else {
-            // Manejo de params si es necesario
             const basePath = pathToCheck.split('*')[0];
             if (pathToCheck.startsWith(basePath)) {
                params = pathToCheck.replace(basePath, '');

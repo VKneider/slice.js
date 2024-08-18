@@ -32,40 +32,36 @@ export default class DocumentationPage extends HTMLElement {
          position: 'fixed',
          logo: {
             src: '../../images/Slice.js-logo.png',
-            href: '/',
+            path: '/',
          },
          items: [
             {
                text: 'Home',
-               href: '/',
+               path: '/',
             },
             {
                text: 'About Us',
-               href: '',
+               path: '',
                type: 'dropdown',
                options: [
                   {
                      text: 'Julio',
-                     href: 'https://github.com/juliograterol',
+                     path: 'https://github.com/juliograterol',
                   },
                   {
                      text: 'Victor',
-                     href: 'https://github.com/VKneider',
+                     path: 'https://github.com/VKneider',
                   },
                ],
             },
             {
                text: 'Documentation',
-               href: '/Documentation',
+               path: '/Documentation',
             },
             {
                text: 'Playground',
-               href: '/Playground',
-            },
-            {
-               text: 'Card ',
-               href: '/Documentation/Card',
-            },
+               path: '/Playground',
+            }
          ],
          buttons: [
             {
@@ -103,7 +99,7 @@ export default class DocumentationPage extends HTMLElement {
       for (const name in components) {
          const component = {
             value: name,
-            href: `/Documentation/${name}`,
+            path: `/Documentation/${name}`,
             component:`${name}Documentation`,
          };
          if (components[name] === 'Visual') {
@@ -117,12 +113,12 @@ export default class DocumentationPage extends HTMLElement {
                items: [
                   {
                      value: 'What is Slice.js?',
-                     href: '/Documentation/What-is-Slice.js',
+                     path: '/Documentation/What-is-Slice.js',
                      component: 'WhatIsSlice'
                   },
                   {
                      value: 'Installation',
-                     href: '/Documentation/Installation',
+                     path: '/Documentation/Installation',
                      component: 'Installation'
                   },
                ],
@@ -134,44 +130,44 @@ export default class DocumentationPage extends HTMLElement {
                      items:[
                         {
                            value: 'The build method',
-                           href: '/Documentation/The-build-method',
+                           path: '/Documentation/The-build-method',
                            component: 'TheBuildMethod'
                         },
                         {
                            value: 'Visual',
-                           href: '/Documentation/Visual',
+                           path: '/Documentation/Visual',
                            component: 'VisualDocumentation'
                         },
                         {
                            value: 'Structural',
-                           href: '/Documentation/Structural',
+                           path: '/Documentation/Structural',
                            component: 'StructuralDocumentation'
                         },
                         {
                            value: 'Services',
-                           href: '/Documentation/Services',
+                           path: '/Documentation/Services',
                            component: 'ServicesDocumentation'
                         },
                         {
                            value: `Lifecycle methods`,
-                           href: '/Documentation/Lifecycle-methods',
+                           path: '/Documentation/Lifecycle-methods',
                            component: 'LifecycleMethods'
                         }
                      ]
                   },
                   {
                      value: 'Routing',
-                     href: '/Documentation/Routing',
+                     path: '/Documentation/Routing',
                      component: 'RoutingDocumentation'
                   },
                   {
                      value: 'Themes',
-                     href: '/Documentation/Themes',
+                     path: '/Documentation/Themes',
                      component: 'ThemesDocumentation'
                   },
                   {
                      value: 'Slice Styles',
-                     href: '/Documentation/Slice-Styles',
+                     path: '/Documentation/Slice-Styles',
                      component: 'SliceStylesDocumentation'
                   },
                ],
@@ -183,7 +179,7 @@ export default class DocumentationPage extends HTMLElement {
                   items:[
                      {
                         value: 'FetchManager',
-                        href: '/Documentation/SliceComponents/FetchManager',
+                        path: '/Documentation/SliceComponents/FetchManager',
                      }
                   ]
                },
@@ -193,13 +189,26 @@ export default class DocumentationPage extends HTMLElement {
 
          ],
          onClickCallback: async (item) => {
-            if(item.href){
-               myRouteContainer.href = item.href;
-               myRouteContainer.component = item.component;
-               await slice.router.navigate(item.href)
+            if(item.path){
+               //myRouteContainer.path = item.path;
+               //myRouteContainer.component = item.component;
+               await slice.router.navigate(item.path)
             }
          },
       });
+
+      const extraRoute = {
+         path: '/Documentation',
+         component: 'Documentation'
+      }
+
+      //add extra route to the routes
+      compVisual.items.push(extraRoute)
+
+      const VisualComponentsMultiRoute = await slice.build('MultiRoute', {
+         routes:compVisual.items
+      })
+      
 
 
       const mainMenu = await slice.build('MainMenu', {});
@@ -213,7 +222,7 @@ export default class DocumentationPage extends HTMLElement {
       div.appendChild(myNavigation);
 
       const myRouteContainer = await slice.build('Route', {
-         href: '/Documentation',
+         path: '/Documentation',
          component: 'Documentation',
       });
       
@@ -222,7 +231,7 @@ export default class DocumentationPage extends HTMLElement {
 
       const layOut = await slice.build('Layout', {
          layout: div,
-         view: myRouteContainer,
+         view: VisualComponentsMultiRoute,
       });
 
       let theme = slice.stylesManager.themeManager.currentTheme;

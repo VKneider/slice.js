@@ -9,9 +9,6 @@ export default class Documentation extends HTMLElement {
 
    async init() {
 
-     
-
-      
       const htmlCard = await slice.build('Card', {
          title: 'HTML',
          text: 'HyperText Markup Language is the most basic building block of the Web. It defines the meaning and structure of web content.',

@@ -12,14 +12,14 @@ export default class Link extends HTMLElement {
 
    async onClick(event) {
       event.preventDefault();
-      const href = this.querySelector('a').getAttribute('href');
+      const path = this.querySelector('a').getAttribute('href');
       const routeTargets = document.querySelectorAll('slice-routetarget');
-      slice.router.navigate(href);
+      slice.router.navigate(path);
    }
 
    getTemplate(props = {}) {
-      const { href = '#', classes = '', text = '' } = props;
-      return `<a href="${href}" class="${classes}" data-route>${text}</a>`;
+      const { path = '#', classes = '', text = '' } = props;
+      return `<a href="${path}" class="${classes}" data-route>${text}</a>`;
    }
 }
 
