@@ -6,9 +6,6 @@ export default class MultiRoute extends HTMLElement {
    }
 
    init() {
-      if(this.props.routes){
-         console.log(this.props.routes)
-      }
       if (!this.props.routes || !Array.isArray(this.props.routes)) {
          slice.logger.logError('MultiRoute', 'No valid routes array provided in props.');
          return;
