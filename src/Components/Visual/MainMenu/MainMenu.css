@@ -43,6 +43,13 @@ slice-mainmenu {
   right: 0;
 }
 
+slice-treeview .simple_treeview::-webkit-scrollbar {
+  width: 0px;
+}
+slice-treeview .simple_treeview::-webkit-scrollbar:horizontal {
+  height: 0px;
+}
+
 @media only screen and (max-width: 770px) {
   slice-mainmenu {
     top: 0px;
