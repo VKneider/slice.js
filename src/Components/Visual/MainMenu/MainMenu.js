@@ -5,7 +5,6 @@ export default class MainMenu extends HTMLElement {
 
       this.$menuButton = this.querySelector('.slice_menu_button');
       this.$closeButton = this.querySelector('.slice_close_menu');
-      this.$container = this.querySelector('.slice_menu_container');
       this.$menu = this.querySelector('.slice_menu');
 
       this.$menuButton.addEventListener('click', () => {
@@ -20,7 +19,7 @@ export default class MainMenu extends HTMLElement {
    }
 
    init() {
-      this.$container.addEventListener('mouseleave', () => {
+      this.addEventListener('mouseleave', () => {
          if (this.querySelector('.slice_menu_open')) {
             this.handleCloseMenu();
          }
@@ -32,11 +31,11 @@ export default class MainMenu extends HTMLElement {
    }
 
    handleOpenMenu() {
-      this.$container.classList.add('slice_menu_open');
+      this.classList.add('slice_menu_open');
    }
 
    handleCloseMenu() {
-      this.$container.classList.remove('slice_menu_open');
+      this.classList.remove('slice_menu_open');
    }
 }
 

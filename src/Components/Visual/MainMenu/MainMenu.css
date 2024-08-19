@@ -1,11 +1,10 @@
-.slice_menu_container {
+slice-mainmenu {
   position: fixed;
   top: 0;
   left: 0;
   font-family: var(--font-family);
   background-color: var(--primary-background-color);
   border-right: 1px solid var(--primary-color-shade);
-  /* box-shadow: 10px 0 10px 0px #00000020; */
   display: flex;
   align-items: center;
   height: 100%;
@@ -13,6 +12,7 @@
   transition: transform 0.3s ease, width 0.3s ease;
   overflow-x: hidden;
 }
+
 .slice_menu {
   width: 100%;
   height: 75%;
@@ -20,6 +20,7 @@
   overflow-x: hidden;
   padding: 10px;
 }
+
 .slice_menu_button {
   position: fixed;
   top: 0;
@@ -29,9 +30,11 @@
   cursor: pointer;
   padding: 20px;
 }
+
 .menu_title {
   visibility: hidden;
 }
+
 .slice_close_menu {
   visibility: hidden;
   position: absolute;
@@ -39,24 +42,29 @@
   top: 0;
   right: 0;
 }
+
 @media only screen and (max-width: 770px) {
-  .slice_menu_container {
+  slice-mainmenu {
     top: 0px;
     position: fixed;
     z-index: 100000;
     display: flex;
     width: 0%;
   }
+
   .slice_menu_button {
     right: 100%;
     visibility: visible;
   }
+
   .menu_title {
     visibility: visible;
   }
+
   .slice_menu_open {
     width: 80%;
   }
+
   .slice_close_menu {
     visibility: visible;
   }

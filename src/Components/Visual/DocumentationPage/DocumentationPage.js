@@ -19,15 +19,6 @@ export default class DocumentationPage extends HTMLElement {
       style.innerHTML = cssText
       document.head.appendChild(style)
 
-
-      const div = document.createElement('div');
-      const componentContainer = document.createElement('div');
-      componentContainer.classList.add('docs_container');
-      componentContainer.id = 'componentContainer';
-
-      const divView = document.createElement('div');
-      divView.classList.add('docs_container');
-
       const navBar = await slice.build('Navbar', {
          position: 'fixed',
          logo: {
@@ -193,6 +184,8 @@ export default class DocumentationPage extends HTMLElement {
                //myRouteContainer.path = item.path;
                //myRouteContainer.component = item.component;
                await slice.router.navigate(item.path)
+               myNavigation.page = VisualComponentsMultiRoute
+
             }
          },
       });
@@ -209,30 +202,27 @@ export default class DocumentationPage extends HTMLElement {
          routes:compVisual.items
       })
       
-
-
       const mainMenu = await slice.build('MainMenu', {});
       mainMenu.add(treeview);
-      div.appendChild(mainMenu);
 
-      div.appendChild(navBar);
-
-      const myNavigation = await slice.build('MyNavigation', {});
-
-      div.appendChild(myNavigation);
+      
+      const myNavigation = await slice.build('MyNavigation', {
+         page: VisualComponentsMultiRoute
+      });
 
       const myRouteContainer = await slice.build('Route', {
          path: '/Documentation',
          component: 'Documentation',
       });
       
-
-      
-
       const layOut = await slice.build('Layout', {
-         layout: div,
+         // layout: div,
          view: VisualComponentsMultiRoute,
       });
+
+      layOut.onLayOut(mainMenu);
+      layOut.onLayOut(navBar);
+      layOut.onLayOut(myNavigation);
 
       let theme = slice.stylesManager.themeManager.currentTheme;
 
