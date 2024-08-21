@@ -20,7 +20,6 @@ app.get('/test', (req, res) => {
    );
 });
 
-
 // Ruta para servir el index.html desde la carpeta 'App'
 app.get('*', (req, res) => {
    console.log('requesting index.html', req.url);

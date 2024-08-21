@@ -53,8 +53,6 @@ export default class Router {
          return;
       }
 
-
-
       const { route, params } = this.matchRoute(path);
       if (route) {
          await this.handleRoute(route, params);
@@ -154,4 +152,3 @@ export default class Router {
    }
       */
 }
-

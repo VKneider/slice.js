@@ -8,8 +8,6 @@ export default class Playground extends HTMLElement {
    }
 
    async init() {
-
-
       let theme = slice.stylesManager.themeManager.currentTheme;
 
       const navBar = await slice.build('Navbar', {
@@ -133,7 +131,6 @@ export default class Playground extends HTMLElement {
       grid.appendChild(details);
 
       this.appendChild(grid);
-
    }
 }
 

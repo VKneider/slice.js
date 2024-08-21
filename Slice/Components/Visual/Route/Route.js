@@ -44,7 +44,6 @@ export default class Route extends HTMLElement {
 
          this.appendChild(cachedComponent);
       } else {
-
          if (!this.props.component) {
             return;
          }
@@ -73,7 +72,7 @@ export default class Route extends HTMLElement {
                if (cachedComponent.update) {
                   await cachedComponent.update();
                }
-               return true
+               return true;
             }
          }
          await this.render();

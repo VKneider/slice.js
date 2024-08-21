@@ -3,12 +3,12 @@ export default class TreeView extends HTMLElement {
       super();
       slice.attachTemplate(this);
 
-      console.log(props)
+      console.log(props);
       this.$treeView = this.querySelector('.simple_treeview');
       slice.controller.setComponentProps(this, props);
 
       if (props.onClickCallback) {
-         this.onClickCallback = props.onClickCallback
+         this.onClickCallback = props.onClickCallback;
       }
 
       this.debuggerProps = [];
@@ -29,11 +29,10 @@ export default class TreeView extends HTMLElement {
    }
 
    async setTreeItem(item) {
-
       if (this.onClickCallback) {
-         item.onClickCallback = this.onClickCallback
+         item.onClickCallback = this.onClickCallback;
       }
-  
+
       const treeItem = await slice.build('TreeItem', item);
       treeItem.classList.add('tree_item');
       this.$treeView.appendChild(treeItem);

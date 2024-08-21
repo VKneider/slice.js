@@ -10,14 +10,13 @@ export default class DocumentationPage extends HTMLElement {
    }
 
    async init() {
-
-      await import("https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js")
-      await import("https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js")
-      const css = await fetch("https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css")
-      const cssText = await css.text()
-      const style = document.createElement('style')
-      style.innerHTML = cssText
-      document.head.appendChild(style)
+      await import('https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js');
+      await import('https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js');
+      const css = await fetch('https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css');
+      const cssText = await css.text();
+      const style = document.createElement('style');
+      style.innerHTML = cssText;
+      document.head.appendChild(style);
 
       const navBar = await slice.build('Navbar', {
          position: 'fixed',
@@ -52,7 +51,7 @@ export default class DocumentationPage extends HTMLElement {
             {
                text: 'Playground',
                path: '/Playground',
-            }
+            },
          ],
          buttons: [
             {
@@ -69,7 +68,7 @@ export default class DocumentationPage extends HTMLElement {
                      await slice.setTheme('Slice');
                      theme = 'Slice';
                   }
-               }
+               },
             },
          ],
       });
@@ -91,7 +90,7 @@ export default class DocumentationPage extends HTMLElement {
          const component = {
             value: name,
             path: `/Documentation/${name}`,
-            component:`${name}Documentation`,
+            component: `${name}Documentation`,
          };
          if (components[name] === 'Visual') {
             compVisual.items.push(component);
@@ -100,117 +99,116 @@ export default class DocumentationPage extends HTMLElement {
 
       const treeview = await slice.build('TreeView', {
          items: [
-            {value:'Introduction',
+            {
+               value: 'Introduction',
                items: [
                   {
                      value: 'What is Slice.js?',
                      path: '/Documentation/What-is-Slice.js',
-                     component: 'WhatIsSlice'
+                     component: 'WhatIsSlice',
                   },
                   {
                      value: 'Installation',
                      path: '/Documentation/Installation',
-                     component: 'Installation'
+                     component: 'Installation',
                   },
                ],
-            }, {
+            },
+            {
                value: 'Getting Started',
                items: [
                   {
                      value: 'Components',
-                     items:[
+                     items: [
                         {
                            value: 'The build method',
                            path: '/Documentation/The-build-method',
-                           component: 'TheBuildMethod'
+                           component: 'TheBuildMethod',
                         },
                         {
                            value: 'Visual',
                            path: '/Documentation/Visual',
-                           component: 'VisualDocumentation'
+                           component: 'VisualDocumentation',
                         },
                         {
                            value: 'Structural',
                            path: '/Documentation/Structural',
-                           component: 'StructuralDocumentation'
+                           component: 'StructuralDocumentation',
                         },
                         {
                            value: 'Services',
                            path: '/Documentation/Services',
-                           component: 'ServicesDocumentation'
+                           component: 'ServicesDocumentation',
                         },
                         {
                            value: `Lifecycle methods`,
                            path: '/Documentation/Lifecycle-methods',
-                           component: 'LifecycleMethods'
-                        }
-                     ]
+                           component: 'LifecycleMethods',
+                        },
+                     ],
                   },
                   {
                      value: 'Routing',
                      path: '/Documentation/Routing',
-                     component: 'RoutingDocumentation'
+                     component: 'RoutingDocumentation',
                   },
                   {
                      value: 'Themes',
                      path: '/Documentation/Themes',
-                     component: 'ThemesDocumentation'
+                     component: 'ThemesDocumentation',
                   },
                   {
                      value: 'Slice Styles',
                      path: '/Documentation/Slice-Styles',
-                     component: 'SliceStylesDocumentation'
+                     component: 'SliceStylesDocumentation',
                   },
                ],
             },
             {
                value: 'Components Library',
-               items: [{
-                  value:'Services',
-                  items:[
-                     {
-                        value: 'FetchManager',
-                        path: '/Documentation/SliceComponents/FetchManager',
-                     }
-                  ]
-               },
-               compVisual,
-            ],
+               items: [
+                  {
+                     value: 'Services',
+                     items: [
+                        {
+                           value: 'FetchManager',
+                           path: '/Documentation/SliceComponents/FetchManager',
+                        },
+                     ],
+                  },
+                  compVisual,
+               ],
             },
-
          ],
          onClickCallback: async (item) => {
-            if(item.path){
+            if (item.path) {
                //myRouteContainer.path = item.path;
                //myRouteContainer.component = item.component;
-               await slice.router.navigate(item.path)
-               myNavigation.page = VisualComponentsMultiRoute
-
+               await slice.router.navigate(item.path);
+               myNavigation.page = VisualComponentsMultiRoute;
             }
          },
       });
 
       const extraRoute = {
          path: '/Documentation',
-         component: 'Documentation'
-      }
+         component: 'Documentation',
+      };
 
       //add extra route to the routes
-      compVisual.items.push(extraRoute)
+      compVisual.items.push(extraRoute);
 
       const VisualComponentsMultiRoute = await slice.build('MultiRoute', {
-         routes:compVisual.items
-      })
-      
+         routes: compVisual.items,
+      });
+
       const mainMenu = await slice.build('MainMenu', {});
       mainMenu.add(treeview);
 
-      
       const myNavigation = await slice.build('MyNavigation', {
-         page: VisualComponentsMultiRoute
+         page: VisualComponentsMultiRoute,
       });
 
-      
       const layOut = await slice.build('Layout', {
          // layout: div,
          view: VisualComponentsMultiRoute,
@@ -223,7 +221,6 @@ export default class DocumentationPage extends HTMLElement {
       let theme = slice.stylesManager.themeManager.currentTheme;
 
       this.appendChild(layOut);
-
    }
 }
 

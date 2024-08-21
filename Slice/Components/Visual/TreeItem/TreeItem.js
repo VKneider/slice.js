@@ -2,20 +2,18 @@ export default class TreeItem extends HTMLElement {
    constructor(props) {
       super();
       slice.attachTemplate(this);
-      
+
       this.$item = this.querySelector('.slice_tree_item');
 
       this.debuggerProps = ['value', 'path', 'onClickCallback'];
       slice.controller.setComponentProps(this, props);
-      
+
       if (props.onClickCallback) {
          this.onClickCallback = props.onClickCallback;
          this.$item.addEventListener('click', async () => {
             await this.onClickCallback(this);
          });
       }
-      
-      
    }
 
    async init() {
@@ -84,15 +82,14 @@ export default class TreeItem extends HTMLElement {
          if (caret) {
             caret.classList.add('caret_open');
          }
-         if(this.$container){
+         if (this.$container) {
             this.$container.classList.add('container_open');
          }
       }
    }
 
    async setItem(value, addTo) {
-
-      if(this.onClickCallback){
+      if (this.onClickCallback) {
          value.onClickCallback = this.onClickCallback;
       }
 

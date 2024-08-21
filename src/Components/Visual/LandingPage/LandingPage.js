@@ -8,7 +8,6 @@ export default class LandingPage extends HTMLElement {
    }
 
    async init() {
- 
       const div = document.createElement('div');
       let theme = slice.stylesManager.themeManager.currentTheme;
 
@@ -48,7 +47,6 @@ export default class LandingPage extends HTMLElement {
       });
 
       this.appendChild(layOut);
-
    }
 }
 

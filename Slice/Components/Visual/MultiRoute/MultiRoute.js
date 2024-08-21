@@ -25,12 +25,11 @@ export default class MultiRoute extends HTMLElement {
       // verify if the current route is registered in the routes.js file
       slice.router.verifyDynamicRouteExistence(this.props.routes)
       */
-
    }
 
    async render() {
       const currentPath = window.location.pathname;
-      const routeMatch = this.props.routes.find(route => route.path === currentPath);
+      const routeMatch = this.props.routes.find((route) => route.path === currentPath);
 
       if (routeMatch) {
          const { component } = routeMatch;
@@ -70,10 +69,9 @@ export default class MultiRoute extends HTMLElement {
 
    async renderIfCurrentRoute() {
       const currentPath = window.location.pathname;
-      const routeMatch = this.props.routes.find(route => route.path === currentPath);
+      const routeMatch = this.props.routes.find((route) => route.path === currentPath);
 
       if (routeMatch) {
-         
          await this.render(); // Llamamos a render() para manejar el renderizado desde la caché si es necesario
          return true;
       }
@@ -82,7 +80,7 @@ export default class MultiRoute extends HTMLElement {
 
    removeComponent() {
       const currentPath = window.location.pathname;
-      const routeMatch = this.props.routes.find(route => route.path === currentPath);
+      const routeMatch = this.props.routes.find((route) => route.path === currentPath);
 
       if (routeMatch) {
          const { component } = routeMatch;

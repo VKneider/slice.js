@@ -10,35 +10,32 @@ export default class StylesManager {
    }
 
    async init() {
-
-      for(let i=0;i<slice.stylesConfig.requestedStyles.length;i++){
+      for (let i = 0; i < slice.stylesConfig.requestedStyles.length; i++) {
          const styles = await slice.controller.fetchText(slice.stylesConfig.requestedStyles[i], 'styles');
          this.componentStyles.innerText += styles;
          slice.logger.logInfo('StylesManager', `${slice.stylesConfig.requestedStyles[i]} styles loaded`);
       }
 
-      if(slice.themeConfig.enabled){
-
+      if (slice.themeConfig.enabled) {
          const module = await import(`${slice.paths.components}/Structural/StylesManager/ThemeManager/ThemeManager.js`);
          this.themeManager = new module.default();
          let theme;
 
-      if (slice.themeConfig.saveThemeLocally) {
-         theme = localStorage.getItem('sliceTheme');
-      }
+         if (slice.themeConfig.saveThemeLocally) {
+            theme = localStorage.getItem('sliceTheme');
+         }
 
-      if (!theme) {
-         theme = slice.themeConfig.defaultTheme;
-      }
+         if (!theme) {
+            theme = slice.themeConfig.defaultTheme;
+         }
 
-      if (slice.themeConfig.useBrowserTheme) {
-         const browserTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'Dark' : 'Light';
-         theme = browserTheme;
-      }
+         if (slice.themeConfig.useBrowserTheme) {
+            const browserTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'Dark' : 'Light';
+            theme = browserTheme;
+         }
 
          await this.themeManager.applyTheme(theme);
       }
-
    }
 
    //add a method that will add css as text to the componentStyles element

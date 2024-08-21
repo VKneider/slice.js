@@ -126,7 +126,7 @@ export default class Controller {
 
          // no debe tener el / al final
          const baseUrl = window.location.origin;
-         
+
          let path;
 
          if (fileType === 'css') {
