@@ -53,6 +53,8 @@ export default class Router {
          return;
       }
 
+
+
       const { route, params } = this.matchRoute(path);
       if (route) {
          await this.handleRoute(route, params);
@@ -96,68 +98,60 @@ export default class Router {
 
    async loadInitialRoute() {
       const path = window.location.pathname;
-      const { matchedRoutes, params } = this.findIfChildrenRoute();
-
-      for (let route of matchedRoutes) {
-         await this.handleRoute(route, params);
-      }
-
-      if (matchedRoutes.length === 0) {
-         const { route, params } = this.matchRoute(path);
-         await this.handleRoute(route, params);
-      }
+      const { route, params } = this.findIfChildrenRoute();
+      await this.handleRoute(route, params);
 
       await this.renderRoutesComponentsInPage();
    }
 
    matchRoute(path) {
-      let matchedRoute = this.routes.find((r) => r.path === path);
-      if (matchedRoute) {
-         return { route: matchedRoute, params: null };
-      }
+      const matchedRoute = this.pathToRouteMap.get(path);
+      if (matchedRoute) return { route: matchedRoute, params: null };
 
       for (let route of this.routes) {
          if (route.path.includes('*')) {
             const basePath = route.path.split('*')[0];
             if (path.startsWith(basePath)) {
-               const param = path.replace(basePath, '');
-               return { route, params: param };
+               const params = path.replace(basePath, '');
+               return { route, params };
             }
          }
       }
 
-      matchedRoute = this.routes.find((r) => r.path === '/404');
-      return { route: matchedRoute, params: null };
+      const notFoundRoute = this.routes.find((r) => r.path === '/404');
+      return { route: notFoundRoute, params: null };
    }
 
    findIfChildrenRoute() {
       const path = window.location.pathname;
-
-      let pathArray = path.split('/');
-      let pathToCheck = '';
-      let matchedRoutes = [];
+      let route = null;
       let params = null;
 
-      pathArray.shift();
-
-      for (let i = 0; i < pathArray.length; i++) {
-         pathToCheck += `/${pathArray[i]}`;
-         const route = this.pathToRouteMap.get(pathToCheck);
-
-         if (route) {
-            matchedRoutes.push(route);
-         } else {
-            const basePath = pathToCheck.split('*')[0];
-            if (pathToCheck.startsWith(basePath)) {
-               params = pathToCheck.replace(basePath, '');
-            }
+      for (const [key, value] of this.pathToRouteMap.entries()) {
+         if (path.startsWith(key)) {
+            route = value;
+            params = path.slice(key.length) || null;
          }
       }
 
-      if (matchedRoutes.length === 0) {
-         matchedRoutes.push(this.routes.find((r) => r.path === '/404'));
+      if (!route) {
+         route = this.routes.find((r) => r.path === '/404');
       }
 
-      return { matchedRoutes, params };
+      return { route, params };
    }
+
+   /*
+   verifyDynamicRouteExistence(route){
+      const routeFromMap = this.pathToRouteMap.get(route.path);
+
+      if(!routeFromMap){
+         slice.logger.logError('Router', `Route ${route.path} not found`);
+         console.log('Route not found');
+      }
+
+
+   }
+      */
 }
+
