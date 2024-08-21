@@ -1,26 +1,24 @@
 const routes = [
    { path: '/', component: 'LandingPage' },
    {
-      path: '/products',
-      component: 'Test1',
+      path: '/Documentation',
+      component: 'DocumentationPage',
       children: [
          {
-            path: '/info',
-            component: 'Button',
-         },
-         {
-            path: '/list',
-            component: 'ProductList',
-         },
-         {
-            path: '/search',
-            component: 'ProductSearch',
-         },
+            path:"/Button",
+            component:"ButtonDocumentation",
+         }
       ],
    },
+   { path: '/Documentation/CustomMenu', component: 'DocumentationPage',
+      children: [
+         {
+            path:"/Button",
+            component:"CardDocumentation",
+         }
+      ] },
+      {path:"/Documentation/CustomMenu/pepito",component:"Button"},
    { path: '/Playground', component: 'Playground' },
-   { path: '/Documentation', component: 'DocumentationPage' },
-   { path: '/Documentation/*/', component: 'DocumentationPage' },
    { path: '/404', component: 'NotFound' },
 ];
 
