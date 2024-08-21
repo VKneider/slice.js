@@ -3,7 +3,11 @@
         "enabled": false,
         "click": "right"
     },
+    "stylesManager":{
+        "requestedStyles":["sliceStyles"]
+    },
     "themeManager": {
+        "enabled":true,
         "defaultTheme": "Slice",
         "saveThemeLocally": true,
         "useBrowserTheme": false
