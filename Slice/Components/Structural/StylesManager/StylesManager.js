@@ -1,4 +1,3 @@
-import ThemeManager from './ThemeManager/ThemeManager.js';
 
 export default class StylesManager {
    constructor() {
@@ -6,7 +5,6 @@ export default class StylesManager {
       this.componentStyles.id = 'slice-component-styles';
       document.head.appendChild(this.componentStyles);
 
-      this.themeManager = new ThemeManager();
    }
 
    async init() {
