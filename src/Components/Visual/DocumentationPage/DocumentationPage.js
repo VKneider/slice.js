@@ -210,10 +210,6 @@ export default class DocumentationPage extends HTMLElement {
          page: VisualComponentsMultiRoute
       });
 
-      const myRouteContainer = await slice.build('Route', {
-         path: '/Documentation',
-         component: 'Documentation',
-      });
       
       const layOut = await slice.build('Layout', {
          // layout: div,
