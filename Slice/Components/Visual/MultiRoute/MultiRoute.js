@@ -10,6 +10,22 @@ export default class MultiRoute extends HTMLElement {
          slice.logger.logError('MultiRoute', 'No valid routes array provided in props.');
          return;
       }
+
+      /*
+      this.props.routes.forEach(route => {
+         if (!route.path || !route.component) {
+            slice.logger.logError('MultiRoute', 'Route must have a path and a component.');
+         }
+
+         console.log(route)
+
+         slice.router.verifyDynamicRouteExistence(route)
+      });
+
+      // verify if the current route is registered in the routes.js file
+      slice.router.verifyDynamicRouteExistence(this.props.routes)
+      */
+
    }
 
    async render() {
@@ -57,6 +73,7 @@ export default class MultiRoute extends HTMLElement {
       const routeMatch = this.props.routes.find(route => route.path === currentPath);
 
       if (routeMatch) {
+         
          await this.render(); // Llamamos a render() para manejar el renderizado desde la caché si es necesario
          return true;
       }
