@@ -7,7 +7,7 @@ export default class Slice {
       this.controller = new Controller();
       this.stylesManager = new StylesManager();
       this.paths = sliceConfig.paths;
-      this.themeConfig = sliceConfig.stylesManager;
+      this.themeConfig = sliceConfig.themeManager;
    }
 
    async getClass(module) {

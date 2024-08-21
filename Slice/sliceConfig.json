@@ -3,7 +3,7 @@
         "enabled": false,
         "click": "right"
     },
-    "stylesManager": {
+    "themeManager": {
         "defaultTheme": "Slice",
         "saveThemeLocally": true,
         "useBrowserTheme": false
