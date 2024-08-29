@@ -1,4 +1,4 @@
-.navigation_container {
+slice-mynavigation {
   position: fixed;
   top: 0;
   right: 0;
@@ -6,7 +6,7 @@
   background-color: var(--primary-background-color);
   border-left: 1px solid var(--primary-color-shade);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   height: 100%;
   width: 17%;
   transition: transform 0.3s ease, width 0.3s ease;
@@ -15,7 +15,7 @@
 .my_navigation {
   display: flex;
   flex-direction: column;
-  height: 75%;
+  margin-top: 80px;
 }
 .my_navigation a {
   padding: 10px;

@@ -6,16 +6,16 @@ slice-mainmenu {
   background-color: var(--primary-background-color);
   border-right: 1px solid var(--primary-color-shade);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   height: 100%;
   width: 17%;
   transition: transform 0.3s ease, width 0.3s ease;
   overflow-x: hidden;
 }
-
 .slice_menu {
+  margin-top: 175px;
   width: 100%;
-  height: 75%;
+  height: 100%;
   overflow-y: scroll;
   overflow-x: hidden;
   padding: 10px;
@@ -43,10 +43,12 @@ slice-mainmenu {
   right: 0;
 }
 
-slice-treeview .simple_treeview::-webkit-scrollbar {
+slice-treeview .simple_treeview::-webkit-scrollbar,
+slice-mainmenu::-webkit-scrollbar {
   width: 0px;
 }
-slice-treeview .simple_treeview::-webkit-scrollbar:horizontal {
+slice-treeview .simple_treeview::-webkit-scrollbar:horizontal,
+slice-mainmenu::-webkit-scrollbar:horizontal  {
   height: 0px;
 }
 
