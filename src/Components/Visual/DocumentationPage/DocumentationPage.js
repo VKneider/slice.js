@@ -81,7 +81,7 @@ export default class DocumentationPage extends HTMLElement {
          Switch: 'Visual',
       };
 
-      let compVisual = {
+      let documentationRoutes = {
          value: 'Visual',
          items: [],
       };
@@ -93,7 +93,7 @@ export default class DocumentationPage extends HTMLElement {
             component: `${name}Documentation`,
          };
          if (components[name] === 'Visual') {
-            compVisual.items.push(component);
+            documentationRoutes.items.push(component);
          }
       }
 
@@ -176,7 +176,7 @@ export default class DocumentationPage extends HTMLElement {
                         },
                      ],
                   },
-                  compVisual,
+                  documentationRoutes,
                ],
             },
          ],
@@ -196,10 +196,27 @@ export default class DocumentationPage extends HTMLElement {
       };
 
       //add extra route to the routes
-      compVisual.items.push(extraRoute);
+      documentationRoutes.items.push(extraRoute);
+
+      function getRoutes(array) {
+         for (let i = 0; i < array.length; i++) {
+            if (array[i].items) {
+               getRoutes(array[i].items);
+            } else {
+               const exists = documentationRoutes.items.some(route => route.path === array[i].path);
+               if (!exists) {
+                  documentationRoutes.items.push(array[i]);
+               }
+            }
+         }
+      }      
+
+      getRoutes(treeview.items);
+
+      console.log(documentationRoutes.items);
 
       const VisualComponentsMultiRoute = await slice.build('MultiRoute', {
-         routes: compVisual.items,
+         routes: documentationRoutes.items,
       });
 
       const mainMenu = await slice.build('MainMenu', {});
@@ -221,7 +238,9 @@ export default class DocumentationPage extends HTMLElement {
       let theme = slice.stylesManager.themeManager.currentTheme;
 
       this.appendChild(layOut);
+
    }
+
 }
 
 customElements.define('slice-documentation-page', DocumentationPage);

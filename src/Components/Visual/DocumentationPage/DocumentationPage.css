@@ -49,13 +49,8 @@ h2 {
   font-family: var(--font-family);
 }
 
-slice-documentation,
-slice-buttondocumentation,
-slice-carddocumentation,
-slice-checkboxdocumentation,
-slice-inputdocumentation,
-slice-switchdocumentation 
-{
+slice-multi-route > :first-child {
+  margin-top: 60px;
   color: var(--font-primary-color);
   margin-top: 60px;
   overflow-y: scroll;
