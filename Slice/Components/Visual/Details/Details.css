@@ -1,42 +1,70 @@
-.slice_details {
-  font-family: var(--font-family);
-  color: var(--font-primary-color);
+slice-details {
+   font-family: var(--font-family);
+   color: var(--font-primary-color);
 }
-.slice_details .details_summary {
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  border-bottom: var(--slice-border) solid var(--primary-color);
-  padding: 10px;
+.details_summary {
+   cursor: pointer;
+   display: flex;
+   align-items: center;
+   border-bottom: var(--slice-border) solid var(--primary-color);
+   padding: 10px;
 }
 .details_summary .caret {
-  transform: rotate(-90deg);
-  margin-right: 10px;
-  color: var(--primary-color);
+   transform: rotate(-90deg);
+   margin-right: 10px;
+   color: var(--primary-color);
 }
 .details_title {
-  width: 100%;
-  font-weight: bold;
+   width: 100%;
+   font-weight: bold;
 }
 .details_text {
-  color: var(--font-secondary-color);
+   color: var(--font-secondary-color);
 }
 .details_container {
-  padding-left: 5px;
-  padding: 10px;
-  background-color: var(--secondary-background-color);
-  border-radius: var(--border-radius-slice);
-  visibility: hidden;
-  display: none;
+   padding-left: 5px;
+   padding: 10px;
+   background-color: var(--secondary-background-color);
+   border-radius: var(--border-radius-slice);
+   visibility: hidden;
+   display: block;
+   height: 0; /* Inicia con altura 0 */
+   overflow: hidden;
+   transition:
+      height 0.3s ease,
+      visibility 0.3s ease; /* Agrega transición a height */
 }
-.full_details {
-  padding-left: 5px;
-  border-left: 2px solid var(--primary-color);
+
+.details_open {
+   height: auto; /* Altura se ajustará automáticamente después de la transición */
+   visibility: visible;
 }
-.details_open .details_container {
-  display: block;
-  visibility: visible;
+
+.symbol {
+   border-radius: 5px;
+   width: 20px;
+   height: 20px;
+   position: relative;
+   transition: transform 0.3s ease;
 }
-.details_open .caret {
-  transform: rotate(-0deg);
+
+.symbol::before,
+.symbol::after {
+   content: '';
+   position: absolute;
+   background-color: var(--primary-color);
+   width: 15px;
+   height: 2px;
+   top: 50%;
+   left: 0;
+   transition: transform 0.5s ease;
+}
+
+.symbol.plus::after {
+   transform: rotate(90deg);
+}
+
+.symbol.minus::before,
+.symbol.minus::after {
+   transform: rotate(360deg);
 }

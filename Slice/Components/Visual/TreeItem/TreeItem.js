@@ -57,11 +57,36 @@ export default class TreeItem extends HTMLElement {
 
       const toggleContainer = () => {
          const isOpen = caret.classList.toggle('caret_open');
+      
+         if (isOpen) {
+            // Calcular la altura completa del contenedor
+            const fullHeight = this.$container.scrollHeight + 'px';
+      
+            // Establecer la altura para iniciar la animación
+            this.$container.style.height = fullHeight;
+      
+            // Después de que la animación termine, ajustar la altura a 'auto'
+            this.$container.addEventListener('transitionend', function onTransitionEnd() {
+               this.style.height = 'auto';
+               this.removeEventListener('transitionend', onTransitionEnd);
+            });
+         } else {
+            // Establecer la altura para iniciar la animación de cierre
+            this.$container.style.height = this.$container.scrollHeight + 'px';
+      
+            // Forzar el reflujo para que la transición funcione
+            requestAnimationFrame(() => {
+               this.$container.style.height = '0';
+            });
+         }
+      
+         // Alternar la clase container_open
          this.$container.classList.toggle('container_open');
+      
          // Guardar el estado en localStorage
          localStorage.setItem(this.getContainerKey(), isOpen ? 'open' : 'closed');
       };
-
+      
       caret.addEventListener('click', toggleContainer);
 
       if (!this.path) {

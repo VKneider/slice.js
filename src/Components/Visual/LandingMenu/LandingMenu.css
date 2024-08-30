@@ -43,8 +43,6 @@ slice-landing-menu {
     text-decoration: underline;
   }
   .goToDocs {
-    padding-left: 30%;
-    padding-right: 30%;
     margin-top: 50px;
     color: var(--font-primary-color);
   }
@@ -52,6 +50,10 @@ slice-landing-menu {
     text-align: justify;
   }
   @media screen and (min-width: 770px) {
+    .goToDocs {
+      padding-left: 30%;
+      padding-right: 30%;
+    }
     h1 {
       font-size: 100px;
     }

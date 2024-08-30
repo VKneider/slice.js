@@ -1,9 +1,14 @@
 .codevisualizer_container {
-  font-size: smaller;
-  max-width: 100%;
-  background-color: whitesmoke;
-  border: 1px solid var(--primary-color);
-  padding: 10px;
-  border-radius: 10px;
-  overflow-x: scroll;
+   font-size: smaller;
+   max-width: 100%;
+   background-color: var(--primary-background-color);
+   border: 1px solid var(--primary-color);
+   padding: 10px;
+   border-radius: 10px;
+   overflow-x: scroll;
+}
+
+.codevisualizer pre code[class*='language-'],
+.codevisualizer pre pre[class*='language-'] {
+   color: var(--font-primary-color);
 }

@@ -1,45 +1,36 @@
 .slice_tree_item,
 .container_open .slice_tree_item {
-  color: var(--font-primary-color);
-  user-select: none;
-  cursor: pointer;
-  width: fit-content;
-  display: flex;
-  flex-direction: row-reverse;
-  align-items: center;
-  padding: 10px;
-  border-radius: var(--border-radius-slice);
+   color: var(--font-primary-color);
+   user-select: none;
+   cursor: pointer;
+   width: fit-content;
+   display: flex;
+   flex-direction: row-reverse;
+   align-items: center;
+   padding: 10px;
+   border-radius: var(--border-radius-slice);
 }
 .slice_tree_item .caret {
-  color: var(--primary-color);
-  margin-right: 5px;
-  transform: rotate(-90deg);
+   color: var(--primary-color);
+   margin-right: 5px;
+   transform: rotate(-90deg);
 }
 .slice_tree_item .caret_open {
-  transform: rotate(0deg);
+   transform: rotate(0deg);
 }
 .container {
-  /* padding-left: 10px; */
-  margin-left: 14px;
-  border-left: 2px solid var(--primary-color);
-  display: none;
-  height: 0;
-  transition: all 0.3s ease;
-  opacity: 0;
-  .slice_tree_item {
-    transition: height 0.3s ease;
-    height: 0;
-  }
+   margin-left: 14px;
+   border-left: 2px solid var(--primary-color);
+   height: 0;
+   overflow: hidden;
+   transition: height 0.3s ease;
 }
+
 .container_open {
-  opacity: 1;
-  height: 100%;
-  display: block;
-  .slice_tree_item {
-    height: auto;
-  }
+   height: auto; /* Esto se ajustará después de la transición */
 }
+
 .slice_tree_item:hover {
-  background-color: #ffffff25;
-  color: var(--primary-color);
+   background-color: #ffffff25;
+   color: var(--primary-color);
 }

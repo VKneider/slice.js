@@ -22,7 +22,7 @@ slice-mynavigation {
 }
 
 @media only screen and (max-width: 770px) {
-  .navigation_container {
+  slice-mynavigation {
     visibility: hidden;
   }
 }
