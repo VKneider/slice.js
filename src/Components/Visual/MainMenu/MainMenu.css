@@ -60,21 +60,21 @@ slice-mainmenu::-webkit-scrollbar:horizontal  {
     display: flex;
     width: 0%;
   }
-
+  .slice_menu {
+    margin-top: 0;
+  }
   .slice_menu_button {
     right: 100%;
     visibility: visible;
   }
-
   .menu_title {
     visibility: visible;
   }
-
   .slice_menu_open {
     width: 80%;
   }
-
   .slice_close_menu {
     visibility: visible;
+    cursor: pointer;
   }
 }

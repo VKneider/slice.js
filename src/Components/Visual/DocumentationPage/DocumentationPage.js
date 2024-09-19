@@ -198,7 +198,7 @@ export default class DocumentationPage extends HTMLElement {
       //add extra route to the routes
       documentationRoutes.items.push(extraRoute);
 
-      function getRoutes(array) {
+      const getRoutes = (array) => {
          for (let i = 0; i < array.length; i++) {
             if (array[i].items) {
                getRoutes(array[i].items);

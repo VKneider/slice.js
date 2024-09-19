@@ -8,10 +8,10 @@ export default class MainMenu extends HTMLElement {
       this.$menu = this.querySelector('.slice_menu');
 
       this.$menuButton.addEventListener('click', () => {
-         this.handleOpenMenu();
+         this.toggleMenu();
       });
       this.$closeButton.addEventListener('click', () => {
-         this.handleCloseMenu();
+         this.toggleMenu();
       });
 
       slice.controller.setComponentProps(this, props);
@@ -20,9 +20,7 @@ export default class MainMenu extends HTMLElement {
 
    init() {
       this.addEventListener('mouseleave', () => {
-         if (this.querySelector('.slice_menu_open')) {
-            this.handleCloseMenu();
-         }
+         this.toggleMenu();
       });
    }
 
@@ -30,13 +28,11 @@ export default class MainMenu extends HTMLElement {
       this.$menu.appendChild(value);
    }
 
-   handleOpenMenu() {
-      this.classList.add('slice_menu_open');
-   }
-
-   handleCloseMenu() {
-      this.classList.remove('slice_menu_open');
-   }
+   toggleMenu = () => {
+      const isOpen = this.classList.toggle('slice_menu_open');
+      this.$isOpen = isOpen;
+      return isOpen;
+   };
 }
 
 customElements.define('slice-mainmenu', MainMenu);
