@@ -1,4 +1,5 @@
 .codevisualizer_container {
+   position: relative;
    font-size: smaller;
    max-width: 100%;
    background-color: var(--primary-background-color);
@@ -11,4 +12,26 @@
 .codevisualizer pre code[class*='language-'],
 .codevisualizer pre pre[class*='language-'] {
    color: var(--font-primary-color);
+}
+
+.codevisualizer_container:hover .copy_code,
+.copy_code:hover label {
+   opacity: 1;
+}
+
+.codevisualizer_container .copy_code,
+.copy_code label {
+   transition: all 250ms ease;
+   cursor: pointer;
+   opacity: 0;
+}
+
+.codevisualizer_container .copy_code {
+   display: flex;
+   align-items: flex-end;
+   flex-direction: column;
+   position: absolute;
+   padding: 5px;
+   right: 0;
+   top: 0;
 }

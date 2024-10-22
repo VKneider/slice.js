@@ -34,6 +34,7 @@ const components = {
   "Documentation": "UserVisual",
   "DocumentationPage": "UserVisual",
   "InputDocumentation": "UserVisual",
+  "Installation": "UserVisual",
   "LandingMenu": "UserVisual",
   "LandingPage": "UserVisual",
   "MainMenu": "UserVisual",

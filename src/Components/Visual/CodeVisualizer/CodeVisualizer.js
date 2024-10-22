@@ -5,6 +5,7 @@ export default class CodeVisualizer extends HTMLElement {
 
       this.$container = this.querySelector('.codevisualizer_container');
       this.$code = this.querySelector('.codevisualizer');
+      this.$copyCode = this.querySelector(".copy_code");
 
       slice.controller.setComponentProps(this, props);
       this.debuggerProps = ['language', 'value'];
@@ -29,6 +30,19 @@ export default class CodeVisualizer extends HTMLElement {
 
    init() {
       this.visualizeCode();
+
+      this.$copyCode.addEventListener('click', () => {
+         const codeToCopy = this.$code.textContent; 
+         const tempTextArea = document.createElement('textarea');
+         tempTextArea.value = codeToCopy;
+         document.body.appendChild(tempTextArea);
+
+         tempTextArea.select();
+         document.execCommand("copy");
+
+         document.body.removeChild(tempTextArea);
+         alert("Código copiado al portapapeles.");
+      });
    }
 
    visualizeCode() {
