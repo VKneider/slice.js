@@ -12,9 +12,10 @@
     "slice:modify": "node node_modules/slicejs-cli/client.js modify",
     "slice:list": "node node_modules/slicejs-cli/client.js list",
     "slice:delete": "node node_modules/slicejs-cli/client.js delete",
-    "slice:start": "node ./Slice/server.js",
+    "slice:start": "node api/server.js",
     "format": "prettier --write \"**/*.js\"",
-    "run": "node ./Slice/api/server.js"
+    "run": "node api/server.js",
+    "build": "npm run"
   },
   "keywords": [],
   "author": "",
