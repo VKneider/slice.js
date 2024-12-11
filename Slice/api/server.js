@@ -7,23 +7,19 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
-const PORT = 10000;
+const PORT = 3000;
 
 // Servir archivos estáticos desde la carpeta 'Slice'
-app.use('/Slice/', express.static(path.join(__dirname, '..', 'Slice')));
+app.use('/Slice/', express.static(path.join(__dirname, '..', '..', 'Slice')));
 // Servir archivos estáticos desde la carpeta 'App'
 app.use(express.static(path.join(__dirname, '..', 'src')));
 
-app.get('/test', (req, res) => {
-   res.send(
-      `${__dirname} , ruta static: ${path.join(__dirname, '..', 'src')} y la ruta final para el index.html: ${path.join(__dirname, '..', 'src', 'App', 'index.html')}`
-   );
-});
+
 
 // Ruta para servir el index.html desde la carpeta 'App'
 app.get('*', (req, res) => {
    console.log('requesting index.html', req.url);
-   const filePath = path.join(__dirname, '..', 'src', 'App', 'index.html');
+   const filePath = path.join(__dirname, '..','..', 'src', 'App', 'index.html');
    res.sendFile(filePath);
 });
 
@@ -32,3 +28,5 @@ app.listen(PORT, () => {
 });
 
 export default app;
+
+module.exports = app;
