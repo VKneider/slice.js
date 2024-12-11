@@ -15,6 +15,11 @@ app.use('/Slice/', express.static(path.join(__dirname,'..','Slice')));
 app.use(express.static(path.join(__dirname,'..', 'src')));
 
 
+app.get('/testing', (req, res) => {
+   res.send(` Actual route in server: __dirname: ${__dirname} __filename: ${__filename} - checking if file exists: ${path.join(__dirname, '..', 'src','App', 'index.html')}`);
+});
+
+app
 
 // Ruta para servir el index.html desde la carpeta 'App'
 app.get('*', (req, res) => {
