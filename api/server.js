@@ -21,7 +21,7 @@ app.get('*', (req, res) => {
    console.log('requesting index.html', req.url);
    console.log(req.url)
    console.log(__dirname)
-   const filePath = path.join(__dirname,'..', 'src', 'App', 'index.html');
+   const filePath = path.join('App', 'index.html');
    res.sendFile(filePath);
 });
 
