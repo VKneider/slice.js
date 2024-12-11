@@ -12,10 +12,15 @@ const PORT = 3001;
 // Servir archivos estáticos desde la carpeta 'Slice'
 app.use('/Slice/', express.static(path.join(__dirname,'..','Slice')));
 // Servir archivos estáticos desde la carpeta 'App'
+
+app.get('/testing1', (req, res) => {
+   res.send(` Actual route in server: __dirname: ${__dirname} __filename: ${__filename} - checking if file exists: ${path.join(__dirname, '..', 'src','App', 'index.html')}`);
+});
+
 app.use(express.static(path.join(__dirname,'..', 'src')));
 
 
-app.get('/testing', (req, res) => {
+app.get('/testing2', (req, res) => {
    res.send(` Actual route in server: __dirname: ${__dirname} __filename: ${__filename} - checking if file exists: ${path.join(__dirname, '..', 'src','App', 'index.html')}`);
 });
 
