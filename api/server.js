@@ -7,7 +7,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
-const PORT = 3003;
+const PORT = 3000;
 
 // Servir archivos estáticos desde la carpeta 'Slice'
 app.use('/Slice/', express.static(path.join(__dirname,'..','Slice')));
