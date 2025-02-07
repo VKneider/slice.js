@@ -12,6 +12,8 @@ export default class TheSliceTeam extends HTMLElement {
 
   async init() {
 
+
+
    const navBar = await slice.build('Navbar', {
       position: 'fixed',
       logo: {
@@ -42,15 +44,17 @@ export default class TheSliceTeam extends HTMLElement {
             value: 'Change Theme',
             // color:
             onClickCallback: async () => {
+
+               let theme = slice.stylesManager.themeManager.currentTheme;
                if (theme === 'Slice') {
                   await slice.setTheme('Light');
-                  theme = 'Light';
+                  //theme = 'Light';
                } else if (theme === 'Light') {
                   await slice.setTheme('Dark');
-                  theme = 'Dark';
+                  //theme = 'Dark';
                } else if (theme === 'Dark') {
                   await slice.setTheme('Slice');
-                  theme = 'Slice';
+                  //theme = 'Slice';
                }
             },
          },
