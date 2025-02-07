@@ -1,0 +1,23 @@
+.slice_team {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  margin-top: 80px;  /* Ajusta este valor según la altura de tu navbar */
+  width: 100%;
+}
+
+.slice_team_title {
+  font-size: 2rem;
+  color: var(--font-primary-color);
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.slice_team_container {
+  display: flex;
+  flex-direction: column; /* Cambiado para que estén en columna */
+  align-items: center; /* Centrar las tarjetas */
+  gap: 1.5rem;
+  width: 100%;
+}
