@@ -211,10 +211,6 @@ export default class DocumentationPage extends HTMLElement {
          }
       }      
 
-      getRoutes(treeview.items);
-
-      console.log(documentationRoutes.items);
-
       const VisualComponentsMultiRoute = await slice.build('MultiRoute', {
          routes: documentationRoutes.items,
       });
@@ -238,6 +234,11 @@ export default class DocumentationPage extends HTMLElement {
       let theme = slice.stylesManager.themeManager.currentTheme;
 
       this.appendChild(layOut);
+
+      //if route is domain/Documentation 
+      if (window.location.pathname === '/Documentation') {
+         VisualComponentsMultiRoute.renderIfCurrentRoute();
+      }
 
    }
 
