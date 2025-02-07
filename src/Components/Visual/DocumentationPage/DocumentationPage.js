@@ -37,6 +37,11 @@ export default class DocumentationPage extends HTMLElement {
                text: 'Playground',
                path: '/Playground',
             },
+            {
+               text: 'Our Team',
+               path: '/Team',
+            }
+
          ],
          buttons: [
             {
@@ -196,9 +201,13 @@ export default class DocumentationPage extends HTMLElement {
          }
       }      
 
+      
+
       const VisualComponentsMultiRoute = await slice.build('MultiRoute', {
          routes: documentationRoutes.items,
       });
+
+
 
       const mainMenu = await slice.build('MainMenu', {});
       mainMenu.add(treeview);
