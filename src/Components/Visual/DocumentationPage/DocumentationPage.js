@@ -227,12 +227,12 @@ export default class DocumentationPage extends HTMLElement {
 
       let theme = slice.stylesManager.themeManager.currentTheme;
 
+      if (window.location.pathname === '/Documentation') {
+         await VisualComponentsMultiRoute.renderIfCurrentRoute();
+      }
       this.appendChild(layOut);
 
       //if route is domain/Documentation 
-      if (window.location.pathname === '/Documentation') {
-         VisualComponentsMultiRoute.renderIfCurrentRoute();
-      }
 
    }
 
