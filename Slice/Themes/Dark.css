@@ -4,18 +4,22 @@
   /** primary **/
   --primary-color: #0066ff;
   --primary-color-rgb: rgb(0, 102, 255);
-  --primary-background-color: #000;
+  /* Se reemplaza el negro puro por un gris muy oscuro, más cálido y agradable */
+  --primary-background-color: #282828; /* antes: #000 */
   --primary-color-contrast: #000;
-  --primary-color-shade: #222;
+  /* Ajustamos la sombra para que armonice con el fondo aclarado */
+  --primary-color-shade: #383838; /* antes: #222 */
 
   /** secondary **/
   --secondary-color: #63ccfd;
   --secondary-color-rgb: rgb(99, 204, 253);
-  --secondary-background-color: #222;
+  /* Se aclara el fondo secundario para suavizar el efecto general */
+  --secondary-background-color: #333333; /* antes: #222 */
   --secondary-color-contrast: #fff;
 
   /** tertiary **/
-  --tertiary-background-color: #444;
+  /* Se levanta ligeramente el fondo terciario para mantener la coherencia visual */
+  --tertiary-background-color: #555555; /* antes: #444 */
 
   /** success **/
   --success-color: #00ff40;
