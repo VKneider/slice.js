@@ -30,21 +30,6 @@ export default class DocumentationPage extends HTMLElement {
                path: '/',
             },
             {
-               text: 'About Us',
-               path: '',
-               type: 'dropdown',
-               options: [
-                  {
-                     text: 'Julio',
-                     path: 'https://github.com/juliograterol',
-                  },
-                  {
-                     text: 'Victor',
-                     path: 'https://github.com/VKneider',
-                  },
-               ],
-            },
-            {
                text: 'Documentation',
                path: '/Documentation',
             },
