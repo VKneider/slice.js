@@ -68,6 +68,12 @@ slice-landing-menu {
   .goToDocs {
     padding: 10px;
   }
+
+  .info {
+    bottom: 20;
+  }
+
+
 }
 @keyframes fade-in {
   0% {
