@@ -1,0 +1,104 @@
+slice-team-card {
+  display: block;
+  width: 100%;
+  max-width: 800px;
+  margin: 20px auto;
+  font-family: var(--font-family);
+}
+
+.slice_team_card {
+  display: flex;
+  align-items: center;
+  padding: 20px;
+  background: var(--primary-background-color);
+  border: 1px solid var(--medium-color);
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease-in-out;
+  width: 100%;
+}
+
+.slice_team_card:hover {
+  transform: scale(1.02);
+}
+
+/* Imagen circular */
+.team_card_image {
+  flex: 0 0 120px;
+  height: 120px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-right: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: var(--light-gray);
+}
+
+.team_card_image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+/* Contenido de la tarjeta */
+.team_card_content {
+  flex: 1;
+}
+
+.team_card_name {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--font-primary-color);
+}
+
+.team_card_role {
+  margin: 5px 0;
+  font-size: 1rem;
+  color: var(--medium-contrast);
+}
+
+.team_card_description {
+  font-size: 0.9rem;
+  color: var(--medium-contrast);
+  margin-top: 5px;
+}
+
+/* Links */
+.team_card_links {
+  margin-top: 10px;
+  display: flex;
+  gap: 10px;
+}
+
+.team_card_links a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  background: var(--primary-color);
+  color: var(--primary-color-contrast);
+  border-radius: 8px;
+  text-decoration: none;
+  transition: background 0.3s;
+  font-weight: bold;
+}
+
+.team_card_links a:hover {
+  background: var(--secondary-color);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .slice_team_card {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .team_card_image {
+    margin-bottom: 15px;
+    margin-right: 0;
+  }
+}
