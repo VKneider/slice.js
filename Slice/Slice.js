@@ -123,11 +123,11 @@ export default class Slice {
             return null;
          }
 
-         if (sliceConfig.debugger.enabled && componentCategory === 'Visual') {
+         if (componentInstance.init) await componentInstance.init();
+
+         if (sliceConfig.debugger.enabled && isVisual) {
             this.debugger.attachDebugMode(componentInstance);
          }
-
-         if (componentInstance.init) await componentInstance.init();
 
          this.controller.registerComponent(componentInstance);
          this.controller.registerComponentsRecursively(componentInstance);
@@ -168,6 +168,15 @@ async function init() {
       };
    }
 
+   if (sliceConfig.debugger.enabled) {
+      const DebuggerModule = await window.slice.getClass(
+         `${sliceConfig.paths.components}/Structural/Debugger/Debugger.js`
+      );
+      window.slice.debugger = new DebuggerModule();
+      await window.slice.debugger.enableDebugMode();
+      document.body.appendChild(window.slice.debugger);
+   }
+
    if (sliceConfig.loading.enabled) {
       const loading = await window.slice.build('Loading', {});
       window.slice.loading = loading;
@@ -180,14 +189,7 @@ async function init() {
       await window.slice.router.init();
    }
 
-   if (sliceConfig.debugger.enabled) {
-      const DebuggerModule = await window.slice.getClass(
-         `${sliceConfig.paths.components}/Structural/Debugger/Debugger.js`
-      );
-      window.slice.debugger = new DebuggerModule();
-      await window.slice.debugger.enableDebugMode();
-      document.body.appendChild(window.slice.debugger);
-   }
+   
 
    if (sliceConfig.translator.enabled) {
       const translator = await window.slice.build('Translator');
