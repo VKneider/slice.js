@@ -14,21 +14,22 @@ export default class Router {
 
    createPathToRouteMap(routes, basePath = '') {
       const pathToRouteMap = new Map();
-
+  
       for (const route of routes) {
-         const fullPath = `${basePath}${route.path}`;
-         const routeEntry = { ...route, fullPath };
-
-         pathToRouteMap.set(fullPath, routeEntry);
-
-         if (route.children) {
-            const childPathToRouteMap = this.createPathToRouteMap(route.children, fullPath);
-            routeEntry.children = childPathToRouteMap;
-         }
+          const fullPath = `${basePath}${route.path}`.replace(/\/+/g, '/'); // Normaliza las barras diagonales
+          pathToRouteMap.set(fullPath, { ...route, fullPath });
+  
+          // Si tiene rutas secundarias, también agregarlas al mapa
+          if (route.children) {
+              const childPathToRouteMap = this.createPathToRouteMap(route.children, fullPath);
+              for (const [childPath, childRoute] of childPathToRouteMap.entries()) {
+                  pathToRouteMap.set(childPath, childRoute);
+              }
+          }
       }
-
+  
       return pathToRouteMap;
-   }
+  }
 
    async renderRoutesComponentsInPage() {
       const routeContainers = document.querySelectorAll('slice-route, slice-multi-route');
@@ -75,6 +76,7 @@ export default class Router {
       if (existingComponent) {
          targetElement.innerHTML = '';
          if (existingComponent.update) {
+            existingComponent.props = { ...existingComponent.props, ...params };
             await existingComponent.update();
          }
          targetElement.appendChild(existingComponent);
@@ -96,59 +98,56 @@ export default class Router {
 
    async loadInitialRoute() {
       const path = window.location.pathname;
-      const { route, params } = this.findIfChildrenRoute();
+      const { route, params } = this.matchRoute(path);
+
       await this.handleRoute(route, params);
 
       await this.renderRoutesComponentsInPage();
    }
 
    matchRoute(path) {
-      const matchedRoute = this.pathToRouteMap.get(path);
-      if (matchedRoute) return { route: matchedRoute, params: null };
-
-      for (let route of this.routes) {
-         if (route.path.includes('*')) {
-            const basePath = route.path.split('*')[0];
-            if (path.startsWith(basePath)) {
-               const params = path.replace(basePath, '');
+      // 1. Buscar coincidencia exacta en el mapa
+      const exactMatch = this.pathToRouteMap.get(path);
+      if (exactMatch) {
+         return { route: exactMatch, params: {} };
+      }
+   
+      // 2. Buscar coincidencias en rutas con parámetros (que contengan la sintaxis `${...}`)
+      for (const [routePattern, route] of this.pathToRouteMap.entries()) {
+         if (routePattern.includes('${')) {
+            const { regex, paramNames } = this.compilePathPattern(routePattern);
+            const match = path.match(regex);
+            if (match) {
+               const params = {};
+               paramNames.forEach((name, i) => {
+                  params[name] = match[i + 1]; // El grupo 0 es la coincidencia completa
+               });
                return { route, params };
             }
          }
       }
-
-      const notFoundRoute = this.routes.find((r) => r.path === '/404');
-      return { route: notFoundRoute, params: null };
+   
+      // 3. Si no hay coincidencias, retornar la ruta 404 (suponiendo que exista)
+      const notFoundRoute = this.pathToRouteMap.get('/404');
+      return { route: notFoundRoute, params: {} };
    }
 
-   findIfChildrenRoute() {
-      const path = window.location.pathname;
-      let route = null;
-      let params = null;
+   /**
+ * Convierte un patrón de ruta con parámetros en una expresión regular.
+ * Por ejemplo, el patrón "/User/${id}" se convertirá en:
+ *   - regex: /^\/User\/([^/]+)$/
+ *   - paramNames: ['id']
+ */
+compilePathPattern(pattern) {
+   const paramNames = [];
+   // Reemplaza cada aparición de ${param} por un grupo capturador que coincida con cualquier cosa
+   // que no sea una barra (para que solo capture hasta la siguiente barra)
+   const regexPattern = '^' + pattern.replace(/\$\{([^}]+)\}/g, (_, paramName) => {
+      paramNames.push(paramName);
+      return '([^/]+)';
+   }) + '$';
 
-      for (const [key, value] of this.pathToRouteMap.entries()) {
-         if (path.startsWith(key)) {
-            route = value;
-            params = path.slice(key.length) || null;
-         }
-      }
+   return { regex: new RegExp(regexPattern), paramNames };
+}
 
-      if (!route) {
-         route = this.routes.find((r) => r.path === '/404');
-      }
-
-      return { route, params };
-   }
-
-   /*
-   verifyDynamicRouteExistence(route){
-      const routeFromMap = this.pathToRouteMap.get(route.path);
-
-      if(!routeFromMap){
-         slice.logger.logError('Router', `Route ${route.path} not found`);
-         console.log('Route not found');
-      }
-
-
-   }
-      */
 }
