@@ -27,6 +27,10 @@ const routes = [
       path: '/Docum/${category}/${id}', // Ejemplo con dos parámetros: "category" e "id"
       component: 'LandingPage',
     },
+    {
+      path:'/Team',
+      component: 'TheSliceTeam',
+    }
 ];
 
 export default routes;

@@ -38,9 +38,10 @@ const components = {
   "LandingPage": "UserVisual",
   "MainMenu": "UserVisual",
   "MyLayout": "UserVisual",
-  "MyNavBar": "UserVisual",
   "MyNavigation": "UserVisual",
   "Playground": "UserVisual",
+  "SliceTeamCard": "UserVisual",
   "SwitchDocumentation": "UserVisual",
+  "TheSliceTeam": "UserVisual",
   "WhatIsSlice": "UserVisual"
 }; export default components;
