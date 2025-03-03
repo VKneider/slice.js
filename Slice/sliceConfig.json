@@ -1,6 +1,6 @@
 {
     "debugger": {
-        "enabled": true,
+        "enabled": false,
         "click": "right"
     },
     "stylesManager":{
@@ -9,11 +9,11 @@
     "themeManager": {
         "enabled":true,
         "defaultTheme": "Slice",
-        "saveThemeLocally": true,
+        "saveThemeLocally": false,
         "useBrowserTheme": false
     },
     "logger": {
-        "enabled": false,
+        "enabled": true,
         "showLogs": {
             "console": {
                 "error": true,
@@ -26,10 +26,23 @@
         "enabled": false
     },
     "paths": {
-        "components": "/Slice/Components",
-        "themes": "/Slice/Themes",
-        "styles": "/Slice/Styles",
-        "userComponents": "/Components"
+        "components": {
+            "AppComponents":{
+                "path":"/Components/Visual",
+                "type":"Visual"
+            },
+            "Visual":{
+                "path":"/Slice/Components/Visual",
+                "type":"Visual"
+            },
+            "Service":{
+                "path":"/Slice/Components/Service",
+                "type":"Service"
+            }
+        },
+        "themes": "/Themes",
+        "styles": "/Styles",
+        "routes":"/routes.js"
     },
     "router":{
         "defaultRoute": "/",
@@ -37,7 +50,10 @@
         
     },
     "loading":{
-        "enabled": true
+        "enabled": false
+    },
+    "production": {
+        "enabled": false
     }
 }
 
