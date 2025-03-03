@@ -1,7 +1,6 @@
-import routes from './routes.js';
 
 export default class Router {
-   constructor() {
+   constructor(routes) {
       this.routes = routes;
       this.activeRoute = null;
       this.pathToRouteMap = this.createPathToRouteMap(routes);
