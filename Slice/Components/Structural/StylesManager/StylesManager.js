@@ -15,7 +15,8 @@ export default class StylesManager {
       }
 
       if (slice.themeConfig.enabled) {
-         const module = await import(`${slice.paths.components}/Structural/StylesManager/ThemeManager/ThemeManager.js`);
+         const module = await import(`${slice.paths.structuralComponentFolderPath}/StylesManager/ThemeManager/ThemeManager.js`);
+
          this.themeManager = new module.default();
          let theme;
 

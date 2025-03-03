@@ -110,39 +110,32 @@ export default class Controller {
       return this.componentCategories.get(componentSliceId);
    }
 
-   async fetchText(componentName, fileType, componentBasePath, componentCategory) {
+   async fetchText(componentName, resourceType, componentCategory, customPath) {
       try {
+         const baseUrl = window.location.origin;
+         let path;
+
          if (!componentCategory) {
             componentCategory = this.componentCategories.get(componentName);
          }
 
-         if (!componentBasePath && fileType !== 'theme' && fileType !== 'styles') {
-            if (componentCategory.includes('User')) {
-               componentBasePath = slice.paths.userComponents;
-            } else {
-               componentBasePath = slice.paths.components;
-            }
+         let isVisual = resourceType === 'html' || resourceType === 'css';
+
+         if(isVisual) {
+            path = `${slice.paths.components[componentCategory].path}/${componentName}`; 
+            resourceType === 'html' ? path += `/${componentName}.html` : path += `/${componentName}.css`;
          }
 
-         // no debe tener el / al final
-         const baseUrl = window.location.origin;
-
-         let path;
-
-         if (fileType === 'css') {
-            path = `${baseUrl}${componentBasePath}/${componentCategory}/${componentName}/${componentName}.css`;
-         }
-
-         if (fileType === 'html') {
-            path = `${baseUrl}${componentBasePath}/${componentCategory}/${componentName}/${componentName}.html`;
-         }
-
-         if (fileType === 'theme') {
+         if (resourceType === 'theme') {
             path = `${baseUrl}${slice.paths.themes}/${componentName}.css`;
          }
 
-         if (fileType === 'styles') {
+         if (resourceType === 'styles') {
             path = `${baseUrl}${slice.paths.styles}/${componentName}.css`;
+         }
+
+         if(customPath){
+            path = customPath;
          }
 
          const response = await fetch(path);
@@ -154,11 +147,14 @@ export default class Controller {
          const html = await response.text();
          return html;
       } catch (error) {
-         slice.logger.logError('Controller', `Error fetching ${fileType} for component ${componentName}:`, error);
+         slice.logger.logError('Controller', `Error fetching ${resourceType} for component ${componentName}:`, error);
          // You can also re-throw the error if you want it to propagate
          // throw error;
       }
    }
+
+  
+   
 
    setComponentProps(component, props) {
       for (const prop in props) {
