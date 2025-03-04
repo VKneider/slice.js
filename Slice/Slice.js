@@ -205,7 +205,7 @@ async function init() {
    await window.slice.stylesManager.init();
 
 
-   const routesModule = await import(slice.paths.routes);
+   const routesModule = await import(slice.paths.routesFile);
    const routes = routesModule.default;
    const RouterModule = await window.slice.getClass(`${slice.paths.structuralComponentFolderPath}/Router/Router.js`);
    window.slice.router = new RouterModule(routes);
