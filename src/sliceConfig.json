@@ -42,7 +42,7 @@
         },
         "themes": "/Themes",
         "styles": "/Styles",
-        "routesFile ":"/routes.js"
+        "routesFile":"/routes.js"
     },
     "router":{
         "defaultRoute": "/"        
