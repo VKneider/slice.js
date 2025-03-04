@@ -45,9 +45,7 @@
         "routes":"/routes.js"
     },
     "router":{
-        "defaultRoute": "/",
-        "enabled": true
-        
+        "defaultRoute": "/"        
     },
     "loading":{
         "enabled": false

@@ -178,15 +178,13 @@ async function init() {
    }
    await window.slice.stylesManager.init();
 
-   if (sliceConfig.router.enabled) {
 
-      const routesModule = await import(slice.paths.routes);
-      const routes = routesModule.default;
-
-      const RouterModule = await window.slice.getClass(`${slice.paths.structuralComponentFolderPath}/Router/Router.js`);
-      window.slice.router = new RouterModule(routes);
-      await window.slice.router.init();
-   }
+   const routesModule = await import(slice.paths.routes);
+   const routes = routesModule.default;
+   const RouterModule = await window.slice.getClass(`${slice.paths.structuralComponentFolderPath}/Router/Router.js`);
+   window.slice.router = new RouterModule(routes);
+   await window.slice.router.init();
+   
 
    if (sliceConfig.translator.enabled) {
       const translator = await window.slice.build('Translator');
