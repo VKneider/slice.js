@@ -1,11 +1,11 @@
 import Log from './Log.js';
-import sliceConfig from '../../../sliceConfig.json' with { type: 'json' };
 
 export default class Logger {
    constructor() {
       this.logs = [];
-      this.logEnabled = sliceConfig.logger.enabled;
-      this.showLogsConfig = sliceConfig.logger.showLogs;
+      this.logEnabled = slice.loggerConfig.enabled;
+      this.showLogsConfig = slice.loggerConfig.showLogs;
+      console.log(slice.loggerConfig)
 
       this.showLog = function showLog(log) {
          if (!this.showLogsConfig) return;

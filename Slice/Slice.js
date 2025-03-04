@@ -1,14 +1,16 @@
 import Controller from './Components/Structural/Controller/Controller.js';
 import StylesManager from './Components/Structural/StylesManager/StylesManager.js';
-import sliceConfig from './sliceConfig.json' with { type: 'json' };
 
 export default class Slice {
-   constructor() {
+   constructor(sliceConfig) {
       this.controller = new Controller();
       this.stylesManager = new StylesManager();
       this.paths = sliceConfig.paths;
       this.themeConfig = sliceConfig.themeManager;
       this.stylesConfig = sliceConfig.stylesManager;
+      this.loggerConfig = sliceConfig.logger;
+      this.debuggerConfig = sliceConfig.debugger;
+      this.loadingConfig = sliceConfig.loading;
    }
 
    async getClass(module) {
@@ -116,7 +118,7 @@ export default class Slice {
 
          if (componentInstance.init) await componentInstance.init();
 
-         if (sliceConfig.debugger.enabled && isVisual) {
+         if (slice.debuggerConfig.enabled && isVisual) {
             this.debugger.attachDebugMode(componentInstance);
          }
 
@@ -143,13 +145,37 @@ export default class Slice {
    attachTemplate(componentInstance) {
       this.controller.loadTemplateToComponent(componentInstance);
    }
+
+   
+}
+
+
+async function loadConfig(){
+   try {
+      const response = await fetch('/sliceConfig.json'); // 🔹 Express lo sirve desde `src/`
+      if (!response.ok) throw new Error('Error loading sliceConfig.json');
+      const json = await response.json();
+      console.log(json)
+      return json;
+  } catch (error) {
+      console.error(`Error loading config file: ${error.message}`);
+      return null;
+  }
 }
 
 async function init() {
 
+   const sliceConfig = await loadConfig();
+   if (!sliceConfig) {
+      //Display error message in console with colors and alert in english
+      console.error('%c⛔️ Error loading Slice configuration ⛔️', 'color: red; font-size: 20px;');
+      alert('Error loading Slice configuration');
+      return;
+   }
    
-   window.slice = new Slice();
-   
+
+   window.slice = new Slice(sliceConfig);
+
    slice.paths.structuralComponentFolderPath = "/Slice/Components/Structural"; 
 
    if (sliceConfig.logger.enabled) {
