@@ -28,15 +28,15 @@
     "paths": {
         "components": {
             "AppComponents":{
-                "path":"/Components/Visual",
+                "path":"/Components/AppComponents",
                 "type":"Visual"
             },
             "Visual":{
-                "path":"/Slice/Components/Visual",
+                "path":"/Components/Visual",
                 "type":"Visual"
             },
             "Service":{
-                "path":"/Slice/Components/Service",
+                "path":"/Components/Service",
                 "type":"Service"
             }
         },
