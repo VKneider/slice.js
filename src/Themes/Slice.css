@@ -1,42 +1,47 @@
 :root {
   /* Tipografía */
-  --font-primary-color: #2e7d32; /* Verde oscuro, inspirado en la naturaleza */
+  --font-primary-color: #6D2323; /* Rojo profundo para los textos principales */
+  --font-secondary-color: #A31D1D; /* Rojo más intenso para destacar */
+  
+  /** Primary - Colores cálidos **/
+  --primary-color: #A31D1D; /* Rojo oscuro pero sofisticado */
+  --primary-color-rgb: 163, 29, 29;
+  --primary-background-color: #FEF9E1; /* Beige suave para el fondo, cálido y acogedor */
+  --primary-color-contrast: #ffffff; /* Contraste blanco para claridad */
+  --primary-color-shade: #6D2323; /* Rojo más oscuro para énfasis */
 
-  /** primary **/
-  --primary-color: #388e3c; /* Verde intenso */
-  --primary-color-rgb: 56, 142, 60;
-  --primary-background-color: #e8f5e9; /* Fondo verde claro suave */
-  --primary-color-contrast: #ffffff; /* Contraste blanco */
-  --primary-color-shade: #2c6f28; /* Verde más oscuro para énfasis */
+  /** Secondary - Color cálido y elegante **/
+  --secondary-color: #E5D0AC; /* Beige cálido y suave */
+  --secondary-color-rgb: 229, 208, 172;
+  --secondary-background-color: #FEF9E1; /* Fondo claro para resaltar los elementos */
+  --secondary-color-contrast: #6D2323; /* Contraste con el rojo más oscuro */
 
-  /** secondary **/
-  --secondary-color: #81c784; /* Verde pasto claro */
-  --secondary-color-rgb: 129, 199, 132;
-  --secondary-background-color: #c8e6c9; /* Fondo verde muy suave */
-  --secondary-color-contrast: #000000;
+  /** Tertiary - Colores neutros pero sofisticados **/
+  --tertiary-background-color: #F5E0C7; /* Beige un poco más oscuro para balancear el diseño */
 
-  /** tertiary **/
-  --tertiary-background-color: #66bb6a; /* Verde intermedio */
-
-  /** success **/
-  --success-color: #43a047; /* Verde medio para éxito */
+  /** Success - Verde suave para mensajes positivos **/
+  --success-color: #4CAF50; /* Verde natural para dar un toque de frescura */
   --success-contrast: #ffffff;
 
-  /** warning **/
-  --warning-color: #ffeb3b; /* Amarillo brillante para contraste */
-  --warning-contrast: #000000;
+  /** Warning - Amarillo suave para advertencias sutiles **/
+  --warning-color: #FFB74D;
+  --warning-contrast: #4e342e;
 
-  /** danger **/
-  --danger-color: #e74c3c; /* Rojo para peligro */
+  /** Danger - Rojo más suave para alertas pero no tan fuerte **/
+  --danger-color: #6D2323; /* Rojo profundo para peligros o advertencias */
   --danger-contrast: #ffffff;
 
-  /** medium **/
-  --medium-color: #9e9e9e; /* Gris medio */
+  /** Medium - Gris cálido para textos secundarios **/
+  --medium-color: #A89F91;
   --medium-contrast: #000000;
 
-  /* Disabled */
-  --disabled-color: #a5d6a7; /* Verde pastel suave para elementos deshabilitados */
+  /* Disabled - Un color claro para elementos deshabilitados */
+  --disabled-color: #E6E0B9;
 
-  /** accent **/
-  --accent-color: #4caf50; /* Verde brillante para acentos */
+  /** Accent - Un toque cálido y sutil **/
+  --accent-color: #C75B5B;
+
+  /* Sombras suaves para dar profundidad */
+  --box-shadow-primary: 0px 4px 10px rgba(163, 29, 29, 0.1);
+  --box-shadow-secondary: 0px 3px 8px rgba(109, 35, 35, 0.1);
 }

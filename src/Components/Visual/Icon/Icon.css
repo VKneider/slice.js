@@ -1,11 +1,11 @@
 @font-face {
   font-family: "slc";
-  src: url('./Components/Visual/Icon/slc.eot?t=1714090352079'); /* IE9*/
-  src: url('./Components/Visual/Icon/slc.eot?t=1714090352079#iefix') format('embedded-opentype'), /* IE6-IE8 */
-  url("./Components/Visual/Icon/slc.woff2?t=1714090352079") format("woff2"),
-  url("./Components/Visual/Icon/slc.woff?t=1714090352079") format("woff"),
-  url('./Components/Visual/Icon/slc.ttf?t=1714090352079') format('truetype'), /* chrome, firefox, opera, Safari, Android, iOS 4.2+*/
-  url('./Components/Visual/Icon/slc.svg?t=1714090352079#slc') format('svg'); /* iOS 4.1- */
+  src: url('/Components/Visual/Icon/slc.eot?t=1714090352079'); /* IE9 */
+  src: url('/Components/Visual/Icon/slc.eot?t=1714090352079#iefix') format('embedded-opentype'),
+       url("/Components/Visual/Icon/slc.woff2?t=1714090352079") format("woff2"),
+       url("/Components/Visual/Icon/slc.woff?t=1714090352079") format("woff"),
+       url('/Components/Visual/Icon/slc.ttf?t=1714090352079') format('truetype'),
+       url('/Components/Visual/Icon/slc.svg?t=1714090352079#slc') format('svg'); /* iOS 4.1- */
 }
 
 [class^="slc-"], [class*=" slc-"] {
