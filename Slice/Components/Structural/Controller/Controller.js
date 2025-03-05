@@ -1,4 +1,4 @@
-import components from '../../components.js';
+import components from '/Components/components.js';
 
 export default class Controller {
    constructor() {
