@@ -1,1 +1,1 @@
-{ "version": 2, "rewrites": [{ "source": "/(.*)", "destination": "/api/" }] }
+{ "version": 2, "rewrites": [{ "source": "/(.*)", "destination": "node_modules/api/slicejs-web-framework/api/" }] }

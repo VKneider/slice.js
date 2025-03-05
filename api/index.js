@@ -6,7 +6,7 @@ import inquirer from 'inquirer';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-import sliceConfig from '../src/sliceConfig.json' assert { type: 'json' };
+import sliceConfig from '../../../src/sliceConfig.json' assert { type: 'json' };
 
 let server;
 
@@ -27,7 +27,7 @@ app.get('/testing1', (req, res) => {
 });
 
 
-app.use(express.static(path.join(__dirname,'..', folderDeployed)));
+app.use(express.static(path.join(__dirname,'../','../', '../', folderDeployed)));
 
 
 app.get('/testing2', (req, res) => {
@@ -41,7 +41,7 @@ if(isProduction){
 
 // Ruta para servir el index.html desde la carpeta 'App'
 app.get('*', (req, res) => {
-   const filePath = path.join(__dirname, '..', 'src','App', 'index.html');
+   const filePath = path.join(__dirname, '../','../', '../', 'src','App', 'index.html');
    res.sendFile(filePath);
 });
 
