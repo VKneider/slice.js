@@ -1,6 +1,6 @@
 {
   "name": "slicejs-web-framework",
-  "version": "1.0.5",
+  "version": "1.0.7",
   "description": "",
   "engines": {
     "node": "20.x"
@@ -17,16 +17,12 @@
     "development": "npm run",
     "slice:modify": "node node_modules/slicejs-cli/client.js modify"
   },
-  "bin": {
-    "slice": "./node_modules/slicejs-cli/client.js"
-  },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "module",
   "dependencies": {
-    "express": "^4.19.2",
-    "slicejs-cli": "^2.0.3"
+    "express": "^4.19.2"
   },
   "devDependencies": {
     "prettier": "3.3.3"
