@@ -17,8 +17,10 @@ const isProduction = sliceConfig.production === true;
 const folderDeployed = isProduction ? 'dist' : 'src';
 
 // Servir archivos estáticos desde la carpeta 'Slice'
-app.use('/Slice/', express.static(path.join(__dirname,'..','Slice')));
+app.use('/Slice/', express.static(path.join(__dirname, '..', 'node_modules', 'slicejs-web-framework', 'Slice')));
 // Servir archivos estáticos desde la carpeta 'App'
+
+
 
 
 
