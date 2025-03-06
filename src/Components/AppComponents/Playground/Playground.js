@@ -22,21 +22,6 @@ export default class Playground extends HTMLElement {
                path: '/',
             },
             {
-               text: 'About Us',
-               path: '',
-               type: 'dropdown',
-               options: [
-                  {
-                     text: 'Julio',
-                     path: 'https://github.com/juliograterol',
-                  },
-                  {
-                     text: 'Victor',
-                     path: 'https://github.com/VKneider',
-                  },
-               ],
-            },
-            {
                text: 'Documentation',
                path: '/Documentation',
             },
@@ -44,6 +29,10 @@ export default class Playground extends HTMLElement {
                text: 'Playground',
                path: '/Playground',
             },
+            {
+               text: 'Our Team',
+               path: '/Team',
+            }
          ],
          buttons: [
             {

@@ -1,9 +1,8 @@
-import sliceConfig from '../../../sliceConfig.json' with { type: 'json' };
 
 export default class Debugger extends HTMLElement {
    constructor() {
       super();
-      this.toggleClick = sliceConfig.debugger.click;
+      this.toggleClick = slice.debuggerConfig.click;
       this.toggle = 'click';
       this.selectedComponentSliceId = null;
       this.isActive = false;

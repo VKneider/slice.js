@@ -1,6 +1,6 @@
 {
-  "name": "slice-web-framework",
-  "version": "1.0.0",
+  "name": "slicejs-web-framework",
+  "version": "1.0.5",
   "description": "",
   "engines": {
     "node": "20.x"
@@ -8,13 +8,17 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "slice:init": "node node_modules/slicejs-cli/client.js init",
-    "slice:create": "node node_modules/slicejs-cli/client.js create",
-    "slice:modify": "node node_modules/slicejs-cli/client.js modify",
-    "slice:list": "node node_modules/slicejs-cli/client.js list",
-    "slice:delete": "node node_modules/slicejs-cli/client.js delete",
-    "slice:start": "node ./Slice/server.js",
+    "slice:create": "node node_modules/slicejs-cli/client.js component create",
+    "slice:delete": "node node_modules/slicejs-cli/client.js component delete",
+    "slice:list": "node node_modules/slicejs-cli/client.js component list",
+    "slice:start": "node api/index.js",
     "format": "prettier --write \"**/*.js\"",
-    "run": "node ./Slice/server.js"
+    "run": "node api/index.js",
+    "development": "npm run",
+    "slice:modify": "node node_modules/slicejs-cli/client.js modify"
+  },
+  "bin": {
+    "slice": "./node_modules/slicejs-cli/client.js"
   },
   "keywords": [],
   "author": "",
@@ -22,12 +26,12 @@
   "type": "module",
   "dependencies": {
     "express": "^4.19.2",
-    "slicejs-cli": "1.0.54"
+    "slicejs-cli": "^2.0.3"
   },
   "devDependencies": {
     "prettier": "3.3.3"
   },
-  "prettier":{
+  "prettier": {
     "trailingComma": "es5",
     "tabWidth": 3,
     "semi": true,

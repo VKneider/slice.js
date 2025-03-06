@@ -1,0 +1,47 @@
+:root {
+  /* Tipografía */
+  --font-primary-color: #6D2323; /* Rojo profundo para los textos principales */
+  --font-secondary-color: #A31D1D; /* Rojo más intenso para destacar */
+  
+  /** Primary - Colores cálidos **/
+  --primary-color: #A31D1D; /* Rojo oscuro pero sofisticado */
+  --primary-color-rgb: 163, 29, 29;
+  --primary-background-color: #FEF9E1; /* Beige suave para el fondo, cálido y acogedor */
+  --primary-color-contrast: #ffffff; /* Contraste blanco para claridad */
+  --primary-color-shade: #6D2323; /* Rojo más oscuro para énfasis */
+
+  /** Secondary - Color cálido y elegante **/
+  --secondary-color: #E5D0AC; /* Beige cálido y suave */
+  --secondary-color-rgb: 229, 208, 172;
+  --secondary-background-color: #FEF9E1; /* Fondo claro para resaltar los elementos */
+  --secondary-color-contrast: #6D2323; /* Contraste con el rojo más oscuro */
+
+  /** Tertiary - Colores neutros pero sofisticados **/
+  --tertiary-background-color: #F5E0C7; /* Beige un poco más oscuro para balancear el diseño */
+
+  /** Success - Verde suave para mensajes positivos **/
+  --success-color: #4CAF50; /* Verde natural para dar un toque de frescura */
+  --success-contrast: #ffffff;
+
+  /** Warning - Amarillo suave para advertencias sutiles **/
+  --warning-color: #FFB74D;
+  --warning-contrast: #4e342e;
+
+  /** Danger - Rojo más suave para alertas pero no tan fuerte **/
+  --danger-color: #6D2323; /* Rojo profundo para peligros o advertencias */
+  --danger-contrast: #ffffff;
+
+  /** Medium - Gris cálido para textos secundarios **/
+  --medium-color: #A89F91;
+  --medium-contrast: #000000;
+
+  /* Disabled - Un color claro para elementos deshabilitados */
+  --disabled-color: #E6E0B9;
+
+  /** Accent - Un toque cálido y sutil **/
+  --accent-color: #C75B5B;
+
+  /* Sombras suaves para dar profundidad */
+  --box-shadow-primary: 0px 4px 10px rgba(163, 29, 29, 0.1);
+  --box-shadow-secondary: 0px 3px 8px rgba(109, 35, 35, 0.1);
+}

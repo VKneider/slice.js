@@ -1,0 +1,28 @@
+# Ignorar la carpeta de configuración y editor
+.vscode/
+
+# Ignorar la carpeta de dependencias
+node_modules/
+
+# Ignorar las imágenes del README (o cualquier otro contenido no relacionado)
+readme_images/
+
+# Ignorar los archivos de documentación y carpeta de API
+docs/
+
+
+# Ignorar el código fuente no necesario para la publicación
+
+
+# Ignorar el archivo de configuración personal de git
+.gitignore
+
+# Ignorar el archivo de configuración de Vercel (si no es necesario para la publicación)
+vercel.json
+
+# Ignorar archivos de lock o configuraciones de pruebas locales
+package-lock.json
+
+# Ignorar otros archivos innecesarios
+*.md
+*.log

@@ -2,6 +2,11 @@ slice-landing-menu {
   h1 {
     z-index: 0;
   }
+
+  h2{
+    color: var(--font-primary-color);
+  }
+
   .sliceLogo {
     position: absolute;
     z-index: -1;
@@ -63,6 +68,12 @@ slice-landing-menu {
   .goToDocs {
     padding: 10px;
   }
+
+  .info {
+    bottom: 20;
+  }
+
+
 }
 @keyframes fade-in {
   0% {

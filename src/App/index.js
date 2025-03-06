@@ -1,4 +1,4 @@
-import Slice from '../../Slice/Slice.js';
+import Slice from '/Slice/Slice.js';
 
 const CACHE_NAME = 'slice-cache-v1';
 const urlsToCache = [

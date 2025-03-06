@@ -1,14 +1,16 @@
 import Controller from './Components/Structural/Controller/Controller.js';
 import StylesManager from './Components/Structural/StylesManager/StylesManager.js';
-import sliceConfig from './sliceConfig.json' with { type: 'json' };
 
 export default class Slice {
-   constructor() {
+   constructor(sliceConfig) {
       this.controller = new Controller();
       this.stylesManager = new StylesManager();
       this.paths = sliceConfig.paths;
       this.themeConfig = sliceConfig.themeManager;
       this.stylesConfig = sliceConfig.stylesManager;
+      this.loggerConfig = sliceConfig.logger;
+      this.debuggerConfig = sliceConfig.debugger;
+      this.loadingConfig = sliceConfig.loading;
    }
 
    async getClass(module) {
@@ -51,23 +53,14 @@ export default class Slice {
          return null;
       }
 
-      let componentBasePath;
-
-      if (componentCategory.includes('User')) {
-         componentCategory = componentCategory.replace('User', '');
-         componentBasePath = this.paths.userComponents;
-      } else {
-         componentBasePath = this.paths.components;
-      }
-
-      const isVisual = componentCategory === 'Visual';
-      let modulePath = `${componentBasePath}/${componentCategory}/${componentName}/${componentName}.js`;
+      let isVisual = slice.paths.components[componentCategory].type === "Visual";     
+      let modulePath = `${slice.paths.components[componentCategory].path}/${componentName}/${componentName}.js`;
 
       // Load template, class, and CSS concurrently if needed
       try {
          const loadTemplate =
             isVisual && !this.controller.templates.has(componentName)
-               ? this.controller.fetchText(componentName, 'html', componentBasePath, componentCategory)
+               ? this.controller.fetchText(componentName, 'html', componentCategory)
                : Promise.resolve(null);
 
          const loadClass = !this.controller.classes.has(componentName)
@@ -76,7 +69,7 @@ export default class Slice {
 
          const loadCSS =
             isVisual && !this.controller.requestedStyles.has(componentName)
-               ? this.controller.fetchText(componentName, 'css', componentBasePath, componentCategory)
+               ? this.controller.fetchText(componentName, 'css', componentCategory)
                : Promise.resolve(null);
 
          const [html, ComponentClass, css] = await Promise.all([loadTemplate, loadClass, loadCSS]);
@@ -123,11 +116,11 @@ export default class Slice {
             return null;
          }
 
-         if (sliceConfig.debugger.enabled && componentCategory === 'Visual') {
+         if (componentInstance.init) await componentInstance.init();
+
+         if (slice.debuggerConfig.enabled && isVisual) {
             this.debugger.attachDebugMode(componentInstance);
          }
-
-         if (componentInstance.init) await componentInstance.init();
 
          this.controller.registerComponent(componentInstance);
          this.controller.registerComponentsRecursively(componentInstance);
@@ -152,13 +145,41 @@ export default class Slice {
    attachTemplate(componentInstance) {
       this.controller.loadTemplateToComponent(componentInstance);
    }
+
+   
+}
+
+
+async function loadConfig(){
+   try {
+      const response = await fetch('/sliceConfig.json'); // 🔹 Express lo sirve desde `src/`
+      if (!response.ok) throw new Error('Error loading sliceConfig.json');
+      const json = await response.json();
+      console.log(json)
+      return json;
+  } catch (error) {
+      console.error(`Error loading config file: ${error.message}`);
+      return null;
+  }
 }
 
 async function init() {
-   window.slice = new Slice();
+
+   const sliceConfig = await loadConfig();
+   if (!sliceConfig) {
+      //Display error message in console with colors and alert in english
+      console.error('%c⛔️ Error loading Slice configuration ⛔️', 'color: red; font-size: 20px;');
+      alert('Error loading Slice configuration');
+      return;
+   }
+   
+
+   window.slice = new Slice(sliceConfig);
+
+   slice.paths.structuralComponentFolderPath = "/Slice/Components/Structural"; 
 
    if (sliceConfig.logger.enabled) {
-      const LoggerModule = await window.slice.getClass(`${sliceConfig.paths.components}/Structural/Logger/Logger.js`);
+      const LoggerModule = await window.slice.getClass(`${slice.paths.structuralComponentFolderPath}/Logger/Logger.js`);
       window.slice.logger = new LoggerModule();
    } else {
       window.slice.logger = {
@@ -168,32 +189,36 @@ async function init() {
       };
    }
 
-   if (sliceConfig.loading.enabled) {
-      const loading = await window.slice.build('Loading', {});
-      window.slice.loading = loading;
-   }
-   await window.slice.stylesManager.init();
-
-   if (sliceConfig.router.enabled) {
-      const RouterModule = await window.slice.getClass(`${sliceConfig.paths.components}/Structural/Router/Router.js`);
-      window.slice.router = new RouterModule();
-      await window.slice.router.init();
-   }
-
    if (sliceConfig.debugger.enabled) {
       const DebuggerModule = await window.slice.getClass(
-         `${sliceConfig.paths.components}/Structural/Debugger/Debugger.js`
+         `${slice.paths.structuralComponentFolderPath}/Debugger/Debugger.js`
       );
       window.slice.debugger = new DebuggerModule();
       await window.slice.debugger.enableDebugMode();
       document.body.appendChild(window.slice.debugger);
    }
 
+   if (sliceConfig.loading.enabled) {
+      const loading = await window.slice.build('Loading', {});
+      window.slice.loading = loading;
+   }
+   await window.slice.stylesManager.init();
+
+
+   const routesModule = await import(slice.paths.routesFile);
+   const routes = routesModule.default;
+   const RouterModule = await window.slice.getClass(`${slice.paths.structuralComponentFolderPath}/Router/Router.js`);
+   window.slice.router = new RouterModule(routes);
+   await window.slice.router.init();
+   
+
    if (sliceConfig.translator.enabled) {
       const translator = await window.slice.build('Translator');
       window.slice.translator = translator;
       window.slice.logger.logInfo('Slice', 'Translator succesfuly enabled');
    }
+
+
 }
 
 await init();

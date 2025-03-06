@@ -30,21 +30,6 @@ export default class DocumentationPage extends HTMLElement {
                path: '/',
             },
             {
-               text: 'About Us',
-               path: '',
-               type: 'dropdown',
-               options: [
-                  {
-                     text: 'Julio',
-                     path: 'https://github.com/juliograterol',
-                  },
-                  {
-                     text: 'Victor',
-                     path: 'https://github.com/VKneider',
-                  },
-               ],
-            },
-            {
                text: 'Documentation',
                path: '/Documentation',
             },
@@ -52,6 +37,11 @@ export default class DocumentationPage extends HTMLElement {
                text: 'Playground',
                path: '/Playground',
             },
+            {
+               text: 'Our Team',
+               path: '/Team',
+            }
+
          ],
          buttons: [
             {
@@ -211,13 +201,13 @@ export default class DocumentationPage extends HTMLElement {
          }
       }      
 
-      getRoutes(treeview.items);
-
-      console.log(documentationRoutes.items);
+      
 
       const VisualComponentsMultiRoute = await slice.build('MultiRoute', {
          routes: documentationRoutes.items,
       });
+
+
 
       const mainMenu = await slice.build('MainMenu', {});
       mainMenu.add(treeview);
@@ -237,7 +227,12 @@ export default class DocumentationPage extends HTMLElement {
 
       let theme = slice.stylesManager.themeManager.currentTheme;
 
+      if (window.location.pathname === '/Documentation') {
+         await VisualComponentsMultiRoute.renderIfCurrentRoute();
+      }
       this.appendChild(layOut);
+
+      //if route is domain/Documentation 
 
    }
 
