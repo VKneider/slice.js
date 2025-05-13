@@ -1,9 +1,9 @@
 {
   "name": "slicejs-web-framework",
-  "version": "1.0.14",
+  "version": "1.0.16",
   "description": "",
   "engines": {
-    "node": "20.x"
+    "node": ">=20"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
