@@ -6,7 +6,7 @@ import inquirer from 'inquirer';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-import sliceConfig from '../src/sliceConfig.json' assert { type: 'json' };
+import sliceConfig from '../src/sliceConfig.json' with { type: 'json' };
 
 let server;
 
