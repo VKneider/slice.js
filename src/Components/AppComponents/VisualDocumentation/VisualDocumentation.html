@@ -1,0 +1,67 @@
+<h1 id="visualComponents">Visual Components</h1>
+
+<p>
+  Visual components in Slice.js are the building blocks of your user interface. These components use the Web Components API, extending <code>HTMLElement</code> to create custom elements that can be used directly in your HTML markup.
+</p>
+
+<h2 id="visualComponentOverview">What are Visual Components?</h2>
+<p>
+  Visual components in Slice.js:
+</p>
+<ul>
+  <li>Render visible UI elements that users can interact with</li>
+  <li>Encapsulate HTML structure, CSS styling, and JavaScript behavior</li>
+  <li>Follow a consistent lifecycle pattern and property management</li>
+  <li>Can be composed together to build complex interfaces</li>
+</ul>
+
+<h2 id="buildingVisualComponents">Building Visual Components</h2>
+<p>
+  Visual components are created using the <code>slice.build()</code> method, which handles template loading, styling, and instance creation:
+</p>
+<div class="visual-build-example"></div>
+
+<h2 id="visualComponentStructure">Visual Component Structure</h2>
+<p>
+  Each visual component consists of three key files:
+</p>
+<ul>
+  <li><strong>ComponentName.js</strong> - The JavaScript class that defines behavior and properties</li>
+  <li><strong>ComponentName.html</strong> - The HTML template that defines structure</li>
+  <li><strong>ComponentName.css</strong> - The CSS styles specific to the component</li>
+</ul>
+
+<h2 id="visualComponentLifecycle">Component Lifecycle</h2>
+<p>
+  Visual components follow a standard lifecycle with two key async methods:
+</p>
+<ol>
+  <li><strong>constructor(props)</strong> - Initialize the component and set up event listeners</li>
+  <li><strong>async init()</strong> - Called once after construction to set default values and perform additional initialization</li>
+  <li><strong>async update()</strong> - Called every time the component is rendered, allowing you to refresh data and update the UI</li>
+  <li><strong>Property getters/setters</strong> - Manage the component's state and update the DOM accordingly</li>
+</ol>
+
+<p>Example component implementation with lifecycle methods:</p>
+<div class="visual-lifecycle-example"></div>
+
+<h2 id="nestedComponents">Creating Components Within Components</h2>
+<p>
+  One of the key advantages of Slice.js is the ability to compose complex UIs by nesting components within each other. Here's how to create and manage nested components:
+</p>
+<div class="nested-components-example"></div>
+
+<p>Usage example with nested components:</p>
+<div class="nested-components-usage"></div>
+
+<h3>Key concepts for nesting components:</h3>
+<ul>
+  <li><strong>Async initialization</strong>: Use async/await in the init() method to ensure child components are fully built</li>
+  <li><strong>Component communication</strong>: Pass data down to child components via props or use custom events for child-to-parent communication</li>
+  <li><strong>DOM management</strong>: Store references to child components for later access and manipulation</li>
+  <li><strong>Lifecycle coordination</strong>: Ensure parent updates trigger child updates when needed</li>
+</ul>
+
+<h2 id="visualComponentsFaq">Frequently Asked Questions</h2>
+<p>Common questions about working with Visual Components in Slice.js:</p>
+<div class="faq-section"></div>

@@ -1,0 +1,98 @@
+<h1 id="structuralComponents">Structural Components</h1>
+
+<p>
+  Structural components form the backbone of the Slice.js framework. They provide core functionality like component management, routing, styling, logging, and debugging. Unlike Visual or Service components, Structural components are typically pre-initialized by the framework and accessed through the global <code>slice</code> object.
+</p>
+
+<h2 id="controllerComponent">Controller</h2>
+<p>
+  The Controller manages all component instances, handles component registration, and provides the <code>build()</code> method for creating new components.
+</p>
+
+<h3>Key responsibilities:</h3>
+<ul>
+  <li>Component registration and lifecycle management</li>
+  <li>Template and class loading</li>
+  <li>Component construction and property management</li>
+  <li>Component caching and referencing</li>
+</ul>
+
+<h3>Developer usage:</h3>
+<div class="controller-example"></div>
+
+<h2 id="routerComponent">Router</h2>
+<p>
+  The Router handles navigation between different views in your application, supporting both history-based navigation and route parameters.
+</p>
+
+<h3>Key responsibilities:</h3>
+<ul>
+  <li>Route registration and matching</li>
+  <li>History management and navigation</li>
+  <li>Dynamic route parameters</li>
+  <li>Integration with Route and MultiRoute components</li>
+</ul>
+
+<h3>Developer usage:</h3>
+<div class="router-example"></div>
+
+<h2 id="stylesManagerComponent">StylesManager</h2>
+<p>
+  The StylesManager handles global styles and themes, allowing for dynamic theme switching and consistent styling across the application.
+</p>
+
+<h3>Key responsibilities:</h3>
+<ul>
+  <li>Theme loading and application</li>
+  <li>Component style registration</li>
+  <li>Global style management</li>
+  <li>Theme persistence</li>
+</ul>
+
+<h3>Developer usage:</h3>
+<div class="styles-manager-example"></div>
+
+<h2 id="loggerComponent">Logger</h2>
+<p>
+  The Logger provides a consistent way to log information, warnings, and errors throughout your application.
+</p>
+
+<h3>Key responsibilities:</h3>
+<ul>
+  <li>Error, warning, and info logging</li>
+  <li>Log filtering and retrieval</li>
+  <li>Structured logging with component context</li>
+  <li>Configurable output channels</li>
+</ul>
+
+<h3>Developer usage:</h3>
+<div class="logger-example"></div>
+
+<h2 id="debuggerComponent">Debugger</h2>
+<p>
+  The Debugger provides development tools for inspecting and manipulating components at runtime.
+</p>
+
+<h3>Key responsibilities:</h3>
+<ul>
+  <li>Component property inspection</li>
+  <li>Live property editing</li>
+  <li>Debugging interface</li>
+</ul>
+
+<h3>Developer usage:</h3>
+<div class="debugger-example"></div>
+
+<h2 id="structuralComponentsConfig">Configuration</h2>
+<p>
+  Structural components are primarily configured through the <code>sliceConfig.json</code> file at the root of your project. This allows you to:
+</p>
+<ul>
+  <li>Enable or disable specific features</li>
+  <li>Set default options and behaviors</li>
+  <li>Configure paths and resource locations</li>
+  <li>Control logging, debugging, and theming behavior</li>
+</ul>
+
+<h2 id="structuralComponentsFaq">Frequently Asked Questions</h2>
+<div class="faq-section"></div>

@@ -10,6 +10,19 @@ const routes = [
             component: 'WhatIsSlice',
          },
          {
+            path:'/Visual',
+            component: 'VisualDocumentation',
+         },
+         {
+            path:'/Service',
+            component: 'ServiceDocumentation',
+         },
+         {
+            path:'/Structural',
+            component: 'StructuralDocumentation',
+         },
+
+         {
             path:'/Themes',
             component: 'ThemesDocumentation',
          },

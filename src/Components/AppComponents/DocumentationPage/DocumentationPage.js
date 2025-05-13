@@ -48,8 +48,8 @@ export default class DocumentationPage extends HTMLElement {
                      },
                      {
                         title: 'Services',
-                        path: '/Documentation/Services',
-                        component: 'ServicesDocumentation'
+                        path: '/Documentation/Service',
+                        component: 'ServiceDocumentation'
                      },
                      {
                         title: 'Lifecycle methods',

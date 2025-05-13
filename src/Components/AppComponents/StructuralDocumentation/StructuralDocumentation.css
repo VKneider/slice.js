@@ -1,0 +1,72 @@
+slice-structuraldocumentation {
+  color: var(--font-primary-color);
+  font-family: var(--font-family);
+}
+
+slice-structuraldocumentation h1,
+slice-structuraldocumentation h2,
+slice-structuraldocumentation h3 {
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+slice-structuraldocumentation p {
+  line-height: 1.6;
+  margin: 1em 0;
+}
+
+slice-structuraldocumentation ul,
+slice-structuraldocumentation ol {
+  margin: 1em 0;
+  padding-left: 2em;
+}
+
+slice-structuraldocumentation li {
+  margin-bottom: 0.5em;
+}
+
+slice-structuraldocumentation code {
+  font-family: monospace;
+  background-color: var(--secondary-background-color);
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+
+slice-structuraldocumentation .controller-example,
+slice-structuraldocumentation .router-example,
+slice-structuraldocumentation .styles-manager-example,
+slice-structuraldocumentation .logger-example,
+slice-structuraldocumentation .debugger-example {
+  margin: 1.5em 0;
+}
+
+slice-structuraldocumentation strong {
+  color: var(--primary-color);
+}
+
+slice-structuraldocumentation .faq-section {
+  margin: 2em 0;
+}
+
+slice-structuraldocumentation .faq-section slice-details {
+  margin-bottom: 1em;
+}
+
+slice-structuraldocumentation h2 {
+  border-bottom: 1px solid var(--primary-color-shade);
+  padding-bottom: 0.3em;
+}
+
+slice-structuraldocumentation h3 {
+  color: var(--primary-color);
+}
+
+slice-structuraldocumentation .structural-component {
+  border-left: 3px solid var(--primary-color);
+  padding-left: 1em;
+  margin: 2em 0;
+  background-color: var(--secondary-background-color);
+  border-radius: 0 var(--border-radius-slice) var(--border-radius-slice) 0;
+  padding: 0.5em 1em;
+}
