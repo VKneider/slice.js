@@ -44,5 +44,6 @@ const components = {
   "IndexedDbManager": "Service",
   "Link": "Service",
   "LocalStorageManager": "Service",
-  "Translator": "Service"
+  "Translator": "Service",
+  "StructuralDocumentation": "AppComponents",
 }; export default components;
