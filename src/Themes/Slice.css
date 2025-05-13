@@ -1,47 +1,47 @@
 :root {
   /* Tipografía */
-  --font-primary-color: #6D2323; /* Rojo profundo para los textos principales */
-  --font-secondary-color: #A31D1D; /* Rojo más intenso para destacar */
-  
-  /** Primary - Colores cálidos **/
-  --primary-color: #A31D1D; /* Rojo oscuro pero sofisticado */
-  --primary-color-rgb: 163, 29, 29;
-  --primary-background-color: #FEF9E1; /* Beige suave para el fondo, cálido y acogedor */
-  --primary-color-contrast: #ffffff; /* Contraste blanco para claridad */
-  --primary-color-shade: #6D2323; /* Rojo más oscuro para énfasis */
+  --font-primary-color: #2E1A47; /* Uva oscuro, elegante para lectura */
+  --font-secondary-color: #7D3AC1; /* Uva brillante para títulos y resaltes */
 
-  /** Secondary - Color cálido y elegante **/
-  --secondary-color: #E5D0AC; /* Beige cálido y suave */
-  --secondary-color-rgb: 229, 208, 172;
-  --secondary-background-color: #FEF9E1; /* Fondo claro para resaltar los elementos */
-  --secondary-color-contrast: #6D2323; /* Contraste con el rojo más oscuro */
+  /** Primary - Uva intenso **/
+  --primary-color: #7D3AC1;
+  --primary-color-rgb: 125, 58, 193;
+  --primary-background-color: #F8F4FF; /* Lila muy claro como fondo principal */
+  --primary-color-contrast: #ffffff;
+  --primary-color-shade: #4E2279;
 
-  /** Tertiary - Colores neutros pero sofisticados **/
-  --tertiary-background-color: #F5E0C7; /* Beige un poco más oscuro para balancear el diseño */
+  /** Secondary - Lima vibrante **/
+  --secondary-color: #C6FF00; /* Amarillo lima brillante, capta la atención */
+  --secondary-color-rgb: 198, 255, 0;
+  --secondary-background-color: #F9FFE1;
+  --secondary-color-contrast: #2E2E2E;
 
-  /** Success - Verde suave para mensajes positivos **/
-  --success-color: #4CAF50; /* Verde natural para dar un toque de frescura */
+  /** Tertiary - Turquesa suave **/
+  --tertiary-background-color: #D0F4F2; /* Fondo suave, fresco y moderno */
+
+  /** Success - Verde esmeralda claro **/
+  --success-color: #00B894;
   --success-contrast: #ffffff;
 
-  /** Warning - Amarillo suave para advertencias sutiles **/
-  --warning-color: #FFB74D;
-  --warning-contrast: #4e342e;
+  /** Warning - Amarillo más tradicional pero suave **/
+  --warning-color: #FFD54F;
+  --warning-contrast: #3E2723;
 
-  /** Danger - Rojo más suave para alertas pero no tan fuerte **/
-  --danger-color: #6D2323; /* Rojo profundo para peligros o advertencias */
+  /** Danger - Coral vibrante (sin caer en rojo tradicional) **/
+  --danger-color: #FF6F61;
   --danger-contrast: #ffffff;
 
-  /** Medium - Gris cálido para textos secundarios **/
-  --medium-color: #A89F91;
+  /** Medium - Gris lavanda para texto secundario **/
+  --medium-color: #A89FB5;
   --medium-contrast: #000000;
 
-  /* Disabled - Un color claro para elementos deshabilitados */
-  --disabled-color: #E6E0B9;
+  /** Disabled - Gris pastel lavanda **/
+  --disabled-color: #E6E0F1;
 
-  /** Accent - Un toque cálido y sutil **/
-  --accent-color: #C75B5B;
+  /** Accent - Turquesa brillante para detalles elegantes **/
+  --accent-color: #00CFC1;
 
-  /* Sombras suaves para dar profundidad */
-  --box-shadow-primary: 0px 4px 10px rgba(163, 29, 29, 0.1);
-  --box-shadow-secondary: 0px 3px 8px rgba(109, 35, 35, 0.1);
+  /* Sombras */
+  --box-shadow-primary: 0px 4px 12px rgba(125, 58, 193, 0.15);
+  --box-shadow-secondary: 0px 3px 8px rgba(198, 255, 0, 0.1);
 }
