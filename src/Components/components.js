@@ -6,6 +6,7 @@ const components = {
   "Documentation": "AppComponents",
   "DocumentationPage": "AppComponents",
   "InputDocumentation": "AppComponents",
+  "Installation": "AppComponents",
   "LandingMenu": "AppComponents",
   "LandingPage": "AppComponents",
   "MainMenu": "AppComponents",
@@ -16,6 +17,7 @@ const components = {
   "ServiceDocumentation": "AppComponents",
   "SliceStylesDocumentation": "AppComponents",
   "SliceTeamCard": "AppComponents",
+  "StructuralDocumentation": "AppComponents",
   "SwitchDocumentation": "AppComponents",
   "TheBuildMethod": "AppComponents",
   "ThemesDocumentation": "AppComponents",
@@ -44,6 +46,5 @@ const components = {
   "IndexedDbManager": "Service",
   "Link": "Service",
   "LocalStorageManager": "Service",
-  "Translator": "Service",
-  "StructuralDocumentation": "AppComponents",
+  "Translator": "Service"
 }; export default components;

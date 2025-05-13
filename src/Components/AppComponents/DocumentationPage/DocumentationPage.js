@@ -15,7 +15,7 @@ export default class DocumentationPage extends HTMLElement {
             items: [
                {
                   title: 'What is Slice.js?',
-                  path: '/Documentation/What-is-Slice.js',
+                  path: '/Documentation/Slice',
                   component: 'WhatIsSlice'
                },
                {
