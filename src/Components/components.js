@@ -13,6 +13,7 @@ const components = {
   "MyNavigation": "AppComponents",
   "Playground": "AppComponents",
   "RoutingDocumentation": "AppComponents",
+  "SliceStylesDocumentation": "AppComponents",
   "SliceTeamCard": "AppComponents",
   "SwitchDocumentation": "AppComponents",
   "TheBuildMethod": "AppComponents",
