@@ -21,18 +21,6 @@ export default class Playground extends HTMLElement {
                text: 'Home',
                path: '/',
             },
-            {
-               text: 'Documentation',
-               path: '/Documentation',
-            },
-            {
-               text: 'Playground',
-               path: '/Playground',
-            },
-            {
-               text: 'Our Team',
-               path: '/Team',
-            }
          ],
          buttons: [
             {
@@ -58,13 +46,6 @@ export default class Playground extends HTMLElement {
 
       const sliceButton = await slice.build('Button', {
          value: 'Slice',
-         onClickCallback: () => {
-            if (slice.translator.currentLanguage == 'es') {
-               slice.translator.changeLanguage('en');
-            } else {
-               slice.translator.changeLanguage('es');
-            }
-         },
       });
       const sliceInput = await slice.build('Input', {
          placeholder: 'Enter text here...',
