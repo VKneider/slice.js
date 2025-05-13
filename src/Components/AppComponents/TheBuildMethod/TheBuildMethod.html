@@ -1,0 +1,70 @@
+<div class="build-method-container">
+   <h1 id="build-method">The Build Method</h1>
+   
+   <section class="method-introduction">
+      <p>
+         The <code>build</code> method is the cornerstone of Slice.js component creation. It's an asynchronous method that instantiates and configures components, handling all of the necessary resource loading, template attachment, and initialization.
+      </p>
+   </section>
+
+   <section class="method-syntax">
+      <h2 id="syntax">Syntax</h2>
+      <div class="syntax-box">
+         <code>await slice.build(componentName, props);</code>
+      </div>
+      <h3>Parameters</h3>
+      <ul class="parameters-list">
+         <li><strong>componentName</strong>: <em>string</em> - The name of the component to build as registered in components.js</li>
+         <li><strong>props</strong>: <em>object</em> - (Optional) An object containing properties to set on the component</li>
+      </ul>
+      <h3>Return Value</h3>
+      <p>A Promise that resolves to the constructed component instance, or null if construction fails.</p>
+   </section>
+
+   <section class="method-examples">
+      <h2 id="examples">Examples</h2>
+      
+      <h3 id="basic-usage">Basic Usage</h3>
+      <p>Creating a simple button component and adding it to the DOM:</p>
+      <div class="basic-example-container"></div>
+      
+      <h3 id="advanced-props">Advanced Properties</h3>
+      <p>Building a component with more complex properties:</p>
+      <div class="advanced-example-container"></div>
+      
+      <h3 id="nested-components">Building Nested Components</h3>
+      <p>Creating a structure of components that contain other components:</p>
+      <div class="nested-components-container"></div>
+      
+      <h3 id="error-handling">Error Handling</h3>
+      <p>Proper error handling when building components:</p>
+      <div class="error-handling-container"></div>
+   </section>
+
+   <section class="method-lifecycle">
+      <h2 id="build-lifecycle">Build Lifecycle</h2>
+      <p>When <code>slice.build()</code> is called, the following steps occur:</p>
+      <ol class="lifecycle-steps">
+         <li>Verify that the component exists in the component registry</li>
+         <li>Load the component's template (HTML) if not already cached</li>
+         <li>Load the component's class (JS) if not already cached</li>
+         <li>Load the component's styles (CSS) if not already cached</li>
+         <li>Create an instance of the component with the provided properties</li>
+         <li>Call the component's <code>init()</code> method if it exists</li>
+         <li>Attach debug mode if enabled in configuration</li>
+         <li>Register the component in the controller's active components registry</li>
+         <li>Return the fully initialized component instance</li>
+      </ol>
+   </section>
+
+   <section class="method-best-practices">
+      <h2 id="best-practices">Best Practices</h2>
+      <ul class="best-practices-list">
+         <li>Always use <code>await</code> with <code>slice.build()</code> since it returns a Promise</li>
+         <li>Provide a unique <code>sliceId</code> for components that need to be referenced later</li>
+         <li>Implement proper error handling around component building</li>
+         <li>Use the component's <code>init()</code> method for additional setup rather than the constructor</li>
+         <li>Remember that component properties are set after construction but before initialization</li>
+      </ul>
+   </section>
+</div>
