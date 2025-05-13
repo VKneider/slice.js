@@ -78,7 +78,7 @@ export default class DocumentationPage extends HTMLElement {
          componentsLibrary: {
             title: 'Components Library',
             items: [
-               {
+             /*  {
                   title: 'Services',
                   items: [
                      {
@@ -86,7 +86,7 @@ export default class DocumentationPage extends HTMLElement {
                         path: '/Documentation/SliceComponents/FetchManager'
                      }
                   ]
-               },
+               },*/
                {
                   title: 'Visual',
                   path: '/Documentation/Visual',

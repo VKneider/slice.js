@@ -68,7 +68,7 @@ const routes = [
                      }
                   ]
                },
-               {
+               /*{
                   path: '/Service',
                   component: 'ServiceDocumentation',
                   children:[
@@ -77,7 +77,7 @@ const routes = [
                         component: 'FetchManagerDocumentation',
                      }
                   ]
-               }
+               }*/
             ]
          } 
       ]
