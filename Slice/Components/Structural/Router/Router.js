@@ -1,4 +1,3 @@
-
 export default class Router {
    constructor(routes) {
       this.routes = routes;
@@ -11,16 +10,30 @@ export default class Router {
       window.addEventListener('popstate', this.onRouteChange.bind(this));
    }
 
-   createPathToRouteMap(routes, basePath = '') {
+   createPathToRouteMap(routes, basePath = '', parentRoute = null) {
       const pathToRouteMap = new Map();
   
       for (const route of routes) {
-          const fullPath = `${basePath}${route.path}`.replace(/\/+/g, '/'); // Normaliza las barras diagonales
-          pathToRouteMap.set(fullPath, { ...route, fullPath });
+          const fullPath = `${basePath}${route.path}`.replace(/\/+/g, '/');
+          
+          // Guardar la referencia a la ruta padre
+          const routeWithParent = { 
+              ...route, 
+              fullPath,
+              parentPath: parentRoute ? parentRoute.fullPath : null,
+              parentRoute: parentRoute
+          };
+          
+          pathToRouteMap.set(fullPath, routeWithParent);
   
           // Si tiene rutas secundarias, también agregarlas al mapa
           if (route.children) {
-              const childPathToRouteMap = this.createPathToRouteMap(route.children, fullPath);
+              const childPathToRouteMap = this.createPathToRouteMap(
+                  route.children, 
+                  fullPath, 
+                  routeWithParent // Pasar la ruta actual como padre
+              );
+              
               for (const [childPath, childRoute] of childPathToRouteMap.entries()) {
                   pathToRouteMap.set(childPath, childRoute);
               }
@@ -28,7 +41,7 @@ export default class Router {
       }
   
       return pathToRouteMap;
-  }
+   }
 
    async renderRoutesComponentsInPage() {
       const routeContainers = document.querySelectorAll('slice-route, slice-multi-route');
@@ -41,7 +54,6 @@ export default class Router {
             routerContainersFlag = true;
          }
       }
-
       return routerContainersFlag;
    }
 
@@ -66,7 +78,12 @@ export default class Router {
 
    async handleRoute(route, params) {
       const targetElement = document.querySelector('#app');
-      const existingComponent = slice.controller.getComponent(`route-${route.component}`);
+      
+      // Si tenemos una ruta con parentRoute, usamos el componente del padre
+      const componentName = route.parentRoute ? route.parentRoute.component : route.component;
+      const sliceId = `route-${componentName}`;
+      
+      const existingComponent = slice.controller.getComponent(sliceId);
 
       if (slice.loading) {
          slice.loading.start();
@@ -80,9 +97,9 @@ export default class Router {
          }
          targetElement.appendChild(existingComponent);
       } else {
-         const component = await slice.build(route.component, {
+         const component = await slice.build(componentName, {
             params,
-            sliceId: `route-${route.component}`,
+            sliceId: sliceId,
          });
          targetElement.innerHTML = '';
          targetElement.appendChild(component);
@@ -100,7 +117,6 @@ export default class Router {
       const { route, params } = this.matchRoute(path);
 
       await this.handleRoute(route, params);
-
       await this.renderRoutesComponentsInPage();
    }
 
@@ -108,10 +124,19 @@ export default class Router {
       // 1. Buscar coincidencia exacta en el mapa
       const exactMatch = this.pathToRouteMap.get(path);
       if (exactMatch) {
+         // Si es una ruta hija y tiene un padre definido, devolvemos el padre en su lugar
+         if (exactMatch.parentRoute) {
+            // Mantenemos la información de parámetros que viene de la ruta actual
+            return { 
+               route: exactMatch.parentRoute, 
+               params: {},
+               childRoute: exactMatch // Guardamos la referencia a la ruta hija original
+            };
+         }
          return { route: exactMatch, params: {} };
       }
    
-      // 2. Buscar coincidencias en rutas con parámetros (que contengan la sintaxis `${...}`)
+      // 2. Buscar coincidencias en rutas con parámetros
       for (const [routePattern, route] of this.pathToRouteMap.entries()) {
          if (routePattern.includes('${')) {
             const { regex, paramNames } = this.compilePathPattern(routePattern);
@@ -119,34 +144,35 @@ export default class Router {
             if (match) {
                const params = {};
                paramNames.forEach((name, i) => {
-                  params[name] = match[i + 1]; // El grupo 0 es la coincidencia completa
+                  params[name] = match[i + 1];
                });
+               
+               // Si es una ruta hija, devolvemos el padre con los parámetros
+               if (route.parentRoute) {
+                  return { 
+                     route: route.parentRoute, 
+                     params: params,
+                     childRoute: route
+                  };
+               }
+               
                return { route, params };
             }
          }
       }
    
-      // 3. Si no hay coincidencias, retornar la ruta 404 (suponiendo que exista)
+      // 3. Si no hay coincidencias, retornar la ruta 404
       const notFoundRoute = this.pathToRouteMap.get('/404');
       return { route: notFoundRoute, params: {} };
    }
 
-   /**
- * Convierte un patrón de ruta con parámetros en una expresión regular.
- * Por ejemplo, el patrón "/User/${id}" se convertirá en:
- *   - regex: /^\/User\/([^/]+)$/
- *   - paramNames: ['id']
- */
-compilePathPattern(pattern) {
-   const paramNames = [];
-   // Reemplaza cada aparición de ${param} por un grupo capturador que coincida con cualquier cosa
-   // que no sea una barra (para que solo capture hasta la siguiente barra)
-   const regexPattern = '^' + pattern.replace(/\$\{([^}]+)\}/g, (_, paramName) => {
-      paramNames.push(paramName);
-      return '([^/]+)';
-   }) + '$';
+   compilePathPattern(pattern) {
+      const paramNames = [];
+      const regexPattern = '^' + pattern.replace(/\$\{([^}]+)\}/g, (_, paramName) => {
+         paramNames.push(paramName);
+         return '([^/]+)';
+      }) + '$';
 
-   return { regex: new RegExp(regexPattern), paramNames };
-}
-
+      return { regex: new RegExp(regexPattern), paramNames };
+   }
 }

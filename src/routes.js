@@ -1,36 +1,77 @@
 const routes = [
+   // Rutas principales
    { path: '/', component: 'LandingPage' },
    {
       path: '/Documentation',
       component: 'DocumentationPage',
       children: [
          {
-            path: '/Button',
-            component: 'ButtonDocumentation',
+            path: '/Slice',
+            component: 'WhatIsSlice',
          },
-      ],
-   },
-   {
-      path: '/Documentation/CustomMenu',
-      component: 'DocumentationPage',
-      children: [
          {
-            path: '/Button',
-            component: 'CardDocumentation',
+            path: '/Installation',
+            component: 'Installation',
          },
-      ],
+         {
+            path: '/The-build-method',
+            component: 'TheBuildMethod',
+         },
+         {
+            path:'/Components',
+            component: 'DocumentationPage',
+            children:[
+               {
+                  path: '/Visual',
+                  component: 'VisualDocumentation',
+                  children: [
+                     {
+                        path: '/Card',
+                        component: 'CardDocumentation',
+                     },
+                     {
+                        path:'/Button',
+                        component: 'ButtonDocumentation',
+                     },
+                     {
+                        path:'/Switch',
+                        component: 'SwitchDocumentation',
+                     },
+                     {
+                        path:'/Checkbox',
+                        component: 'CheckboxDocumentation',
+                     },
+                     {
+                        path:'/Input',
+                        component: 'InputDocumentation',
+                     }
+                  ]
+               },
+               {
+                  path: '/Service',
+                  component: 'ServiceDocumentation',
+                  children:[
+                     {
+                        path: '/FetchManager',
+                        component: 'FetchManagerDocumentation',
+                     }
+                  ]
+               }
+            ]
+         } 
+      ]
    },
-   { path: '/Documentation/CustomMenu/pepito', component: 'Button' },
+   // Otras rutas
    { path: '/Playground', component: 'Playground' },
    { path: '/404', component: 'NotFound' },
    {
-      path: '/Docum/${category}/${id}', // Ejemplo con dos parámetros: "category" e "id"
+      path: '/Docum/${category}/${id}',
       component: 'LandingPage',
-    },
-    {
-      path:'/Team',
+   },
+   {
+      path: '/Team',
       component: 'TheSliceTeam',
-    }
+   }
 ];
 
 export default routes;
