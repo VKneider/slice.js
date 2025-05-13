@@ -1,0 +1,61 @@
+slice-themesdocumentation {
+  color: var(--font-primary-color);
+  font-family: var(--font-family);
+}
+
+slice-themesdocumentation .theme-samples {
+  margin: 20px 0;
+}
+
+slice-themesdocumentation .theme-sample {
+  padding: 20px;
+  margin: 10px;
+  border-radius: var(--border-radius-slice);
+  border: 2px solid;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+slice-themesdocumentation .theme-sample:hover {
+  transform: translateY(-5px);
+}
+
+slice-themesdocumentation .theme-sample h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+}
+
+slice-themesdocumentation code {
+  background-color: var(--secondary-background-color);
+  padding: 2px 5px;
+  border-radius: 3px;
+  font-family: monospace;
+}
+
+slice-themesdocumentation .theme-config-example,
+slice-themesdocumentation .theme-apply-example,
+slice-themesdocumentation .css-vars-example,
+slice-themesdocumentation .custom-theme-example {
+  margin: 20px 0;
+}
+
+slice-themesdocumentation ul li {
+  margin-bottom: 10px;
+}
+
+slice-themesdocumentation h2 {
+  margin-top: 30px;
+  border-bottom: 1px solid var(--primary-color-shade);
+  padding-bottom: 8px;
+}
+
+slice-themesdocumentation .theme-transition-example {
+  background-color: var(--secondary-background-color);
+  padding: 15px;
+  border-radius: var(--border-radius-slice);
+  margin: 20px 0;
+}
