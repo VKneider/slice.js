@@ -212,12 +212,13 @@ async function init() {
    await window.slice.router.init();
    
 
+   /*
    if (sliceConfig.translator.enabled) {
       const translator = await window.slice.build('Translator');
       window.slice.translator = translator;
       window.slice.logger.logInfo('Slice', 'Translator succesfuly enabled');
    }
-
+   */
 
 }
 

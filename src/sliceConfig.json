@@ -22,9 +22,6 @@
             }
         }
     },
-    "translator": {
-        "enabled": false
-    },
     "paths": {
         "components": {
             "AppComponents":{
