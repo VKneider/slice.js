@@ -5,18 +5,106 @@ export default class DocumentationPage extends HTMLElement {
 
       slice.controller.setComponentProps(this, props);
       this.debuggerProps = [];
-
-      this.components = ['Button', 'Card', 'Checkbox', 'Input', 'Switch'];
    }
 
    async init() {
-      await import('https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js');
-      await import('https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js');
-      const css = await fetch('https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css');
-      const cssText = await css.text();
-      const style = document.createElement('style');
-      style.innerHTML = cssText;
-      document.head.appendChild(style);
+      // Centralizar las rutas de documentación
+      const routesConfig = {
+         introduction: {
+            title: 'Introduction',
+            items: [
+               {
+                  title: 'What is Slice.js?',
+                  path: '/Documentation/What-is-Slice.js',
+                  component: 'WhatIsSlice'
+               },
+               {
+                  title: 'Installation',
+                  path: '/Documentation/Installation',
+                  component: 'Installation'
+               }
+            ]
+         },
+         gettingStarted: {
+            title: 'Getting Started',
+            items: [
+               {
+                  title: 'Components',
+                  items: [
+                     {
+                        title: 'The build method',
+                        path: '/Documentation/The-build-method',
+                        component: 'TheBuildMethod'
+                     },
+                     {
+                        title: 'Visual',
+                        path: '/Documentation/Visual',
+                        component: 'VisualDocumentation'
+                     },
+                     {
+                        title: 'Structural',
+                        path: '/Documentation/Structural',
+                        component: 'StructuralDocumentation'
+                     },
+                     {
+                        title: 'Services',
+                        path: '/Documentation/Services',
+                        component: 'ServicesDocumentation'
+                     },
+                     {
+                        title: 'Lifecycle methods',
+                        path: '/Documentation/Lifecycle-methods',
+                        component: 'LifecycleMethods'
+                     }
+                  ]
+               },
+               {
+                  title: 'Routing',
+                  path: '/Documentation/Routing',
+                  component: 'RoutingDocumentation'
+               },
+               {
+                  title: 'Themes',
+                  path: '/Documentation/Themes',
+                  component: 'ThemesDocumentation'
+               },
+               {
+                  title: 'Slice Styles',
+                  path: '/Documentation/Slice-Styles',
+                  component: 'SliceStylesDocumentation'
+               }
+            ]
+         },
+         componentsLibrary: {
+            title: 'Components Library',
+            items: [
+               {
+                  title: 'Services',
+                  items: [
+                     {
+                        title: 'FetchManager',
+                        path: '/Documentation/SliceComponents/FetchManager'
+                     }
+                  ]
+               },
+               {
+                  title: 'Visual',
+                  path: '/Documentation/Visual',
+                  items: [
+                     { title: 'Button', path: '/Documentation/Components/Visual/Button', component: 'ButtonDocumentation' },
+                     { title: 'Card', path: '/Documentation/Components/Visual/Card', component: 'CardDocumentation' },
+                     { title: 'Checkbox', path: '/Documentation/Components/Visual/Checkbox', component: 'CheckboxDocumentation' },
+                     { title: 'Input', path: '/Documentation/Components/Visual/Input', component: 'InputDocumentation' },
+                     { title: 'Switch', path: '/Documentation/Components/Visual/Switch', component: 'SwitchDocumentation' }
+                  ]
+               }
+            ]
+         },
+         defaultRoute: {
+            path: '/Documentation',
+            component: 'Documentation'
+         }
+      };
 
       const navBar = await slice.build('Navbar', {
          position: 'fixed',
@@ -25,29 +113,16 @@ export default class DocumentationPage extends HTMLElement {
             path: '/',
          },
          items: [
-            {
-               text: 'Home',
-               path: '/',
-            },
-            {
-               text: 'Documentation',
-               path: '/Documentation',
-            },
-            {
-               text: 'Playground',
-               path: '/Playground',
-            },
-            {
-               text: 'Our Team',
-               path: '/Team',
-            }
-
+            { text: 'Home', path: '/' },
+            { text: 'Documentation', path: '/Documentation' },
+            { text: 'Playground', path: '/Playground' },
+            { text: 'Our Team', path: '/Team' }
          ],
          buttons: [
             {
                value: 'Change Theme',
-               // color:
                onClickCallback: async () => {
+                  let theme = slice.stylesManager.themeManager.currentTheme;
                   if (theme === 'Slice') {
                      await slice.setTheme('Light');
                      theme = 'Light';
@@ -63,151 +138,124 @@ export default class DocumentationPage extends HTMLElement {
          ],
       });
 
-      const components = {
-         Button: 'Visual',
-         Card: 'Visual',
-         Checkbox: 'Visual',
-         Input: 'Visual',
-         Switch: 'Visual',
-      };
-
-      let documentationRoutes = {
-         value: 'Visual',
-         items: [],
-      };
-
-      for (const name in components) {
-         const component = {
-            value: name,
-            path: `/Documentation/${name}`,
-            component: `${name}Documentation`,
+      // Función para extraer todas las rutas para MultiRoute
+      const getAllRoutes = (routesObj) => {
+         const allRoutes = [];
+         
+         const processItems = (items) => {
+            if (!items) return;
+            
+            items.forEach(item => {
+               if (item.path && item.component) {
+                  allRoutes.push({
+                     path: item.path,
+                     component: item.component
+                  });
+               }
+               
+               if (item.items) {
+                  processItems(item.items);
+               }
+            });
          };
-         if (components[name] === 'Visual') {
-            documentationRoutes.items.push(component);
-         }
+         
+         // Procesar cada sección principal
+         Object.values(routesObj).forEach(section => {
+            if (section.path && section.component) {
+               allRoutes.push({
+                  path: section.path,
+                  component: section.component
+               });
+            }
+            
+            if (section.items) {
+               processItems(section.items);
+            }
+         });
+         
+         return allRoutes;
+      };
+
+      // Función para convertir el config de rutas al formato del TreeView
+      const createTreeViewItems = (routesConfig) => {
+         return [
+            {
+               value: routesConfig.introduction.title,
+               items: routesConfig.introduction.items.map(item => ({
+                  value: item.title,
+                  path: item.path,
+                  component: item.component
+               }))
+            },
+            {
+               value: routesConfig.gettingStarted.title,
+               items: routesConfig.gettingStarted.items.map(item => {
+                  if (item.items) {
+                     return {
+                        value: item.title,
+                        items: item.items.map(subItem => ({
+                           value: subItem.title,
+                           path: subItem.path,
+                           component: subItem.component
+                        }))
+                     };
+                  }
+                  return {
+                     value: item.title,
+                     path: item.path,
+                     component: item.component
+                  };
+               })
+            },
+            {
+               value: routesConfig.componentsLibrary.title,
+               items: routesConfig.componentsLibrary.items.map(item => {
+                  if (item.items) {
+                     return {
+                        value: item.title,
+                        items: item.items.map(subItem => ({
+                           value: subItem.title,
+                           path: subItem.path,
+                           component: subItem.component
+                        }))
+                     };
+                  }
+                  return {
+                     value: item.title,
+                     path: item.path,
+                     component: item.component
+                  };
+               })
+            }
+         ];
+      };
+
+      // Obtener todas las rutas planas para el MultiRoute
+      const multiRouteItems = getAllRoutes(routesConfig);
+      
+      // Asegurarse que la ruta por defecto esté incluida
+      if (!multiRouteItems.some(route => route.path === routesConfig.defaultRoute.path)) {
+         multiRouteItems.push(routesConfig.defaultRoute);
       }
 
+      console.log('MultiRoute items:', multiRouteItems);
+
+      // Crear el MultiRoute con todas las rutas
+      const VisualComponentsMultiRoute = await slice.build('MultiRoute', {
+         routes: multiRouteItems
+      });
+
+      // Crear el TreeView con la estructura jerárquica
+      const treeviewItems = createTreeViewItems(routesConfig);
       const treeview = await slice.build('TreeView', {
-         items: [
-            {
-               value: 'Introduction',
-               items: [
-                  {
-                     value: 'What is Slice.js?',
-                     path: '/Documentation/What-is-Slice.js',
-                     component: 'WhatIsSlice',
-                  },
-                  {
-                     value: 'Installation',
-                     path: '/Documentation/Installation',
-                     component: 'Installation',
-                  },
-               ],
-            },
-            {
-               value: 'Getting Started',
-               items: [
-                  {
-                     value: 'Components',
-                     items: [
-                        {
-                           value: 'The build method',
-                           path: '/Documentation/The-build-method',
-                           component: 'TheBuildMethod',
-                        },
-                        {
-                           value: 'Visual',
-                           path: '/Documentation/Visual',
-                           component: 'VisualDocumentation',
-                        },
-                        {
-                           value: 'Structural',
-                           path: '/Documentation/Structural',
-                           component: 'StructuralDocumentation',
-                        },
-                        {
-                           value: 'Services',
-                           path: '/Documentation/Services',
-                           component: 'ServicesDocumentation',
-                        },
-                        {
-                           value: `Lifecycle methods`,
-                           path: '/Documentation/Lifecycle-methods',
-                           component: 'LifecycleMethods',
-                        },
-                     ],
-                  },
-                  {
-                     value: 'Routing',
-                     path: '/Documentation/Routing',
-                     component: 'RoutingDocumentation',
-                  },
-                  {
-                     value: 'Themes',
-                     path: '/Documentation/Themes',
-                     component: 'ThemesDocumentation',
-                  },
-                  {
-                     value: 'Slice Styles',
-                     path: '/Documentation/Slice-Styles',
-                     component: 'SliceStylesDocumentation',
-                  },
-               ],
-            },
-            {
-               value: 'Components Library',
-               items: [
-                  {
-                     value: 'Services',
-                     items: [
-                        {
-                           value: 'FetchManager',
-                           path: '/Documentation/SliceComponents/FetchManager',
-                        },
-                     ],
-                  },
-                  documentationRoutes,
-               ],
-            },
-         ],
+         items: treeviewItems,
          onClickCallback: async (item) => {
             if (item.path) {
-               //myRouteContainer.path = item.path;
-               //myRouteContainer.component = item.component;
                await slice.router.navigate(item.path);
                myNavigation.page = VisualComponentsMultiRoute;
             }
          },
       });
-
-      const extraRoute = {
-         path: '/Documentation',
-         component: 'Documentation',
-      };
-
-      //add extra route to the routes
-      documentationRoutes.items.push(extraRoute);
-
-      function getRoutes(array) {
-         for (let i = 0; i < array.length; i++) {
-            if (array[i].items) {
-               getRoutes(array[i].items);
-            } else {
-               const exists = documentationRoutes.items.some(route => route.path === array[i].path);
-               if (!exists) {
-                  documentationRoutes.items.push(array[i]);
-               }
-            }
-         }
-      }      
-
-      
-
-      const VisualComponentsMultiRoute = await slice.build('MultiRoute', {
-         routes: documentationRoutes.items,
-      });
-
-
 
       const mainMenu = await slice.build('MainMenu', {});
       mainMenu.add(treeview);
@@ -217,7 +265,6 @@ export default class DocumentationPage extends HTMLElement {
       });
 
       const layOut = await slice.build('Layout', {
-         // layout: div,
          view: VisualComponentsMultiRoute,
       });
 
@@ -225,17 +272,12 @@ export default class DocumentationPage extends HTMLElement {
       layOut.onLayOut(navBar);
       layOut.onLayOut(myNavigation);
 
-      let theme = slice.stylesManager.themeManager.currentTheme;
-
       if (window.location.pathname === '/Documentation') {
          await VisualComponentsMultiRoute.renderIfCurrentRoute();
       }
+      
       this.appendChild(layOut);
-
-      //if route is domain/Documentation 
-
    }
-
 }
 
 customElements.define('slice-documentation-page', DocumentationPage);
