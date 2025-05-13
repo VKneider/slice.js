@@ -1,6 +1,7 @@
 slice-the-build-method {
   font-family: var(--font-family);
   color: var(--font-primary-color);
+  display: block;
 }
 
 slice-the-build-method .build-method-container {
@@ -9,107 +10,266 @@ slice-the-build-method .build-method-container {
   padding: 20px;
 }
 
+slice-the-build-method .build-method-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
 slice-the-build-method h1 {
   font-size: 2.2rem;
-  margin-bottom: 1.5rem;
   color: var(--primary-color);
   border-bottom: 2px solid var(--secondary-background-color);
   padding-bottom: 0.5rem;
+  margin-right: 1rem;
+  margin-bottom: 0;
+  flex-grow: 1;
+}
+
+slice-the-build-method .build-method-badge {
+  background-color: var(--primary-color);
+  color: var(--primary-color-contrast);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: bold;
 }
 
 slice-the-build-method h2 {
   font-size: 1.8rem;
-  margin-top: 2rem;
-  margin-bottom: 1rem;
+  margin-top: 2.5rem;
+  margin-bottom: 1.2rem;
   color: var(--primary-color);
+  position: relative;
+  padding-left: 1rem;
+}
+
+slice-the-build-method h2:before {
+  content: "";
+  position: absolute;
+  left: 0;
+  height: 100%;
+  width: 4px;
+  background-color: var(--primary-color);
+  border-radius: 4px;
 }
 
 slice-the-build-method h3 {
   font-size: 1.5rem;
-  margin-top: 1.5rem;
-  margin-bottom: 0.75rem;
+  margin-top: 1.8rem;
+  margin-bottom: 1rem;
   color: var(--font-primary-color);
 }
 
 slice-the-build-method p {
-  margin-bottom: 1rem;
-  line-height: 1.6;
+  margin-bottom: 1.2rem;
+  line-height: 1.7;
   text-align: justify;
+  font-size: 1.05rem;
 }
 
 slice-the-build-method code {
   font-family: monospace;
   background-color: var(--secondary-background-color);
-  padding: 2px 5px;
+  padding: 3px 6px;
   border-radius: 4px;
-  font-size: 0.9em;
+  font-size: 0.95em;
+  color: var(--primary-color);
 }
 
 slice-the-build-method .syntax-box {
   background-color: var(--secondary-background-color);
-  padding: 15px;
+  padding: 20px;
   border-radius: var(--border-radius-slice);
   margin: 20px 0;
   overflow-x: auto;
+  border-left: 4px solid var(--primary-color);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+}
+
+slice-the-build-method .syntax-box:hover {
+  transform: translateY(-2px);
 }
 
 slice-the-build-method .syntax-box code {
-  font-size: 1.1em;
+  font-size: 1.2em;
   background: none;
 }
 
-slice-the-build-method .parameters-list,
-slice-the-build-method .best-practices-list,
-slice-the-build-method .lifecycle-steps {
-  margin-left: 20px;
-  margin-bottom: 1.5rem;
-  line-height: 1.6;
+slice-the-build-method .parameters-section,
+slice-the-build-method .return-section {
+  background-color: var(--primary-background-color);
+  padding: 15px 20px;
+  border-radius: var(--border-radius-slice);
+  margin: 15px 0;
+  border: 1px solid var(--secondary-background-color);
 }
 
-slice-the-build-method .parameters-list li,
-slice-the-build-method .best-practices-list li,
-slice-the-build-method .lifecycle-steps li {
-  margin-bottom: 0.75rem;
+slice-the-build-method .parameters-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
-
-slice-the-build-method .lifecycle-steps li {
-  counter-increment: step-counter;
-  position: relative;
-  padding-left: 10px;
+slice-the-build-method .parameters-list li {
+  display: grid;
+  grid-template-columns: 1fr 1fr 3fr;
+  gap: 15px;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--secondary-background-color);
 }
 
-slice-the-build-method .lifecycle-steps li::before {
+slice-the-build-method .parameters-list li:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+slice-the-build-method .param-name {
   font-weight: bold;
-  margin-right: 8px;
+  color: var(--primary-color);
+}
+
+slice-the-build-method .param-type {
+  font-style: italic;
+  color: var(--font-secondary-color);
+}
+
+slice-the-build-method .example-card {
+  background-color: var(--primary-background-color);
+  border-radius: var(--border-radius-slice);
+  padding: 20px;
+  margin-bottom: 30px;
+  border: 1px solid var(--secondary-background-color);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.3s ease;
+}
+
+slice-the-build-method .example-card:hover {
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+}
+
+slice-the-build-method .example-card h3 {
+  margin-top: 0;
   color: var(--primary-color);
 }
 
 slice-the-build-method .method-examples div[class$="-container"] {
-  margin-bottom: 2rem;
+  margin-top: 1rem;
   border-radius: var(--border-radius-slice);
   overflow: hidden;
 }
 
+slice-the-build-method .lifecycle-diagram {
+  background-color: var(--primary-background-color);
+  border-radius: var(--border-radius-slice);
+  padding: 20px;
+  border: 1px solid var(--secondary-background-color);
+}
+
+slice-the-build-method .lifecycle-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+slice-the-build-method .lifecycle-steps li {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 15px;
+  border-bottom: 1px dashed var(--secondary-background-color);
+}
+
+slice-the-build-method .lifecycle-steps li:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+slice-the-build-method .step-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  background-color: var(--primary-color);
+  color: var(--primary-color-contrast);
+  border-radius: 50%;
+  margin-right: 15px;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+slice-the-build-method .step-content {
+  flex-grow: 1;
+  line-height: 1.5;
+}
+
+slice-the-build-method .best-practices-container {
+  background-color: var(--primary-background-color);
+  border-radius: var(--border-radius-slice);
+  padding: 20px;
+  border: 1px solid var(--secondary-background-color);
+}
+
+slice-the-build-method .best-practices-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+slice-the-build-method .best-practices-list li {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 15px;
+  line-height: 1.6;
+}
+
+slice-the-build-method .best-practices-list li:last-child {
+  margin-bottom: 0;
+}
+
+slice-the-build-method .practice-icon {
+  display: inline-block;
+  margin-right: 10px;
+  color: var(--success-color);
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+slice-the-build-method .method-introduction,
 slice-the-build-method .method-syntax,
 slice-the-build-method .method-examples,
 slice-the-build-method .method-lifecycle,
 slice-the-build-method .method-best-practices {
-  margin-bottom: 3rem;
+  margin-bottom: 3.5rem;
 }
 
 slice-the-build-method section {
-  padding-top: 10px;
+  padding-top: 15px;
 }
 
 @media only screen and (max-width: 770px) {
   slice-the-build-method .build-method-container {
     max-width: 100%;
-    padding: 10px;
+    padding: 15px;
+  }
+
+  slice-the-build-method .build-method-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  slice-the-build-method .build-method-badge {
+    margin-top: 10px;
   }
 
   slice-the-build-method h1 {
     font-size: 1.8rem;
+    margin-right: 0;
   }
 
   slice-the-build-method h2 {
@@ -118,5 +278,19 @@ slice-the-build-method section {
 
   slice-the-build-method h3 {
     font-size: 1.3rem;
+  }
+
+  slice-the-build-method .parameters-list li {
+    grid-template-columns: 1fr;
+    gap: 5px;
+  }
+
+  slice-the-build-method .lifecycle-steps li {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  slice-the-build-method .step-number {
+    margin-bottom: 10px;
   }
 }
