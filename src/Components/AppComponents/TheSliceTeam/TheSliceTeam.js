@@ -17,7 +17,7 @@ export default class TheSliceTeam extends HTMLElement {
    const navBar = await slice.build('Navbar', {
       position: 'fixed',
       logo: {
-         src: '../../images/Slice.js-logo.png',
+         src: '/images/Slice.js-logo.png',
          path: '/',
       },
       items: [
