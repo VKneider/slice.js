@@ -9,11 +9,11 @@ export default class Debugger extends HTMLElement {
    }
 
    async enableDebugMode() {
-      const html = await slice.controller.fetchText('Debugger', 'html');
+      const html = await slice.controller.fetchText('Debugger', true, true, "/Slice/Components/Structural/Debugger/Debugger.html" );
       this.innerHTML = html;
-      const css = await slice.controller.fetchText('Debugger', 'css');
+      const css = await slice.controller.fetchText('Debugger', true, true, "/Slice/Components/Structural/Debugger/Debugger.css" );
       slice.stylesManager.registerComponentStyles('Debugger', css);
-
+      
       this.debuggerContainer = this.querySelector('#debugger-container');
       this.closeDebugger = this.querySelector('#close-debugger');
       this.componentDetails = this.querySelector('#component-details');
