@@ -31,6 +31,8 @@ slice-home-page {
 .hero-logo {
   max-width: 150px;
   height: auto;
+  /* Convertir el logo a una silueta */
+  filter: brightness(0) drop-shadow(0 0 8px var(--primary-color));
 }
 
 .hero-title {

@@ -9,11 +9,127 @@ export default class Debugger extends HTMLElement {
    }
 
    async enableDebugMode() {
-      const html = await slice.controller.fetchText('Debugger', true, true, "/Slice/Components/Structural/Debugger/Debugger.html" );
+      //const html = await slice.controller.fetchText('Debugger', true, true, "/Slice/Components/Structural/Debugger/Debugger.html" );
+
+      const html = `
+      <div id="debugger-container">
+  <div class="debugger-header">
+    <div id="close-debugger">[×]</div>
+    <h3>Component Details</h3>
+  </div>
+  <div id="component-details">
+    <ul class="component-details-list"></ul>
+    <div class="component-details-table"></div>
+  </div>
+</div>`
+
+
+
+
+
       this.innerHTML = html;
-      const css = await slice.controller.fetchText('Debugger', true, true, "/Slice/Components/Structural/Debugger/Debugger.css" );
+      //const css = await slice.controller.fetchText('Debugger', true, true, "/Slice/Components/Structural/Debugger/Debugger.css");
+      const css = `
+         #debugger-container {
+  font-family: var(--font-family);
+  display: none;
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  padding: 10px;
+  border: var(--slice-border) solid var(--primary-color);
+  background-color: var(--primary-background-color);
+  z-index: 1000;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+#debugger-container.active {
+  display: block;
+}
+
+.slice_thead td {
+  font-weight: bold;
+  background-color: var(--primary-color);
+  color: var(--primary-color-contrast);
+}
+
+#close-debugger {
+  cursor: pointer;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 14px;
+  color: var(--danger-color);
+}
+
+h3 {
+  color: var(--primary-color);
+  margin-bottom: 10px;
+}
+
+#component-details {
+  color: var(--font-primary-color);
+}
+.component-details-table {
+  overflow: scroll;
+  input {
+    outline: none;
+    border-bottom: 1px solid var(--tertiary-background-color);
+  }
+}
+.component-details-table::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.component-details-table::-webkit-scrollbar-thumb {
+  background: var(--secondary-color);
+  border-radius: var(--border-radius-slice);
+}
+
+#component-details table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  /* border: 1px solid var(--primary-color); */
+}
+
+.debugger-header {
+  border-bottom: 1px solid var(--primary-color);
+  user-select: none;
+  cursor: grab;
+}
+
+.debugger-header:active {
+  cursor: grabbing;
+}
+
+#component-details th,
+#component-details td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--primary-color);
+}
+
+input {
+  border: 0px;
+}
+
+.slice_component-details td,
+input {
+  background-color: var(--secondary-background-color);
+  color: var(--font-primary-color);
+}
+
+/* Estilo para las filas impares, solo para mejorar la legibilidad */
+#component-details tr:nth-child(odd) {
+  background-color: #f9f9f9;
+}
+
+      `
+
       slice.stylesManager.registerComponentStyles('Debugger', css);
-      
+
       this.debuggerContainer = this.querySelector('#debugger-container');
       this.closeDebugger = this.querySelector('#close-debugger');
       this.componentDetails = this.querySelector('#component-details');
