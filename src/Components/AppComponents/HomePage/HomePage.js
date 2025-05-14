@@ -3,7 +3,6 @@ export default class HomePage extends HTMLElement {
       super();
       slice.attachTemplate(this);
       
-      this.$featureContainer = this.querySelector('.feature-grid');
       this.$examplesContainer = this.querySelector('.examples-container');
       
       slice.controller.setComponentProps(this, props);
@@ -20,7 +19,9 @@ export default class HomePage extends HTMLElement {
          },
          items: [
             { text: 'Home', path: '/' },
+            { text: 'Documentation', path: '/Documentation' },
             { text: 'Playground', path: '/Playground' },
+            { text: 'Contributors', path: '/Team' }
          ],
          buttons: [
             {
@@ -62,85 +63,68 @@ export default class HomePage extends HTMLElement {
       this.querySelector('.cta-buttons').appendChild(docsButton);
       this.querySelector('.cta-buttons').appendChild(componentsButton);
       
-      // Crear tarjetas de características
-      await this.createFeatureCards();
+      // Crear features section con un enfoque diferente (sin usar Cards)
+      await this.createFeatures();
       
       // Crear ejemplos de componentes
       await this.createComponentExamples();
+      
+      // Configurar la sección de código de inicio
+      await this.setupGettingStartedSection();
       
       // Añadir la barra de navegación al inicio del componente
       this.insertBefore(navbar, this.firstChild);
    }
    
-   async createFeatureCards() {
+   async createFeatures() {
       // Definir características
       const features = [
          {
             title: 'Component-Based',
-            text: 'Build your app using modular, reusable components following web standards.',
-            icon: { name: 'layout', iconStyle: 'filled' }
+            description: 'Build your app using modular, reusable components following web standards.'
          },
          {
             title: 'Zero Dependencies',
-            text: 'Built with vanilla JavaScript. No external libraries required.',
-            icon: { name: 'package', iconStyle: 'filled' }
+            description: 'Built with vanilla JavaScript. No external libraries required.'
          },
          {
             title: 'Easy Routing',
-            text: 'Simple and powerful routing system for single page applications.',
-            icon: { name: 'navigation', iconStyle: 'filled' }
+            description: 'Simple and powerful routing system for single page applications.'
          },
          {
             title: 'Theme System',
-            text: 'Built-in theme support with easy customization through CSS variables.',
-            icon: { name: 'palette', iconStyle: 'filled' }
+            description: 'Built-in theme support with easy customization through CSS variables.'
          },
          {
             title: 'Developer Tools',
-            text: 'Integrated debugging and logging for faster development.',
-            icon: { name: 'code', iconStyle: 'filled' }
+            description: 'Integrated debugging and logging for faster development.'
          },
          {
             title: 'Performance Focused',
-            text: 'Lightweight and optimized for fast loading and execution.',
-            icon: { name: 'zap', iconStyle: 'filled' }
+            description: 'Lightweight and optimized for fast loading and execution.'
          }
       ];
       
-      // Crear grid para las tarjetas
-      const grid = await slice.build('Grid', {
-         columns: 3,
-         rows: 2
-      });
+      const featureGrid = this.querySelector('.feature-grid');
       
-      // Crear y añadir cada tarjeta al grid
+      // Crear y añadir cada feature como un elemento HTML simple
       for (const feature of features) {
-         const card = await slice.build('Card', {
-            title: feature.title,
-            text: feature.text,
-            icon: feature.icon,
-            isOpen: true
-         });
+         const featureElement = document.createElement('div');
+         featureElement.classList.add('feature-item');
          
-         await grid.setItem(card);
+         const featureTitle = document.createElement('h3');
+         featureTitle.textContent = feature.title;
+         featureTitle.classList.add('feature-title');
+         
+         const featureDescription = document.createElement('p');
+         featureDescription.textContent = feature.description;
+         featureDescription.classList.add('feature-description');
+         
+         featureElement.appendChild(featureTitle);
+         featureElement.appendChild(featureDescription);
+         
+         featureGrid.appendChild(featureElement);
       }
-      
-      // Ajustar columnas para mobile
-      if (window.innerWidth <= 770) {
-         grid.columns = 1;
-      }
-      
-      // Añadir grid al contenedor
-      this.$featureContainer.appendChild(grid);
-      
-      // Añadir evento para ajustar el grid en resize
-      window.addEventListener('resize', () => {
-         if (window.innerWidth <= 770) {
-            grid.columns = 1;
-         } else {
-            grid.columns = 3;
-         }
-      });
    }
    
    async createComponentExamples() {
@@ -186,6 +170,26 @@ export default class HomePage extends HTMLElement {
          
          this.$examplesContainer.appendChild(container);
       }
+   }
+   
+   async setupGettingStartedSection() {
+      // Opcionalmente podríamos mejorar esta sección usando el CodeVisualizer component
+      // en lugar del código HTML estático en el template
+      const codeVisualizer = await slice.build('CodeVisualizer', {
+         value: `// Initialize a new Slice.js project
+npm run slice:init
+
+// Create a new component
+npm run slice:create
+
+// Start your application
+npm run slice:start`,
+         language: 'bash'
+      });
+      
+      const codeSample = this.querySelector('.code-sample');
+      codeSample.innerHTML = ''; // Clear the static code sample
+      codeSample.appendChild(codeVisualizer);
    }
 }
 
