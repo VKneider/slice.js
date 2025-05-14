@@ -1,0 +1,130 @@
+slice-codevisualizer {
+  display: block;
+  width: 100%;
+}
+
+.codevisualizer_container {
+  position: relative;
+  font-size: smaller;
+  max-width: 100%;
+  background-color: var(--secondary-background-color);
+  border: 1px solid var(--primary-color);
+  padding: 15px 10px 10px;
+  border-radius: var(--border-radius-slice, 10px);
+  overflow-x: auto;
+  margin: 15px 0;
+}
+
+.codevisualizer pre {
+  margin: 0;
+  padding: 0;
+  font-family: 'Courier New', Courier, monospace;
+  line-height: 1.5;
+  white-space: pre;
+  tab-size: 2;
+}
+
+.codevisualizer code {
+  display: block;
+  color: var(--font-primary-color);
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+/* Botón de copiar */
+.copy-button {
+  position: absolute;
+  top: 5px;
+  right: 10px;
+  padding: 4px 8px;
+  font-size: 12px;
+  background-color: var(--primary-color);
+  color: var(--primary-color-contrast);
+  border: none;
+  border-radius: var(--border-radius-slice, 4px);
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s ease, background-color 0.2s ease;
+  z-index: 1;
+}
+
+.copy-button:hover {
+  opacity: 1;
+}
+
+.copy-button.copied {
+  background-color: var(--success-color);
+  color: var(--success-contrast);
+  opacity: 1;
+}
+
+/* Temas para resaltado de sintaxis adaptados a las variables de Slice */
+.codevisualizer .code-keyword {
+  color: var(--primary-color); /* Palabras clave en color primario */
+}
+
+.codevisualizer .code-string {
+  color: var(--success-color); /* Strings en color de éxito */
+}
+
+.codevisualizer .code-number {
+  color: var(--warning-color); /* Números en color de advertencia */
+}
+
+.codevisualizer .code-comment {
+  color: var(--medium-color); /* Comentarios en color medio */
+  font-style: italic;
+}
+
+.codevisualizer .code-function {
+  color: var(--secondary-color); /* Funciones en color secundario */
+}
+
+.codevisualizer .code-method {
+  color: var(--secondary-color); /* Métodos en color secundario */
+}
+
+.codevisualizer .code-builtin {
+  color: var(--secondary-color); /* Objetos integrados en color secundario */
+}
+
+.codevisualizer .code-tag {
+  color: var(--primary-color); /* Tags HTML en color primario */
+}
+
+.codevisualizer .code-attribute {
+  color: var(--warning-color); /* Atributos HTML en color de advertencia */
+}
+
+.codevisualizer .code-selector {
+  color: var(--primary-color); /* Selectores CSS en color primario */
+}
+
+.codevisualizer .code-property {
+  color: var(--secondary-color); /* Propiedades CSS en color secundario */
+}
+
+.codevisualizer .code-value {
+  color: var(--success-color); /* Valores CSS en color de éxito */
+}
+
+.codevisualizer .code-unit {
+  color: var(--warning-color); /* Unidades CSS en color de advertencia */
+}
+
+.codevisualizer .code-color {
+  color: var(--font-primary-color); /* Colores CSS en color primario */
+}
+
+/* Media query para diseño responsivo */
+@media screen and (max-width: 768px) {
+  .codevisualizer_container {
+    font-size: 12px;
+    padding: 25px 8px 8px;
+  }
+  
+  .copy-button {
+    font-size: 10px;
+    padding: 3px 6px;
+  }
+}

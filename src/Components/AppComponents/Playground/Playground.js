@@ -21,6 +21,10 @@ export default class Playground extends HTMLElement {
                text: 'Home',
                path: '/',
             },
+            {
+               text: 'Playground',
+               path: '/Playground',
+            },
          ],
          buttons: [
             {

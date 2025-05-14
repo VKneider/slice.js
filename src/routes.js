@@ -6,6 +6,10 @@ const routes = [
       path: '/Docum/${category}/${id}',
       component: 'LandingPage',
    },
+   {
+      path: "/Playground",
+      component: "Playground",
+   }
 
 ];
 

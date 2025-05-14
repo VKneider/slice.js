@@ -19,9 +19,8 @@ export default class HomePage extends HTMLElement {
          },
          items: [
             { text: 'Home', path: '/' },
-            { text: 'Documentation', path: '/Documentation' },
             { text: 'Playground', path: '/Playground' },
-            { text: 'Contributors', path: '/Team' }
+
          ],
          buttons: [
             {
@@ -43,7 +42,8 @@ export default class HomePage extends HTMLElement {
       // Crear botones para la sección de llamada a la acción
       const docsButton = await slice.build('Button', {
          value: 'Documentation',
-         onClickCallback: () => slice.router.navigate('/Documentation'),
+         onClickCallback: () => //redirect to https://slice-js-docs.vercel.app/Documentation
+         window.open('https://slice-js-docs.vercel.app/Documentation', '_blank'),
          customColor: {
             button: 'var(--primary-color)',
             label: 'var(--primary-color-contrast)'
@@ -52,7 +52,7 @@ export default class HomePage extends HTMLElement {
       
       const componentsButton = await slice.build('Button', {
          value: 'Components Library',
-         onClickCallback: () => slice.router.navigate('/Documentation/Visual'),
+         onClickCallback: () => window.open('https://slice-js-docs.vercel.app/Documentation/Visual', '_blank'),
          customColor: {
             button: 'var(--secondary-color)',
             label: 'var(--secondary-color-contrast)'
