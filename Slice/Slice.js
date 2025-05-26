@@ -123,7 +123,9 @@ export default class Slice {
          }
 
          this.controller.registerComponent(componentInstance);
-         this.controller.registerComponentsRecursively(componentInstance);
+         if(isVisual){
+            this.controller.registerComponentsRecursively(componentInstance);
+         }
 
          this.logger.logInfo('Slice', `Instance ${componentInstance.sliceId} created`);
          return componentInstance;
