@@ -221,8 +221,7 @@ export default class Router {
          await existingComponent.update();
       }
       targetElement.appendChild(existingComponent);
-      
-      // Solo renderizar rutas dentro del componente existente
+      // Renderizar DESPUÉS de insertar (pero antes de mostrar)
       await this.renderRoutesInComponent(existingComponent);
    } else {
       const component = await slice.build(componentName, {
@@ -233,10 +232,9 @@ export default class Router {
       targetElement.innerHTML = '';
       targetElement.appendChild(component);
       
-      // AQUÍ: Solo renderizar rutas dentro del nuevo componente
+      // Renderizar INMEDIATAMENTE después de insertar
       await this.renderRoutesInComponent(component);
    }
-
 
    // Invalidar caché después de cambios importantes en el DOM
    this.invalidateCache();
@@ -247,12 +245,12 @@ export default class Router {
 
    slice.router.activeRoute = route;
 }
+
    async loadInitialRoute() {
       const path = window.location.pathname;
       const { route, params } = this.matchRoute(path);
 
       await this.handleRoute(route, params);
-      await this.renderRoutesComponentsInPage();
    }
 
    matchRoute(path) {
