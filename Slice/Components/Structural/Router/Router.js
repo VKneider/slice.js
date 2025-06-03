@@ -95,17 +95,18 @@ export default class Router {
             existingComponent.props = { ...existingComponent.props, ...params };
             await existingComponent.update();
          }
+         await this.renderRoutesComponentsInPage();
          targetElement.appendChild(existingComponent);
       } else {
          const component = await slice.build(componentName, {
             params,
             sliceId: sliceId,
          });
+         await this.renderRoutesComponentsInPage();
          targetElement.innerHTML = '';
          targetElement.appendChild(component);
       }
 
-      await this.renderRoutesComponentsInPage();
 
 
       if (slice.loading) {
