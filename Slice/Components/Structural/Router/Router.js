@@ -203,44 +203,50 @@ export default class Router {
    }
 
    async handleRoute(route, params) {
-      const targetElement = document.querySelector('#app');
-      
-      const componentName = route.parentRoute ? route.parentRoute.component : route.component;
-      const sliceId = `route-${componentName}`;
-      
-      const existingComponent = slice.controller.getComponent(sliceId);
+   const targetElement = document.querySelector('#app');
+   
+   const componentName = route.parentRoute ? route.parentRoute.component : route.component;
+   const sliceId = `route-${componentName}`;
+   
+   const existingComponent = slice.controller.getComponent(sliceId);
 
-      if (slice.loading) {
-         slice.loading.start();
-      }
-
-      if (existingComponent) {
-         targetElement.innerHTML = '';
-         if (existingComponent.update) {
-            existingComponent.props = { ...existingComponent.props, ...params };
-            await existingComponent.update();
-         }
-         targetElement.appendChild(existingComponent);
-      } else {
-         const component = await slice.build(componentName, {
-            params,
-            sliceId: sliceId,
-         });
-         targetElement.innerHTML = '';
-         targetElement.appendChild(component);
-      }
-
-      // Invalidar caché después de cambios importantes en el DOM
-      this.invalidateCache();
-      await this.renderRoutesComponentsInPage();
-
-      if (slice.loading) {
-         slice.loading.stop();
-      }
-
-      slice.router.activeRoute = route;
+   if (slice.loading) {
+      slice.loading.start();
    }
 
+   if (existingComponent) {
+      targetElement.innerHTML = '';
+      if (existingComponent.update) {
+         existingComponent.props = { ...existingComponent.props, ...params };
+         await existingComponent.update();
+      }
+      targetElement.appendChild(existingComponent);
+      
+      // Solo renderizar rutas dentro del componente existente
+      await this.renderRoutesInComponent(existingComponent);
+   } else {
+      const component = await slice.build(componentName, {
+         params,
+         sliceId: sliceId,
+      });
+
+      targetElement.innerHTML = '';
+      targetElement.appendChild(component);
+      
+      // AQUÍ: Solo renderizar rutas dentro del nuevo componente
+      await this.renderRoutesInComponent(component);
+   }
+
+
+   // Invalidar caché después de cambios importantes en el DOM
+   this.invalidateCache();
+
+   if (slice.loading) {
+      slice.loading.stop();
+   }
+
+   slice.router.activeRoute = route;
+}
    async loadInitialRoute() {
       const path = window.location.pathname;
       const { route, params } = this.matchRoute(path);
