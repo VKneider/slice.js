@@ -105,6 +105,9 @@ export default class Router {
          targetElement.appendChild(component);
       }
 
+      await this.renderRoutesComponentsInPage();
+
+
       if (slice.loading) {
          slice.loading.stop();
       }
