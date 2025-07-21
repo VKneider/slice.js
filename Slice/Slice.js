@@ -11,6 +11,7 @@ export default class Slice {
       this.loggerConfig = sliceConfig.logger;
       this.debuggerConfig = sliceConfig.debugger;
       this.loadingConfig = sliceConfig.loading;
+      this.productionConfig = sliceConfig.production;
    }
 
    async getClass(module) {
@@ -20,6 +21,10 @@ export default class Slice {
       } catch (error) {
          this.logger.logError('Slice', `Error loading class ${module}`, error);
       }
+   }
+
+   isProduction(){
+      return this.productionConfig.enabled;
    }
 
    getComponent(componentSliceId) {

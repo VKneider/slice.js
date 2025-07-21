@@ -1,10 +1,73 @@
 <div id="debugger-container">
-  <div class="debugger-header">
-    <div id="close-debugger">[×]</div>
-    <h3>Component Details</h3>
-  </div>
-  <div id="component-details">
-    <ul class="component-details-list"></ul>
-    <div class="component-details-table"></div>
-  </div>
+   <div class="debugger-header">
+      <div class="header-content">
+         <div class="component-info">
+            <div class="component-icon">🔍</div>
+            <div class="component-details">
+               <div class="component-name">Component Inspector</div>
+               <div class="component-id">Ready to debug</div>
+            </div>
+         </div>
+         <div class="header-actions">
+            <button class="minimize-btn" title="Minimize">−</button>
+            <button id="close-debugger" title="Close">×</button>
+         </div>
+      </div>
+   </div>
+   
+   <div class="debugger-content">
+      <div class="tabs-container">
+         <div class="tab-nav">
+            <button class="tab-btn active" data-tab="props">📋 Props</button>
+            <button class="tab-btn" data-tab="info">ℹ️ Info</button>
+         </div>
+      </div>
+      
+      <div class="tab-content">
+         <div class="tab-pane active" id="props-tab">
+            <div class="props-container"></div>
+            <div class="props-actions">
+               <div class="action-buttons">
+                  <button class="action-btn primary" id="apply-changes">✅ Apply Changes</button>
+                  <button class="action-btn secondary" id="reset-values">🔄 Reset Values</button>
+               </div>
+               <div class="actions-note">
+                  <small>💡 Press Enter on any input to apply changes automatically</small>
+               </div>
+            </div>
+         </div>
+         
+         <div class="tab-pane" id="info-tab">
+            <div class="info-container">
+               <div class="info-list"></div>
+            </div>
+         </div>
+      </div>
+   </div>
+   
+   <!-- Modal para editar objetos/funciones -->
+   <div class="editor-modal" id="editor-modal">
+      <div class="modal-content">
+         <div class="modal-header">
+            <h3 id="modal-title">Edit Property</h3>
+            <button class="modal-close" id="modal-close">×</button>
+         </div>
+         <div class="modal-body">
+            <div class="editor-type-selector">
+               <button class="type-btn active" data-type="json">📋 JSON</button>
+               <button class="type-btn" data-type="function">⚡ Function</button>
+            </div>
+            <div class="editor-container">
+               <textarea id="property-editor" spellcheck="false"></textarea>
+            </div>
+            <div class="editor-footer">
+               <div class="validation-message"></div>
+            </div>
+         </div>
+         <div class="modal-actions">
+            <button class="modal-btn cancel" id="modal-cancel">Cancel</button>
+            <button class="modal-btn save" id="modal-save">Save Changes</button>
+         </div>
+      </div>
+   </div>
 </div>
