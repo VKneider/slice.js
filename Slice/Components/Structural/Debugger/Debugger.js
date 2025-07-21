@@ -1,3 +1,5 @@
+// ✅ VERSIÓN ANTI-INTERFERENCIA - Aislada del Router y con debugging
+
 export default class Debugger extends HTMLElement {
    constructor() {
       super();
@@ -6,10 +8,16 @@ export default class Debugger extends HTMLElement {
       this.selectedComponentSliceId = null;
       this.isActive = false;
       this.activeTab = 'props';
+      this.currentComponent = null;
+      this.componentProps = {};
+      this.currentEditingProp = null;
+      this.currentEditingType = null;
+      
+      // ✅ Flag para prevenir interferencias externas
+      this.isDebuggerInput = false;
    }
 
    async enableDebugMode() {
-      // Cargar HTML y CSS desde archivos externos
       const html = await slice.controller.fetchText('Debugger', 'html', 'Structural');
       const css = await slice.controller.fetchText('Debugger', 'css', 'Structural');
 
@@ -20,7 +28,7 @@ export default class Debugger extends HTMLElement {
       this.setupEventListeners();
       this.makeDraggable();
 
-      slice.logger.logInfo('Logger', 'Advanced Debug mode enabled');
+      slice.logger.logInfo('Debugger', 'Advanced Debug mode enabled');
       return true;
    }
 
@@ -74,11 +82,13 @@ export default class Debugger extends HTMLElement {
       });
 
       // Action buttons
-      this.querySelector('#apply-changes').addEventListener('click', () => {
+      this.querySelector('#apply-changes')?.addEventListener('click', (e) => {
+         e.stopPropagation();
          this.applyAllChanges();
       });
 
-      this.querySelector('#reset-values').addEventListener('click', () => {
+      this.querySelector('#reset-values')?.addEventListener('click', (e) => {
+         e.stopPropagation();
          this.resetValues();
       });
 
@@ -94,57 +104,71 @@ export default class Debugger extends HTMLElement {
          }
       });
 
-      // ✅ SIMPLIFICADO: Solo Enter para aplicar, sin más eventos automáticos
-      this.addEventListener('keypress', (event) => {
-         if (event.key === 'Enter' && event.target.classList.contains('prop-control')) {
-            event.preventDefault();
-            this.applyPropertyChange(event.target);
-         }
-      });
-
-      // ✅ SIMPLIFICADO: Solo cambio visual para checkboxes
-      this.addEventListener('change', (event) => {
-         if (event.target.type === 'checkbox' && event.target.classList.contains('prop-control')) {
-            const span = event.target.nextElementSibling;
-            if (span) {
-               span.textContent = event.target.checked ? 'true' : 'false';
-            }
-            this.applyPropertyChange(event.target);
-         }
-      });
-
-      // ✅ DEBUG: Agregar logs para entender qué está pasando
-      this.addEventListener('click', (event) => {
+      // ✅ EVENTOS PRINCIPALES - Con protección anti-interferencia
+      this.addEventListener('mousedown', (event) => {
          if (event.target.classList.contains('prop-control')) {
-            console.log('🎯 Debug: Input clicked', event.target.dataset.prop);
+            this.isDebuggerInput = true;
+            // Prevenir interferencias del Router u otros sistemas
+            event.stopPropagation();
          }
       });
 
       this.addEventListener('focus', (event) => {
          if (event.target.classList.contains('prop-control')) {
-            console.log('🎯 Debug: Input focused', event.target.dataset.prop);
+            this.isDebuggerInput = true;
+            event.stopPropagation();
          }
       }, true);
 
       this.addEventListener('blur', (event) => {
          if (event.target.classList.contains('prop-control')) {
-            console.log('🎯 Debug: Input blurred', event.target.dataset.prop);
+            this.isDebuggerInput = false;
          }
       }, true);
+
+      this.addEventListener('keypress', (event) => {
+         if (event.key === 'Enter' && event.target.classList.contains('prop-control')) {
+            event.preventDefault();
+            event.stopPropagation();
+            this.applyPropertyChange(event.target);
+         }
+      });
+
+      this.addEventListener('change', (event) => {
+         if (event.target.type === 'checkbox' && event.target.classList.contains('prop-control')) {
+            event.stopPropagation();
+            this.applyPropertyChange(event.target);
+         }
+      });
+
+      // ✅ PROTECCIÓN GLOBAL: Prevenir que eventos externos interfieran
+      this.addEventListener('click', (event) => {
+         if (this.contains(event.target)) {
+            event.stopPropagation();
+         }
+      });
+
+      // ✅ Los eventos DOMNodeInserted/Removed están deprecated, 
+      // pero la protección con stopPropagation() ya es suficiente
    }
 
    switchTab(tabName) {
       this.activeTab = tabName;
       
-      // Update tab buttons
       this.querySelectorAll('.tab-btn').forEach(btn => {
          btn.classList.toggle('active', btn.dataset.tab === tabName);
       });
 
-      // Update tab panes
       this.querySelectorAll('.tab-pane').forEach(pane => {
          pane.classList.toggle('active', pane.id === `${tabName}-tab`);
       });
+   }
+
+   switchEditorType(type) {
+      this.querySelectorAll('.type-btn').forEach(btn => {
+         btn.classList.toggle('active', btn.dataset.type === type);
+      });
+      this.currentEditingType = type;
    }
 
    attachDebugMode(component) {
@@ -211,280 +235,278 @@ export default class Debugger extends HTMLElement {
          }
       });
 
+      // ✅ Crear UI sin interferencias
       this.updateDebuggerContent();
       this.debuggerContainer.classList.add('active');
    }
 
    updateDebuggerContent() {
-      console.log('🔥 DEBUG: updateDebuggerContent called - this recreates ALL inputs!');
-      console.trace(); // Esto nos dirá desde dónde se está llamando
       this.updatePropsTab();
       this.updateInfoTab();
    }
 
    updatePropsTab() {
-      console.log('🔥 DEBUG: updatePropsTab called - this recreates props inputs!');
-      console.trace();
-      
-      const component = this.currentComponent;
-      const ComponentClass = component.constructor;
-      const hasStaticProps = ComponentClass.props && !slice.isProduction();
-      const staticProps = ComponentClass.props || {};
-
-      this.propsContainer.innerHTML = '';
-
-      if (hasStaticProps) {
-         // Enhanced props view
-         const usedSection = document.createElement('div');
-         usedSection.className = 'props-section';
-         usedSection.innerHTML = '<div class="section-title">📋 Component Properties</div>';
-
-         Object.entries(staticProps).forEach(([prop, config]) => {
-            const propItem = this.createPropItem(prop, config, this.componentProps[prop]);
-            usedSection.appendChild(propItem);
-         });
-
-         this.propsContainer.appendChild(usedSection);
-      } else {
-         // Legacy props view
-         const legacySection = document.createElement('div');
-         legacySection.className = 'props-section';
-         legacySection.innerHTML = '<div class="section-title">📋 Properties (Legacy)</div>';
-
-         Object.entries(this.componentProps).forEach(([prop, value]) => {
-            if (value !== null) {
-               const propItem = this.createLegacyPropItem(prop, value);
-               legacySection.appendChild(propItem);
-            }
-         });
-
-         this.propsContainer.appendChild(legacySection);
+      const propsContainer = this.querySelector('.props-container');
+      if (!propsContainer) {
+         return;
       }
+      
+      propsContainer.innerHTML = '';
+
+      const realComponentProps = this.getComponentPropsForDebugger(this.currentComponent);
+      const ComponentClass = this.currentComponent.constructor;
+      const configuredProps = ComponentClass.props || {};
+
+      realComponentProps.forEach(prop => {
+         const propElement = this.createPropElement(prop, configuredProps[prop]);
+         propsContainer.appendChild(propElement);
+      });
    }
 
-   createPropItem(prop, config, value) {
-      const isUsed = value !== undefined;
-      const isRequired = config.required;
-      
-      const propItem = document.createElement('div');
-      propItem.className = 'prop-item';
+   createPropElement(prop, config = {}) {
+      const propWrapper = document.createElement('div');
+      propWrapper.className = 'prop-item';
+      propWrapper.dataset.prop = prop;
 
-      const statusClass = isRequired && !isUsed ? 'status-missing' : 
-                         isUsed ? 'status-used' : 'status-optional';
-      const statusText = isRequired && !isUsed ? '❌ Missing' : 
-                        isUsed ? '✅ Used' : '⚪ Optional';
+      const currentValue = this.currentComponent[prop];
+      const valueType = this.getValueType(currentValue);
 
-      const inputType = this.getInputType(config.type, value);
-      const inputHtml = this.createPropertyInput(prop, value, config, inputType);
+      // Status based on usage
+      let status, statusClass;
+      if (currentValue !== undefined && currentValue !== null) {
+         status = 'Used';
+         statusClass = 'status-used';
+      } else if (config.required) {
+         status = 'Missing';
+         statusClass = 'status-missing';
+      } else {
+         status = 'Optional';
+         statusClass = 'status-optional';
+      }
 
-      propItem.innerHTML = `
+      propWrapper.innerHTML = `
          <div class="prop-header">
-            <div class="prop-name ${isRequired ? 'required' : ''}">${prop}</div>
-            <div class="prop-meta">
-               <span class="prop-type">${config.type || 'any'}</span>
-               <span class="prop-status ${statusClass}">${statusText}</span>
+            <div class="prop-title">
+               <strong>${prop}</strong>
+               <span class="prop-type">${valueType}</span>
             </div>
+            <div class="prop-status ${statusClass}">${status}</div>
          </div>
-         <div class="prop-input">${inputHtml}</div>
-         ${!isUsed && config.default !== undefined ? 
-           `<div class="default-value">Default: ${JSON.stringify(config.default)}</div>` : ''}
+         <div class="prop-input">
+            ${this.createInputForType(prop, currentValue, valueType, config)}
+         </div>
+         ${config.default !== undefined ? `<div class="default-value">Default: ${JSON.stringify(config.default)}</div>` : ''}
       `;
 
-      return propItem;
+      return propWrapper;
    }
 
-   createLegacyPropItem(prop, value) {
-      const propItem = document.createElement('div');
-      propItem.className = 'prop-item';
-
-      const inputType = this.getInputType(typeof value, value);
-      const inputHtml = this.createPropertyInput(prop, value, null, inputType);
-
-      propItem.innerHTML = `
-         <div class="prop-header">
-            <div class="prop-name">${prop}</div>
-            <div class="prop-meta">
-               <span class="prop-type">${typeof value}</span>
-               <span class="prop-status status-used">✅ Used</span>
-            </div>
-         </div>
-         <div class="prop-input">${inputHtml}</div>
-      `;
-
-      return propItem;
-   }
-
-   getInputType(type, value) {
-      if (typeof value === 'object' || type === 'object') return 'object';
-      if (typeof value === 'function' || type === 'function') return 'function';
-      if (typeof value === 'boolean' || type === 'boolean') return 'boolean';
-      if (typeof value === 'number' || type === 'number') return 'number';
-      return 'text';
-   }
-
-   createPropertyInput(prop, value, config, inputType) {
-      const hasComplexEditor = inputType === 'object' || inputType === 'function';
-      const displayValue = this.formatValueForDisplay(value);
+   createInputForType(prop, value, type, config = {}) {
+      const serializedValue = this.serializeValue(value);
       
-      if (hasComplexEditor) {
+      if (type === 'boolean') {
          return `
             <div class="input-group">
-               <input type="text" class="prop-control" 
-                      value="${displayValue}" 
+               <input type="checkbox" 
+                      class="prop-control debugger-input" 
                       data-prop="${prop}" 
-                      readonly>
-               <button class="edit-btn" onclick="slice.debugger.openEditor('${prop}', '${inputType}')">✏️</button>
+                      ${value ? 'checked' : ''}
+                      data-debugger-input="true">
+               <span class="checkbox-label">${value ? 'true' : 'false'}</span>
             </div>
          `;
-      } else if (inputType === 'boolean') {
-         const checked = value ? 'checked' : '';
+      } else if (type === 'number') {
          return `
-            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-               <input type="checkbox" ${checked} data-prop="${prop}" class="prop-control">
-               <span style="font-size: 13px; color: var(--font-secondary-color);">
-                  ${value ? 'true' : 'false'}
-               </span>
-            </label>
+            <div class="input-group">
+               <input type="number" 
+                      class="prop-control debugger-input" 
+                      data-prop="${prop}" 
+                      value="${serializedValue}"
+                      step="any"
+                      placeholder="Enter number..."
+                      data-debugger-input="true">
+            </div>
+         `;
+      } else if (type === 'object' || type === 'array' || type === 'function') {
+         return `
+            <div class="input-group">
+               <input type="text" 
+                      class="prop-control debugger-input" 
+                      data-prop="${prop}" 
+                      value="${serializedValue}"
+                      readonly
+                      title="Click edit button to modify"
+                      data-debugger-input="true">
+               <button class="edit-btn" onclick="slice.debugger.openAdvancedEditor('${prop}', '${type}')">✏️</button>
+            </div>
          `;
       } else {
-         // ✅ CORREGIDO: Inputs normales SIN readonly para permitir edición
          return `
-            <input type="${inputType === 'number' ? 'number' : 'text'}" 
-                   class="prop-control" 
-                   value="${displayValue}" 
-                   data-prop="${prop}"
-                   placeholder="Enter ${inputType} value...">
+            <div class="input-group">
+               <input type="text" 
+                      class="prop-control debugger-input" 
+                      data-prop="${prop}" 
+                      value="${serializedValue}"
+                      placeholder="Enter value..."
+                      data-debugger-input="true">
+            </div>
          `;
       }
    }
 
-   formatValueForDisplay(value) {
-      if (value === null || value === undefined) return '';
-      if (typeof value === 'function') return '[Function]';
-      if (typeof value === 'object') return JSON.stringify(value);
-      return String(value);
-   }
+   applyPropertyChange(inputElement) {
+      const prop = inputElement.dataset.prop;
+      if (!prop) return;
 
-   updateInfoTab() {
-      const component = this.currentComponent;
+      let newValue;
       
-      const infoItems = [
-         { label: 'Component Name', value: component.constructor.name },
-         { label: 'Slice ID', value: component.sliceId },
-         { label: 'Connected to DOM', value: component.isConnected ? 'Yes' : 'No' },
-         { label: 'Has Static Props', value: component.constructor.props ? 'Yes' : 'No' },
-         { label: 'Props Count', value: Object.keys(this.componentProps).length },
-         { label: 'Custom Element', value: component.tagName.toLowerCase() }
-      ];
+      if (inputElement.type === 'checkbox') {
+         newValue = inputElement.checked;
+         const label = inputElement.parentNode.querySelector('.checkbox-label');
+         if (label) {
+            label.textContent = newValue ? 'true' : 'false';
+         }
+      } else if (inputElement.type === 'number') {
+         newValue = Number(inputElement.value);
+      } else {
+         newValue = inputElement.value;
+         
+         // Convert string values
+         if (newValue === 'true') newValue = true;
+         if (newValue === 'false') newValue = false;
+         if (!isNaN(newValue) && newValue !== '' && newValue !== null) newValue = Number(newValue);
+      }
 
-      this.infoContainer.innerHTML = infoItems.map(item => `
-         <div class="info-item">
-            <div class="info-label">${item.label}</div>
-            <div class="info-value">${item.value}</div>
-         </div>
-      `).join('');
+      const oldValue = this.currentComponent[prop];
+      
+      this.currentComponent[prop] = newValue;
+      slice.logger.logInfo('Debugger', `Updated ${prop}: ${oldValue} → ${newValue}`);
+      
+      this.showVisualFeedback(inputElement);
    }
 
-   openEditor(prop, type) {
+   showVisualFeedback(inputElement) {
+      const originalBorder = inputElement.style.borderColor;
+      const originalBoxShadow = inputElement.style.boxShadow;
+      
+      inputElement.style.borderColor = '#4CAF50';
+      inputElement.style.boxShadow = '0 0 0 2px rgba(76, 175, 80, 0.3)';
+      
+      setTimeout(() => {
+         inputElement.style.borderColor = originalBorder;
+         inputElement.style.boxShadow = originalBoxShadow;
+      }, 1500);
+   }
+
+   applyAllChanges() {
+      const inputs = this.querySelectorAll('.prop-control:not([readonly])');
+      let changeCount = 0;
+      
+      inputs.forEach(input => {
+         if (!input.readOnly) {
+            this.applyPropertyChange(input);
+            changeCount++;
+         }
+      });
+
+      slice.logger.logInfo('Debugger', `Applied ${changeCount} property changes`);
+      this.showApplyFeedback(changeCount);
+   }
+
+   showApplyFeedback(changeCount) {
+      const applyBtn = this.querySelector('#apply-changes');
+      if (!applyBtn) return;
+      
+      const originalText = applyBtn.textContent;
+      
+      if (changeCount > 0) {
+         applyBtn.textContent = `✅ Applied ${changeCount} changes!`;
+         applyBtn.style.background = '#4CAF50';
+      } else {
+         applyBtn.textContent = '✅ No changes to apply';
+         applyBtn.style.background = '#9E9E9E';
+      }
+      
+      setTimeout(() => {
+         applyBtn.textContent = originalText;
+         applyBtn.style.background = '';
+      }, 2000);
+   }
+
+   openAdvancedEditor(prop, type) {
       this.currentEditingProp = prop;
       this.currentEditingType = type;
       
-      const value = this.componentProps[prop];
-      this.modalTitle.textContent = `Edit ${prop}`;
+      const value = this.currentComponent[prop];
       
-      // Set editor type
+      this.modalTitle.textContent = `Edit ${prop} (${type})`;
+      
       this.querySelectorAll('.type-btn').forEach(btn => {
          btn.classList.toggle('active', btn.dataset.type === type);
       });
-
-      // Set editor content
+      
       if (type === 'function') {
-         this.propertyEditor.value = typeof value === 'function' ? 
-            value.toString() : 'function() {\n  // Your code here\n}';
+         if (typeof value === 'function') {
+            this.propertyEditor.value = value.toString();
+         } else {
+            this.propertyEditor.value = 'function() {\n   // Your code here\n}';
+         }
       } else {
          this.propertyEditor.value = JSON.stringify(value, null, 2);
       }
-
+      
       this.editorModal.classList.add('active');
       this.propertyEditor.focus();
-      this.validateEditor();
-   }
-
-   switchEditorType(type) {
-      this.currentEditingType = type;
-      
-      this.querySelectorAll('.type-btn').forEach(btn => {
-         btn.classList.toggle('active', btn.dataset.type === type);
-      });
-
-      const value = this.componentProps[this.currentEditingProp];
-      
-      if (type === 'function') {
-         this.propertyEditor.value = typeof value === 'function' ? 
-            value.toString() : 'function() {\n  // Your code here\n}';
-      } else {
-         this.propertyEditor.value = JSON.stringify(value, null, 2);
-      }
-      
-      this.validateEditor();
    }
 
    validateEditor() {
-      const content = this.propertyEditor.value;
-      const saveBtn = this.querySelector('#modal-save');
+      const value = this.propertyEditor.value.trim();
+      const type = this.currentEditingType;
       
       try {
-         if (this.currentEditingType === 'function') {
-            // Basic function validation
-            if (content.trim().startsWith('function') || content.trim().startsWith('(') || content.includes('=>')) {
-               new Function('return ' + content);
-               this.validationMessage.textContent = '✅ Valid function syntax';
-               this.validationMessage.style.color = 'var(--success-color)';
-               saveBtn.disabled = false;
-            } else {
-               throw new Error('Invalid function syntax');
-            }
+         if (type === 'function') {
+            new Function('return ' + value)();
          } else {
-            JSON.parse(content);
-            this.validationMessage.textContent = '✅ Valid JSON';
-            this.validationMessage.style.color = 'var(--success-color)';
-            saveBtn.disabled = false;
+            JSON.parse(value);
          }
+         
+         this.validationMessage.textContent = '✅ Valid syntax';
+         this.validationMessage.style.color = '#4CAF50';
+         this.querySelector('#modal-save').disabled = false;
       } catch (error) {
          this.validationMessage.textContent = `❌ ${error.message}`;
-         this.validationMessage.style.color = 'var(--danger-color)';
-         saveBtn.disabled = true;
+         this.validationMessage.style.color = '#F44336';
+         this.querySelector('#modal-save').disabled = true;
       }
    }
 
    savePropertyValue() {
-      const content = this.propertyEditor.value;
+      const value = this.propertyEditor.value.trim();
+      const type = this.currentEditingType;
       
       try {
          let newValue;
          
-         if (this.currentEditingType === 'function') {
-            newValue = new Function('return ' + content)();
+         if (type === 'function') {
+            newValue = new Function('return ' + value)();
          } else {
-            newValue = JSON.parse(content);
+            newValue = JSON.parse(value);
          }
-
-         // Update component property
-         this.currentComponent[this.currentEditingProp] = newValue;
-         this.componentProps[this.currentEditingProp] = newValue;
          
-         // ✅ CORREGIDO: Solo actualizar UI después de cerrar modal
+         this.currentComponent[this.currentEditingProp] = newValue;
          this.closeModal();
          
-         // ✅ Recrear props solo después de editar objeto/función (necesario)
-         setTimeout(() => {
-            this.updatePropsTab();
-         }, 50);
-         
          slice.logger.logInfo('Debugger', `Updated ${this.currentEditingProp} via advanced editor`);
+         
+         const input = this.querySelector(`[data-prop="${this.currentEditingProp}"]`);
+         if (input) {
+            input.value = this.serializeValue(newValue);
+            this.showVisualFeedback(input);
+         }
+         
       } catch (error) {
          this.validationMessage.textContent = `❌ ${error.message}`;
-         this.validationMessage.style.color = 'var(--danger-color)';
+         this.validationMessage.style.color = '#F44336';
       }
    }
 
@@ -495,119 +517,94 @@ export default class Debugger extends HTMLElement {
       this.validationMessage.textContent = '';
    }
 
-   // ✅ NUEVO: Aplicar cambio de una propiedad específica SIN tocar UI
-   applyPropertyChange(inputElement) {
-      const prop = inputElement.dataset.prop;
-      if (!prop) return;
-
-      let newValue;
-      
-      if (inputElement.type === 'checkbox') {
-         newValue = inputElement.checked;
-      } else if (inputElement.type === 'number') {
-         newValue = Number(inputElement.value);
-      } else {
-         newValue = inputElement.value;
-         
-         // Convert string values
-         if (newValue === 'true') newValue = true;
-         if (newValue === 'false') newValue = false;
-         if (!isNaN(newValue) && newValue !== '') newValue = Number(newValue);
-      }
-
-      const oldValue = this.currentComponent[prop];
-      
-      if (JSON.stringify(newValue) !== JSON.stringify(oldValue)) {
-         this.currentComponent[prop] = newValue;
-         slice.logger.logInfo('Debugger', `Updated ${prop}: ${oldValue} → ${newValue}`);
-      }
-   }
-
-   // ✅ SIMPLIFICADO: Solo para el botón Apply Changes
-   applyAllChanges() {
-      const inputs = this.propsContainer.querySelectorAll('.prop-control');
-      let changesCount = 0;
-
-      inputs.forEach(input => {
-         const prop = input.dataset.prop;
-         if (!prop) return;
-
-         let newValue;
-         
-         if (input.type === 'checkbox') {
-            newValue = input.checked;
-         } else if (input.type === 'number') {
-            newValue = Number(input.value);
-         } else {
-            newValue = input.value;
-            
-            if (newValue === 'true') newValue = true;
-            if (newValue === 'false') newValue = false;
-            if (!isNaN(newValue) && newValue !== '') newValue = Number(newValue);
-         }
-
-         const oldValue = this.currentComponent[prop];
-         
-         if (JSON.stringify(newValue) !== JSON.stringify(oldValue)) {
-            this.currentComponent[prop] = newValue;
-            changesCount++;
-         }
-      });
-
-      slice.logger.logInfo('Debugger', `Applied ${changesCount} changes via button`);
-      
-      if (changesCount > 0) {
-         this.showApplyFeedback(changesCount);
-      }
-   }
-
-   // ✅ NUEVO: Mostrar feedback visual
-   showApplyFeedback(changesCount) {
-      const applyBtn = this.querySelector('#apply-changes');
-      const originalText = applyBtn.textContent;
-      
-      applyBtn.textContent = `✅ Applied ${changesCount} changes!`;
-      applyBtn.style.background = 'var(--success-color)';
-      
-      setTimeout(() => {
-         applyBtn.textContent = originalText;
-         applyBtn.style.background = 'var(--primary-color)';
-      }, 1500);
-   }
-
    resetValues() {
       const ComponentClass = this.currentComponent.constructor;
-      const staticProps = ComponentClass.props || {};
+      const configuredProps = ComponentClass.props || {};
       let resetCount = 0;
 
-      Object.entries(staticProps).forEach(([prop, config]) => {
+      Object.entries(configuredProps).forEach(([prop, config]) => {
          if (config.default !== undefined) {
             this.currentComponent[prop] = config.default;
-            resetCount++;
+            
+            const input = this.querySelector(`[data-prop="${prop}"]`);
+            if (input && !input.readOnly) {
+               if (input.type === 'checkbox') {
+                  input.checked = config.default;
+                  const label = input.parentNode.querySelector('.checkbox-label');
+                  if (label) {
+                     label.textContent = config.default ? 'true' : 'false';
+                  }
+               } else {
+                  input.value = this.serializeValue(config.default);
+               }
+               resetCount++;
+            }
          }
       });
 
       slice.logger.logInfo('Debugger', 'Reset values to defaults');
-      
-      // ✅ CORREGIDO: Solo recrear UI después del reset (necesario)
-      if (resetCount > 0) {
-         this.updatePropsTab(); // Necesario para mostrar los nuevos valores
-         this.showResetFeedback(resetCount);
-      }
+      this.showResetFeedback(resetCount);
    }
 
-   // ✅ NUEVO: Mostrar feedback visual para reset
    showResetFeedback(resetCount) {
       const resetBtn = this.querySelector('#reset-values');
+      if (!resetBtn) return;
+      
       const originalText = resetBtn.textContent;
       
       resetBtn.textContent = `🔄 Reset ${resetCount} values!`;
-      resetBtn.style.background = 'var(--warning-color)';
+      resetBtn.style.background = '#FF9800';
       
       setTimeout(() => {
          resetBtn.textContent = originalText;
-         resetBtn.style.background = 'var(--secondary-color)';
+         resetBtn.style.background = '';
       }, 1500);
+   }
+
+   updateInfoTab() {
+      const infoContainer = this.querySelector('.info-list');
+      if (!infoContainer) return;
+      
+      const component = this.currentComponent;
+      
+      const info = [
+         { label: 'Component Type', value: component.constructor.name },
+         { label: 'Slice ID', value: component.sliceId || 'Not assigned' },
+         { label: 'Tag Name', value: component.tagName },
+         { label: 'Connected', value: component.isConnected ? 'Yes' : 'No' },
+         { label: 'Props Count', value: Object.keys(this.componentProps).length },
+         { label: 'Children', value: component.children.length }
+      ];
+      
+      infoContainer.innerHTML = info.map(item => `
+         <div class="info-item">
+            <span class="info-label">${item.label}</span>
+            <span class="info-value">${item.value}</span>
+         </div>
+      `).join('');
+   }
+
+   getValueType(value) {
+      if (value === null) return 'null';
+      if (value === undefined) return 'undefined';
+      if (Array.isArray(value)) return 'array';
+      return typeof value;
+   }
+
+   serializeValue(value) {
+      if (value === null || value === undefined) {
+         return '';
+      }
+      
+      if (typeof value === 'object' || typeof value === 'function') {
+         try {
+            return JSON.stringify(value);
+         } catch {
+            return String(value);
+         }
+      }
+      
+      return String(value);
    }
 
    getComponentPropsForDebugger(component) {
