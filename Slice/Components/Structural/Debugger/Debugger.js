@@ -18,8 +18,11 @@ export default class Debugger extends HTMLElement {
    }
 
    async enableDebugMode() {
-      const html = await slice.controller.fetchText('Debugger', 'html', 'Structural');
-      const css = await slice.controller.fetchText('Debugger', 'css', 'Structural');
+      //const html = await slice.controller.fetchText('Debugger', 'html', 'Structural');
+      //const css = await slice.controller.fetchText('Debugger', 'css', 'Structural');
+
+      const html = productionOnlyHtml();
+      const css = productionOnlyCSS();
 
       this.innerHTML = html;
       slice.stylesManager.registerComponentStyles('Debugger', css);
@@ -641,3 +644,705 @@ export default class Debugger extends HTMLElement {
 }
 
 customElements.define('slice-debugger', Debugger);
+
+function productionOnlyCSS(){
+   return `
+   #debugger-container {
+   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+   display: none;
+   position: fixed;
+   top: 20px;
+   right: 20px;
+   width: 420px;
+   height: 85vh;
+   max-height: 85vh;
+   background: var(--primary-background-color);
+   border: 1px solid var(--medium-color);
+   border-radius: 12px;
+   box-shadow: 0 20px 40px rgba(var(--primary-color-rgb), 0.15), 0 4px 12px rgba(0, 0, 0, 0.1);
+   z-index: 10000;
+   overflow: hidden;
+   backdrop-filter: blur(10px);
+}
+
+#debugger-container.active {
+   display: flex;
+   flex-direction: column;
+}
+
+.debugger-header {
+   background: linear-gradient(135deg, var(--primary-color), var(--primary-color-shade));
+   color: var(--primary-color-contrast);
+   padding: 12px 16px;
+   border-radius: 12px 12px 0 0;
+   user-select: none;
+   cursor: grab;
+}
+
+.debugger-header:active {
+   cursor: grabbing;
+}
+
+.header-content {
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+}
+
+.component-info {
+   display: flex;
+   align-items: center;
+   gap: 10px;
+}
+
+.component-icon {
+   font-size: 20px;
+   opacity: 0.9;
+}
+
+.component-name {
+   font-size: 14px;
+   font-weight: 600;
+   margin-bottom: 2px;
+}
+
+.component-id {
+   font-size: 11px;
+   opacity: 0.8;
+}
+
+.header-actions {
+   display: flex;
+   gap: 8px;
+}
+
+.minimize-btn, #close-debugger {
+   background: rgba(255, 255, 255, 0.2);
+   border: none;
+   color: var(--primary-color-contrast);
+   width: 28px;
+   height: 28px;
+   border-radius: 6px;
+   cursor: pointer;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   font-size: 16px;
+   font-weight: bold;
+   transition: background 0.2s ease;
+}
+
+.minimize-btn:hover, #close-debugger:hover {
+   background: rgba(255, 255, 255, 0.3);
+}
+
+.debugger-content {
+   flex: 1;
+   display: flex;
+   flex-direction: column;
+   overflow: hidden;
+}
+
+.tabs-container {
+   border-bottom: 1px solid var(--medium-color);
+}
+
+.tab-nav {
+   display: flex;
+   background: var(--tertiary-background-color);
+}
+
+.tab-btn {
+   flex: 1;
+   padding: 10px 14px;
+   border: none;
+   background: transparent;
+   color: var(--font-secondary-color);
+   font-size: 12px;
+   font-weight: 500;
+   cursor: pointer;
+   transition: all 0.2s ease;
+   border-bottom: 2px solid transparent;
+}
+
+.tab-btn:hover {
+   background: var(--secondary-background-color);
+   color: var(--font-primary-color);
+}
+
+.tab-btn.active {
+   background: var(--primary-background-color);
+   color: var(--primary-color);
+   border-bottom-color: var(--primary-color);
+   font-weight: 600;
+}
+
+.tab-content {
+   flex: 1;
+   overflow: hidden;
+   height: calc(85vh - 100px);
+}
+
+.tab-pane {
+   display: none;
+   height: 100%;
+   overflow-y: auto;
+   overflow-x: hidden;
+   padding: 16px;
+}
+
+.tab-pane.active {
+   display: block;
+}
+
+.tab-pane::-webkit-scrollbar {
+   width: 4px;
+}
+
+.tab-pane::-webkit-scrollbar-track {
+   background: var(--tertiary-background-color);
+   border-radius: 2px;
+}
+
+.tab-pane::-webkit-scrollbar-thumb {
+   background: var(--medium-color);
+   border-radius: 2px;
+}
+
+.tab-pane::-webkit-scrollbar-thumb:hover {
+   background: var(--primary-color);
+}
+
+.props-container {
+   display: flex;
+   flex-direction: column;
+   gap: 12px;
+   margin-bottom: 16px;
+}
+
+.props-actions {
+   border-top: 1px solid var(--medium-color);
+   padding-top: 16px;
+   margin-top: 8px;
+}
+
+.actions-note {
+   margin-top: 12px;
+   padding: 8px 12px;
+   background: var(--tertiary-background-color);
+   border-radius: 6px;
+   border: 1px solid var(--medium-color);
+}
+
+.actions-note small {
+   color: var(--font-secondary-color);
+   font-size: 11px;
+   display: flex;
+   align-items: center;
+   gap: 6px;
+}
+
+.props-section {
+   background: var(--tertiary-background-color);
+   border: 1px solid var(--medium-color);
+   border-radius: 8px;
+   padding: 12px;
+}
+
+.section-title {
+   font-size: 12px;
+   font-weight: 600;
+   color: var(--font-primary-color);
+   margin-bottom: 12px;
+   display: flex;
+   align-items: center;
+   gap: 6px;
+}
+
+.prop-item {
+   display: flex;
+   flex-direction: column;
+   gap: 6px;
+   padding: 12px;
+   background: var(--primary-background-color);
+   border: 1px solid var(--medium-color);
+   border-radius: 6px;
+   margin-bottom: 8px;
+   transition: border-color 0.2s ease;
+}
+
+.prop-item:hover {
+   border-color: var(--primary-color);
+}
+
+.prop-header {
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+}
+
+.prop-name {
+   font-size: 13px;
+   font-weight: 600;
+   color: var(--font-primary-color);
+}
+
+.prop-name.required::after {
+   content: " *";
+   color: var(--danger-color);
+}
+
+.prop-meta {
+   display: flex;
+   align-items: center;
+   gap: 8px;
+}
+
+.prop-type {
+   font-size: 11px;
+   padding: 2px 6px;
+   background: var(--secondary-color);
+   color: var(--secondary-color-contrast);
+   border-radius: 4px;
+   font-family: monospace;
+   font-weight: 500;
+}
+
+.prop-status {
+   font-size: 12px;
+   font-weight: 500;
+}
+
+.status-used {
+   color: var(--success-color);
+}
+
+.status-missing {
+   color: var(--danger-color);
+}
+
+.status-optional {
+   color: var(--medium-color);
+}
+
+.prop-input {
+   margin-top: 8px;
+}
+
+.input-group {
+   position: relative;
+}
+
+.prop-control {
+   width: 100%;
+   padding: 8px 32px 8px 10px;
+   border: 1px solid var(--medium-color);
+   border-radius: 6px;
+   background: var(--primary-background-color);
+   color: var(--font-primary-color);
+   font-size: 13px;
+   transition: border-color 0.2s ease, box-shadow 0.2s ease;
+   font-family: monospace;
+}
+
+.prop-control:focus {
+   outline: none;
+   border-color: var(--primary-color);
+   box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.1);
+}
+
+.prop-control:disabled {
+   background: var(--disabled-color);
+   color: var(--font-secondary-color);
+   cursor: not-allowed;
+}
+
+.prop-control[readonly] {
+   background: var(--tertiary-background-color);
+   cursor: pointer;
+}
+
+.prop-control[readonly]:focus {
+   border-color: var(--accent-color);
+   box-shadow: 0 0 0 3px rgba(var(--accent-color), 0.1);
+}
+
+/* Estilos específicos para checkboxes */
+.prop-control[type="checkbox"] {
+   width: auto;
+   padding: 0;
+   margin: 0;
+   cursor: pointer;
+}
+
+.edit-btn {
+   position: absolute;
+   right: 4px;
+   top: 50%;
+   transform: translateY(-50%);
+   background: var(--accent-color);
+   border: none;
+   color: white;
+   width: 24px;
+   height: 24px;
+   border-radius: 4px;
+   cursor: pointer;
+   font-size: 12px;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   transition: background 0.2s ease;
+}
+
+.edit-btn:hover {
+   background: var(--primary-color);
+}
+
+.default-value {
+   font-size: 11px;
+   color: var(--font-secondary-color);
+   font-style: italic;
+   margin-top: 4px;
+}
+
+.info-list {
+   display: flex;
+   flex-direction: column;
+   gap: 12px;
+}
+
+.info-item {
+   display: flex;
+   justify-content: space-between;
+   padding: 12px;
+   background: var(--tertiary-background-color);
+   border-radius: 6px;
+   border: 1px solid var(--medium-color);
+}
+
+.info-label {
+   font-weight: 600;
+   color: var(--font-primary-color);
+   font-size: 13px;
+}
+
+.info-value {
+   color: var(--font-secondary-color);
+   font-family: monospace;
+   font-size: 12px;
+}
+
+.actions-container {
+   display: flex;
+   flex-direction: column;
+   gap: 16px;
+}
+
+.action-buttons {
+   display: flex;
+   flex-direction: column;
+   gap: 8px;
+}
+
+.action-btn {
+   padding: 12px 16px;
+   border: none;
+   border-radius: 6px;
+   font-size: 13px;
+   font-weight: 500;
+   cursor: pointer;
+   transition: all 0.2s ease;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   gap: 8px;
+}
+
+.action-btn.primary {
+   background: var(--primary-color);
+   color: var(--primary-color-contrast);
+}
+
+.action-btn.primary:hover {
+   background: var(--primary-color-shade);
+}
+
+.action-btn.secondary {
+   background: var(--secondary-color);
+   color: var(--secondary-color-contrast);
+}
+
+.action-btn.secondary:hover {
+   opacity: 0.9;
+}
+
+.action-btn.tertiary {
+   background: var(--tertiary-background-color);
+   color: var(--font-primary-color);
+   border: 1px solid var(--medium-color);
+}
+
+.action-btn.tertiary:hover {
+   background: var(--secondary-background-color);
+}
+
+/* Modal Styles */
+.editor-modal {
+   display: none;
+   position: fixed;
+   top: 0;
+   left: 0;
+   width: 100%;
+   height: 100%;
+   background: rgba(0, 0, 0, 0.6);
+   z-index: 20000;
+   backdrop-filter: blur(4px);
+}
+
+.editor-modal.active {
+   display: flex;
+   align-items: center;
+   justify-content: center;
+}
+
+.modal-content {
+   background: var(--primary-background-color);
+   border-radius: 12px;
+   width: 90%;
+   max-width: 600px;
+   max-height: 80%;
+   display: flex;
+   flex-direction: column;
+   box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+   border: 1px solid var(--medium-color);
+}
+
+.modal-header {
+   padding: 16px 20px;
+   background: var(--tertiary-background-color);
+   border-radius: 12px 12px 0 0;
+   border-bottom: 1px solid var(--medium-color);
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+}
+
+.modal-header h3 {
+   margin: 0;
+   font-size: 16px;
+   font-weight: 600;
+   color: var(--font-primary-color);
+}
+
+.modal-close {
+   background: none;
+   border: none;
+   font-size: 20px;
+   color: var(--font-secondary-color);
+   cursor: pointer;
+   width: 32px;
+   height: 32px;
+   border-radius: 6px;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   transition: background 0.2s ease;
+}
+
+.modal-close:hover {
+   background: var(--secondary-background-color);
+}
+
+.modal-body {
+   flex: 1;
+   padding: 20px;
+   display: flex;
+   flex-direction: column;
+   gap: 16px;
+   overflow: hidden;
+}
+
+.editor-type-selector {
+   display: flex;
+   gap: 4px;
+   background: var(--tertiary-background-color);
+   padding: 4px;
+   border-radius: 6px;
+}
+
+.type-btn {
+   flex: 1;
+   padding: 8px 12px;
+   border: none;
+   background: transparent;
+   color: var(--font-secondary-color);
+   font-size: 12px;
+   font-weight: 500;
+   cursor: pointer;
+   border-radius: 4px;
+   transition: all 0.2s ease;
+}
+
+.type-btn.active {
+   background: var(--primary-color);
+   color: var(--primary-color-contrast);
+}
+
+.editor-container {
+   flex: 1;
+   position: relative;
+   min-height: 200px;
+}
+
+#property-editor {
+   width: 100%;
+   height: 100%;
+   border: 1px solid var(--medium-color);
+   border-radius: 6px;
+   padding: 12px;
+   background: var(--primary-background-color);
+   color: var(--font-primary-color);
+   font-family: 'Monaco', 'Consolas', monospace;
+   font-size: 13px;
+   line-height: 1.5;
+   resize: none;
+   outline: none;
+   min-height: 200px;
+}
+
+#property-editor:focus {
+   border-color: var(--primary-color);
+   box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.1);
+}
+
+.validation-message {
+   font-size: 12px;
+   color: var(--danger-color);
+   min-height: 18px;
+   display: flex;
+   align-items: center;
+   gap: 6px;
+}
+
+.modal-actions {
+   padding: 16px 20px;
+   background: var(--tertiary-background-color);
+   border-radius: 0 0 12px 12px;
+   border-top: 1px solid var(--medium-color);
+   display: flex;
+   gap: 12px;
+   justify-content: flex-end;
+}
+
+.modal-btn {
+   padding: 10px 20px;
+   border: none;
+   border-radius: 6px;
+   font-size: 13px;
+   font-weight: 500;
+   cursor: pointer;
+   transition: all 0.2s ease;
+}
+
+.modal-btn.cancel {
+   background: var(--tertiary-background-color);
+   color: var(--font-primary-color);
+   border: 1px solid var(--medium-color);
+}
+
+.modal-btn.cancel:hover {
+   background: var(--secondary-background-color);
+}
+
+.modal-btn.save {
+   background: var(--success-color);
+   color: var(--success-contrast);
+}
+
+.modal-btn.save:hover {
+   opacity: 0.9;
+}
+
+.modal-btn.save:disabled {
+   background: var(--disabled-color);
+   cursor: not-allowed;
+}
+   `
+}
+
+function productionOnlyHtml(){
+   return `
+   <div id="debugger-container">
+   <div class="debugger-header">
+      <div class="header-content">
+         <div class="component-info">
+            <div class="component-icon">🔍</div>
+            <div class="component-details">
+               <div class="component-name">Component Inspector</div>
+               <div class="component-id">Ready to debug</div>
+            </div>
+         </div>
+         <div class="header-actions">
+            <button class="minimize-btn" title="Minimize">−</button>
+            <button id="close-debugger" title="Close">×</button>
+         </div>
+      </div>
+   </div>
+   
+   <div class="debugger-content">
+      <div class="tabs-container">
+         <div class="tab-nav">
+            <button class="tab-btn active" data-tab="props">📋 Props</button>
+            <button class="tab-btn" data-tab="info">ℹ️ Info</button>
+         </div>
+      </div>
+      
+      <div class="tab-content">
+         <div class="tab-pane active" id="props-tab">
+            <div class="props-container"></div>
+            <div class="props-actions">
+               <div class="action-buttons">
+                  <button class="action-btn primary" id="apply-changes">✅ Apply Changes</button>
+                  <button class="action-btn secondary" id="reset-values">🔄 Reset Values</button>
+               </div>
+               <div class="actions-note">
+                  <small>💡 Press Enter on any input to apply changes automatically</small>
+               </div>
+            </div>
+         </div>
+         
+         <div class="tab-pane" id="info-tab">
+            <div class="info-container">
+               <div class="info-list"></div>
+            </div>
+         </div>
+      </div>
+   </div>
+   
+   <!-- Modal para editar objetos/funciones -->
+   <div class="editor-modal" id="editor-modal">
+      <div class="modal-content">
+         <div class="modal-header">
+            <h3 id="modal-title">Edit Property</h3>
+            <button class="modal-close" id="modal-close">×</button>
+         </div>
+         <div class="modal-body">
+            <div class="editor-type-selector">
+               <button class="type-btn active" data-type="json">📋 JSON</button>
+               <button class="type-btn" data-type="function">⚡ Function</button>
+            </div>
+            <div class="editor-container">
+               <textarea id="property-editor" spellcheck="false"></textarea>
+            </div>
+            <div class="editor-footer">
+               <div class="validation-message"></div>
+            </div>
+         </div>
+         <div class="modal-actions">
+            <button class="modal-btn cancel" id="modal-cancel">Cancel</button>
+            <button class="modal-btn save" id="modal-save">Save Changes</button>
+         </div>
+      </div>
+   </div>
+</div>`
+}
