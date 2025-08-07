@@ -1,6 +1,6 @@
 {
   "name": "slicejs-web-framework",
-  "version": "1.0.33",
+  "version": "1.0.32",
   "description": "",
   "engines": {
     "node": ">=20"
