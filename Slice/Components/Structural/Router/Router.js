@@ -1,380 +1,305 @@
-// Slice/Components/Structural/Router/Router.js
-
-import EventThrottler from './EventThrottler.js';
-import RouteCache from './RouteCache.js';
-import RouteMatcher from './RouteMatcher.js';
-import RouteRenderer from './RouteRenderer.js';
-
-/**
- * Router optimizado con separación de responsabilidades
- * Mejoras significativas en performance y mantenibilidad
- */
 export default class Router {
    constructor(routes) {
       this.routes = routes;
       this.activeRoute = null;
+      this.pathToRouteMap = this.createPathToRouteMap(routes);
       
-      // Inicializar sistemas especializados
-      this.eventThrottler = new EventThrottler();
-      this.routeCache = new RouteCache();
-      this.routeMatcher = new RouteMatcher(routes);
-      this.routeRenderer = new RouteRenderer(this.routeCache);
+      // NUEVO: Sistema de caché optimizado
+      this.routeContainersCache = new Map();
+      this.lastCacheUpdate = 0;
+      this.CACHE_DURATION = 100; // ms - caché muy corto pero efectivo
       
-      // Observer para cambios DOM
-      this.mutationObserver = null;
-      
-      // Estado del router
-      this.isInitialized = false;
-      this.isNavigating = false;
+      // NUEVO: Observer para invalidar caché automáticamente
+      this.setupMutationObserver();
    }
 
-   /**
-    * Inicializar router con observadores optimizados
-    */
    async init() {
-      if (this.isInitialized) {
-         slice.logger.logWarning('Router', 'Router already initialized');
-         return;
-      }
-
-      try {
-         // Configurar observador de mutaciones optimizado
-         this.setupMutationObserver();
-         
-         // Cargar ruta inicial
-         await this.loadInitialRoute();
-         
-         // Configurar listeners de navegación
-         this.setupNavigationListeners();
-         
-         this.isInitialized = true;
-         slice.logger.logInfo('Router', 'Router initialized successfully');
-         
-      } catch (error) {
-         slice.logger.logError('Router', 'Error initializing router', error);
-         throw error;
-      }
+      await this.loadInitialRoute();
+      window.addEventListener('popstate', this.onRouteChange.bind(this));
    }
 
-   /**
-    * Configurar observador de mutaciones optimizado
-    */
+   // NUEVO: Observer para detectar cambios en el DOM
    setupMutationObserver() {
-      if (typeof MutationObserver === 'undefined') {
-         slice.logger.logWarning('Router', 'MutationObserver not available');
-         return;
-      }
-
-      this.mutationObserver = new MutationObserver((mutations) => {
-         // Usar throttling para evitar múltiples invalidaciones
-         this.eventThrottler.throttle('cache-invalidation', () => {
-            this.routeCache.invalidateByMutation(mutations);
-         }, 50);
-      });
-      
-      this.mutationObserver.observe(document.body, {
-         childList: true,
-         subtree: true,
-         attributeFilter: ['slice-route', 'slice-multi-route']
-      });
-   }
-
-   /**
-    * Configurar listeners de navegación
-    */
-   setupNavigationListeners() {
-      // Listener para popstate (back/forward)
-      window.addEventListener('popstate', (event) => {
-         this.eventThrottler.throttle('popstate', () => {
-            return this.onRouteChange();
+      if (typeof MutationObserver !== 'undefined') {
+         this.observer = new MutationObserver((mutations) => {
+            let shouldInvalidateCache = false;
+            
+            mutations.forEach((mutation) => {
+               if (mutation.type === 'childList') {
+                  // Solo invalidar si se añadieron/removieron nodos que podrían ser rutas
+                  const addedNodes = Array.from(mutation.addedNodes);
+                  const removedNodes = Array.from(mutation.removedNodes);
+                  
+                  const hasRouteNodes = [...addedNodes, ...removedNodes].some(node => 
+                     node.nodeType === Node.ELEMENT_NODE && 
+                     (node.tagName === 'SLICE-ROUTE' || 
+                      node.tagName === 'SLICE-MULTI-ROUTE' ||
+                      node.querySelector?.('slice-route, slice-multi-route'))
+                  );
+                  
+                  if (hasRouteNodes) {
+                     shouldInvalidateCache = true;
+                  }
+               }
+            });
+            
+            if (shouldInvalidateCache) {
+               this.invalidateCache();
+            }
          });
-      });
-
-      // Interceptación automática de enlaces (activada por defecto)
-      // Para desactivar: agregar disableAutoInterceptLinks: true en la configuración
-      if (!this.routes.disableAutoInterceptLinks) {
-         this.setupLinkInterception();
-         slice.logger.logInfo('Router', 'Auto link interception enabled');
-      }
-   }
-
-   /**
-    * Configurar interceptación de enlaces
-    * Convierte todos los <a href="/path"> en slice.router.navigate()
-    */
-   setupLinkInterception() {
-      document.addEventListener('click', (event) => {
-         const link = event.target.closest('a[href]');
-         if (link && this.shouldInterceptLink(link)) {
-            event.preventDefault();
-            
-            const href = link.getAttribute('href');
-            slice.logger.logInfo('Router', `Intercepting link: ${href}`);
-            
-            this.navigate(href);
-         }
-      });
-   }
-
-   /**
-    * Verificar si debe interceptar el enlace
-    */
-   shouldInterceptLink(link) {
-      const href = link.getAttribute('href');
-      
-      // No interceptar si no hay href
-      if (!href) return false;
-      
-      // No interceptar enlaces externos (diferentes dominio)
-      if (href.startsWith('http://') || href.startsWith('https://')) {
-         const linkUrl = new URL(href, window.location.origin);
-         if (linkUrl.origin !== window.location.origin) {
-            return false;
-         }
-      }
-      
-      // No interceptar protocolos especiales
-      if (href.startsWith('mailto:') || 
-          href.startsWith('tel:') ||
-          href.startsWith('sms:') ||
-          href.startsWith('ftp:')) {
-         return false;
-      }
-      
-      // No interceptar anchors (#hash)
-      if (href.startsWith('#')) {
-         return false;
-      }
-      
-      // No interceptar si tiene atributos especiales
-      if (link.hasAttribute('download') ||
-          link.target === '_blank' ||
-          link.target === '_top' ||
-          link.target === '_parent' ||
-          link.hasAttribute('data-no-intercept') ||
-          link.hasAttribute('data-external')) {
-         return false;
-      }
-      
-      // No interceptar si está marcado como externo
-      if (link.classList.contains('external-link') ||
-          link.classList.contains('no-intercept')) {
-         return false;
-      }
-      
-      return true;
-   }
-
-   /**
-    * Manejar cambio de ruta con throttling optimizado
-    */
-   async onRouteChange() {
-      if (this.isNavigating) {
-         return;
-      }
-
-      return this.eventThrottler.throttle('route-change', async () => {
-         this.isNavigating = true;
          
+         this.observer.observe(document.body, {
+            childList: true,
+            subtree: true
+         });
+      }
+   }
+
+   // NUEVO: Invalidar caché
+   invalidateCache() {
+      this.routeContainersCache.clear();
+      this.lastCacheUpdate = 0;
+   }
+
+   createPathToRouteMap(routes, basePath = '', parentRoute = null) {
+      const pathToRouteMap = new Map();
+  
+      for (const route of routes) {
+          const fullPath = `${basePath}${route.path}`.replace(/\/+/g, '/');
+          
+          const routeWithParent = { 
+              ...route, 
+              fullPath,
+              parentPath: parentRoute ? parentRoute.fullPath : null,
+              parentRoute: parentRoute
+          };
+          
+          pathToRouteMap.set(fullPath, routeWithParent);
+
+          if (route.children) {
+              const childPathToRouteMap = this.createPathToRouteMap(
+                  route.children, 
+                  fullPath, 
+                  routeWithParent
+              );
+              
+              for (const [childPath, childRoute] of childPathToRouteMap.entries()) {
+                  pathToRouteMap.set(childPath, childRoute);
+              }
+          }
+      }
+  
+      return pathToRouteMap;
+   }
+
+   // OPTIMIZADO: Sistema de caché inteligente
+   async renderRoutesComponentsInPage(searchContainer = document) {
+      let routerContainersFlag = false;
+      const routeContainers = this.getCachedRouteContainers(searchContainer);
+
+      for (const routeContainer of routeContainers) {
          try {
-            const path = window.location.pathname;
-            
-            // Intentar renderizar rutas en componentes existentes primero
-            const routeContainersFlag = await this.routeRenderer.renderRoutesComponentsInPage();
-
-            if (routeContainersFlag) {
-               return;
+            // Verificar que el componente aún esté conectado al DOM
+            if (!routeContainer.isConnected) {
+               this.invalidateCache();
+               continue;
             }
 
-            // Si no hay contenedores de rutas, hacer matching tradicional
-            const { route, params } = this.routeMatcher.matchRoute(path);
-            if (route) {
-               await this.routeRenderer.handleRoute(route, params);
+            let response = await routeContainer.renderIfCurrentRoute();
+            if (response) {
+               this.activeRoute = routeContainer.props;
+               routerContainersFlag = true;
             }
-            
          } catch (error) {
-            slice.logger.logError('Router', 'Error during route change', error);
-         } finally {
-            this.isNavigating = false;
+            slice.logger.logError('Router', `Error rendering route container`, error);
+         }
+      }
+
+      return routerContainersFlag;
+   }
+
+   // NUEVO: Obtener contenedores con caché
+   getCachedRouteContainers(container) {
+      const containerKey = container === document ? 'document' : container.sliceId || 'anonymous';
+      const now = Date.now();
+      
+      // Verificar si el caché es válido
+      if (this.routeContainersCache.has(containerKey) && 
+          (now - this.lastCacheUpdate) < this.CACHE_DURATION) {
+         return this.routeContainersCache.get(containerKey);
+      }
+
+      // Regenerar caché
+      const routeContainers = this.findAllRouteContainersOptimized(container);
+      this.routeContainersCache.set(containerKey, routeContainers);
+      this.lastCacheUpdate = now;
+      
+      return routeContainers;
+   }
+
+   // OPTIMIZADO: Búsqueda más eficiente usando TreeWalker
+   findAllRouteContainersOptimized(container) {
+      const routeContainers = [];
+      
+      // Usar TreeWalker para una búsqueda más eficiente
+      const walker = document.createTreeWalker(
+         container,
+         NodeFilter.SHOW_ELEMENT,
+         {
+            acceptNode: (node) => {
+               // Solo aceptar nodos que sean slice-route o slice-multi-route
+               if (node.tagName === 'SLICE-ROUTE' || node.tagName === 'SLICE-MULTI-ROUTE') {
+                  return NodeFilter.FILTER_ACCEPT;
+               }
+               return NodeFilter.FILTER_SKIP;
+            }
+         }
+      );
+
+      let node;
+      while (node = walker.nextNode()) {
+         routeContainers.push(node);
+      }
+
+      return routeContainers;
+   }
+
+   // NUEVO: Método específico para renderizar rutas dentro de un componente
+   async renderRoutesInComponent(component) {
+      if (!component) {
+         slice.logger.logWarning('Router', 'No component provided for route rendering');
+         return false;
+      }
+
+      return await this.renderRoutesComponentsInPage(component);
+   }
+
+   // OPTIMIZADO: Debouncing para evitar múltiples llamadas seguidas
+   async onRouteChange() {
+      // Cancelar el timeout anterior si existe
+      if (this.routeChangeTimeout) {
+         clearTimeout(this.routeChangeTimeout);
+      }
+
+      // Debounce de 10ms para evitar múltiples llamadas seguidas
+      this.routeChangeTimeout = setTimeout(async () => {
+         const path = window.location.pathname;
+         const routeContainersFlag = await this.renderRoutesComponentsInPage();
+
+         if (routeContainersFlag) {
+            return;
+         }
+
+         const { route, params } = this.matchRoute(path);
+         if (route) {
+            await this.handleRoute(route, params);
          }
       }, 10);
    }
 
-   /**
-    * Navegar a una ruta específica
-    */
-   async navigate(path, options = {}) {
-      if (!path || path === window.location.pathname) {
-         return;
+   async navigate(path) {
+      window.history.pushState({}, path, window.location.origin + path);
+      await this.onRouteChange();
+   }
+
+   async handleRoute(route, params) {
+   const targetElement = document.querySelector('#app');
+   
+   const componentName = route.parentRoute ? route.parentRoute.component : route.component;
+   const sliceId = `route-${componentName}`;
+   
+   const existingComponent = slice.controller.getComponent(sliceId);
+
+   if (slice.loading) {
+      slice.loading.start();
+   }
+
+   if (existingComponent) {
+      targetElement.innerHTML = '';
+      if (existingComponent.update) {
+         existingComponent.props = { ...existingComponent.props, ...params };
+         await existingComponent.update();
       }
+      targetElement.appendChild(existingComponent);
+      // Renderizar DESPUÉS de insertar (pero antes de mostrar)
+      await this.renderRoutesInComponent(existingComponent);
+   } else {
+      const component = await slice.build(componentName, {
+         params,
+         sliceId: sliceId,
+      });
 
-      try {
-         const { replace = false, state = {} } = options;
-         
-         // Actualizar historia del navegador
-         if (replace) {
-            window.history.replaceState(state, '', window.location.origin + path);
-         } else {
-            window.history.pushState(state, '', window.location.origin + path);
-         }
-         
-         // Ejecutar cambio de ruta
-         await this.onRouteChange();
-         
-      } catch (error) {
-         slice.logger.logError('Router', `Error navigating to ${path}`, error);
-      }
+      targetElement.innerHTML = '';
+      targetElement.appendChild(component);
+      
+      // Renderizar INMEDIATAMENTE después de insertar
+      await this.renderRoutesInComponent(component);
    }
 
-   /**
-    * Navegar hacia atrás
-    */
-   back() {
-      window.history.back();
+   // Invalidar caché después de cambios importantes en el DOM
+   this.invalidateCache();
+
+   if (slice.loading) {
+      slice.loading.stop();
    }
 
-   /**
-    * Navegar hacia adelante
-    */
-   forward() {
-      window.history.forward();
-   }
+   slice.router.activeRoute = route;
+}
 
-   /**
-    * Cargar ruta inicial
-    */
    async loadInitialRoute() {
       const path = window.location.pathname;
-      const { route, params } = this.routeMatcher.matchRoute(path);
+      const { route, params } = this.matchRoute(path);
 
-      if (route) {
-         await this.routeRenderer.handleRoute(route, params);
-      } else {
-         slice.logger.logWarning('Router', `No route found for initial path: ${path}`);
-      }
+      await this.handleRoute(route, params);
    }
 
-   /**
-    * Métodos de conveniencia para acceso a subsistemas
-    */
-   
-   // Acceso al matcher
    matchRoute(path) {
-      return this.routeMatcher.matchRoute(path);
-   }
-
-   hasRoute(path) {
-      return this.routeMatcher.hasRoute(path);
-   }
-
-   generateUrl(routePath, params) {
-      return this.routeMatcher.generateUrl(routePath, params);
-   }
-
-   // Acceso al caché
-   invalidateCache() {
-      this.routeCache.invalidateAll();
-   }
-
-   getCacheStats() {
-      return this.routeCache.getStats();
-   }
-
-   // Acceso al renderer
-   async renderRoutesInComponent(component) {
-      return this.routeRenderer.renderRoutesInComponent(component);
-   }
-
-   getRendererStats() {
-      return this.routeRenderer.getStats();
-   }
-
-   /**
-    * Actualizar rutas dinámicamente
-    */
-   updateRoutes(newRoutes) {
-      this.routes = newRoutes;
-      this.routeMatcher.updateRoutes(newRoutes);
-      this.invalidateCache();
-   }
-
-   /**
-    * Añadir ruta individual
-    */
-   addRoute(route, basePath = '') {
-      this.routeMatcher.addRoute(route, basePath);
-      this.invalidateCache();
-   }
-
-   /**
-    * Remover ruta
-    */
-   removeRoute(path) {
-      this.routeMatcher.removeRoute(path);
-      this.invalidateCache();
-   }
-
-   /**
-    * Obtener todas las rutas
-    */
-   getAllRoutes() {
-      return this.routeMatcher.getAllRoutes();
-   }
-
-   /**
-    * Obtener estadísticas completas del router
-    */
-   getStats() {
-      return {
-         isInitialized: this.isInitialized,
-         isNavigating: this.isNavigating,
-         activeRoute: this.activeRoute,
-         matcher: this.routeMatcher.getStats(),
-         cache: this.routeCache.getStats(),
-         renderer: this.routeRenderer.getStats(),
-         eventThrottler: {
-            pendingEvents: this.eventThrottler.timeouts.size
+      const exactMatch = this.pathToRouteMap.get(path);
+      if (exactMatch) {
+         if (exactMatch.parentRoute) {
+            return { 
+               route: exactMatch.parentRoute, 
+               params: {},
+               childRoute: exactMatch
+            };
          }
-      };
+         return { route: exactMatch, params: {} };
+      }
+   
+      for (const [routePattern, route] of this.pathToRouteMap.entries()) {
+         if (routePattern.includes('${')) {
+            const { regex, paramNames } = this.compilePathPattern(routePattern);
+            const match = path.match(regex);
+            if (match) {
+               const params = {};
+               paramNames.forEach((name, i) => {
+                  params[name] = match[i + 1];
+               });
+               
+               if (route.parentRoute) {
+                  return { 
+                     route: route.parentRoute, 
+                     params: params,
+                     childRoute: route
+                  };
+               }
+               
+               return { route, params };
+            }
+         }
+      }
+   
+      const notFoundRoute = this.pathToRouteMap.get('/404');
+      return { route: notFoundRoute, params: {} };
    }
 
-   /**
-    * Destruir router y cleanup
-    */
-   destroy() {
-      // Detener observadores
-      if (this.mutationObserver) {
-         this.mutationObserver.disconnect();
-         this.mutationObserver = null;
-      }
+   compilePathPattern(pattern) {
+      const paramNames = [];
+      const regexPattern = '^' + pattern.replace(/\$\{([^}]+)\}/g, (_, paramName) => {
+         paramNames.push(paramName);
+         return '([^/]+)';
+      }) + '$';
 
-      // Cancelar eventos pendientes
-      this.eventThrottler.destroy();
-
-      // Limpiar subsistemas
-      this.routeCache.destroy();
-      this.routeRenderer.destroy();
-
-      // Remover listeners
-      window.removeEventListener('popstate', this.onRouteChange);
-
-      this.isInitialized = false;
-      
-      slice.logger.logInfo('Router', 'Router destroyed successfully');
-   }
-
-   /**
-    * Reinicializar router (útil para testing)
-    */
-   async reinitialize(newRoutes = null) {
-      this.destroy();
-      
-      if (newRoutes) {
-         this.routes = newRoutes;
-         this.routeMatcher = new RouteMatcher(newRoutes);
-         this.routeRenderer = new RouteRenderer(this.routeCache);
-      }
-      
-      await this.init();
+      return { regex: new RegExp(regexPattern), paramNames };
    }
 }
