@@ -12,131 +12,164 @@ let server;
 
 const app = express();
 
-// Detectar configuración automáticamente
-const PORT = process.env.PORT || 3001;
-const NODE_ENV = process.env.NODE_ENV || 'development';
-const IS_CLI_MODE = process.env.SLICE_CLI_MODE === 'true';
+// Parsear argumentos de línea de comandos
+const args = process.argv.slice(2);
+let runMode = 'development'; // Default
 
-// Determinar directorio a servir
-// Prioridad: 1) NODE_ENV del CLI, 2) sliceConfig.production, 3) default 'src'
-let folderDeployed;
-if (NODE_ENV === 'production') {
-  folderDeployed = 'dist';
-} else if (NODE_ENV === 'development') {
-  folderDeployed = 'src';
-} else {
-  // Fallback al comportamiento original
-  const isProduction = sliceConfig.production === true;
-  folderDeployed = isProduction ? 'dist' : 'src';
+// Detectar modo basado en argumentos
+if (args.includes('--production') || args.includes('--prod')) {
+  runMode = 'production';
+} else if (args.includes('--development') || args.includes('--dev')) {
+  runMode = 'development';
 }
 
-// Servir archivos estáticos desde la carpeta 'Slice'
-app.use('/Slice/', express.static(path.join(__dirname, '..', 'node_modules', 'slicejs-web-framework', 'Slice')));
+// También mantener compatibilidad con NODE_ENV como fallback
+if (!args.length) {
+  const NODE_ENV = process.env.NODE_ENV || 'development';
+  runMode = NODE_ENV === 'production' ? 'production' : 'development';
+}
 
-// Testing routes (mantener las existentes)
-app.get('/testing1', (req, res) => {
-   res.send(` Actual route in server: __dirname: ${__dirname} __filename: ${__filename} - checking if file exists: ${path.join(__dirname, '..', 'src','App', 'index.html')}`);
+// Obtener puerto desde sliceConfig.json, con fallback a process.env.PORT
+const PORT = sliceConfig.server?.port || process.env.PORT || 3001;
+
+// Determinar directorio a servir basado en argumentos
+let folderDeployed;
+if (runMode === 'production') {
+  folderDeployed = 'dist';
+} else {
+  folderDeployed = 'src';
+}
+
+console.log(`🚀 Starting Slice.js server in ${runMode} mode`);
+console.log(`📁 Serving files from: /${folderDeployed}`);
+
+// Middleware para servir archivos estáticos
+app.use(express.static(path.join(__dirname, `../${folderDeployed}`)));
+
+// Middleware para parsear JSON y formularios
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Configurar headers de CORS
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(200);
+  } else {
+    next();
+  }
 });
 
-// Servir archivos estáticos desde la carpeta determinada (src o dist)
-app.use(express.static(path.join(__dirname,'..', folderDeployed)));
-
-app.get('/testing2', (req, res) => {
-   res.send(` Actual route in server: __dirname: ${__dirname} __filename: ${__filename} - checking if file exists: ${path.join(__dirname, '..', 'src','App', 'index.html')}`);
-});
-
-// API de estado (útil para debugging)
+// Ruta de ejemplo para API
 app.get('/api/status', (req, res) => {
-  res.json({ 
-    mode: NODE_ENV,
-    serving: folderDeployed,
-    port: PORT,
-    cliMode: IS_CLI_MODE,
-    timestamp: new Date().toISOString()
+  res.json({
+    status: 'ok',
+    mode: runMode,
+    folder: folderDeployed,
+    timestamp: new Date().toISOString(),
+    framework: 'Slice.js',
+    version: '2.0.0'
   });
 });
 
-// Ruta para servir el index.html desde la carpeta apropiada
+// SPA fallback - servir index.html para rutas no encontradas
 app.get('*', (req, res) => {
-   const filePath = path.join(__dirname, '..', folderDeployed, 'App', 'index.html');
-   res.sendFile(filePath, (err) => {
-     if (err) {
-       // Fallback si no existe App/index.html
-       const fallbackPath = path.join(__dirname, '..', folderDeployed, 'index.html');
-       res.sendFile(fallbackPath, (fallbackErr) => {
-         if (fallbackErr) {
-           res.status(404).send(`File not found: ${folderDeployed}/index.html`);
-         }
-       });
-     }
-   });
+  const indexPath = path.join(__dirname, `../${folderDeployed}`, 'index.html');
+  res.sendFile(indexPath, (err) => {
+    if (err) {
+      res.status(404).send(`
+        <h1>404 - Page Not Found</h1>
+        <p>The requested file could not be found in /${folderDeployed}</p>
+        <p>Make sure you've run the appropriate build command:</p>
+        <ul>
+          <li>For development: Files should be in /src</li>
+          <li>For production: Run "npm run slice:build" first</li>
+        </ul>
+      `);
+    }
+  });
 });
 
 function startServer() {
-   server = app.listen(PORT, () => {    
-      if (IS_CLI_MODE) {
-        // Modo CLI - salida simple y limpia (sin menú)
-        console.log(`🚀 Slice.js ${NODE_ENV} server running at http://localhost:${PORT}`);
-        console.log(`📁 Serving files from /${folderDeployed} directory`);
-        console.log('Press Ctrl+C to stop the server');
-      } else {
-        // Modo standalone - mostrar menú interactivo
-        showMenu();
-      }
-   });
+  server = app.listen(PORT, () => {
+    console.log(`✅ Server running at http://localhost:${PORT}`);
+    console.log(`📂 Mode: ${runMode} (serving from /${folderDeployed})`);
+    
+    if (runMode === 'development') {
+      console.log('🔄 Development mode: Changes in /src will require server restart');
+    } else {
+      console.log('⚡ Production mode: Serving optimized files from /dist');
+    }
+    
+    console.log('🛑 Press Ctrl+C to stop');
+    console.log('\n💡 Available commands:');
+    console.log('  - Development: npm run slice:dev');
+    console.log('  - Production:  npm run slice:start');
+    console.log('  - Build:       npm run slice:build');
+  });
+
+  // Siempre mostrar menú interactivo
+  setTimeout(showInteractiveMenu, 1000);
 }
 
-async function showMenu() {
-   console.clear();
-   console.log("\n=================================");
-   console.log("       SLICE SERVER MENU       ");
-   console.log("=================================\n");
-
-   const url = `http://localhost:${PORT}`;
-   console.log(`Server is running on port ${PORT}, ${url}`);
-   console.log(`Mode: ${NODE_ENV} | Serving: /${folderDeployed}\n`);
-
-   while (true) {
-      try {
-        const { action } = await inquirer.prompt([
-           {
-              type: 'list',
-              name: 'action',
-              message: 'Select an option:',
-              choices: ['Restart Server', 'Stop Server (Exit)']
-           }
-        ]);
-        
-        if (action === 'Stop Server (Exit)') {
-           console.log('\nShutting down server...');
-           server.close(() => {
-              console.log('Server stopped.');
-              process.exit(0);
-           });
-           break;
-        } else if (action === 'Restart Server') {
-           console.log('\nRestarting server...');
-           server.close(() => {
-              console.log('Server stopped. Restarting...');
-              startServer();
-           });
-           break;
+async function showInteractiveMenu() {
+  while (true) {
+    try {
+      console.log('\n' + '='.repeat(50));
+      
+      const { action } = await inquirer.prompt([
+        {
+          type: 'list',
+          name: 'action',
+          message: '🎛️  Server Control Menu',
+          choices: [
+            '📊 Server Status',
+            '🌐 Open in Browser',
+            '🔄 Restart Server',
+            '🛑 Stop Server'
+          ]
         }
-      } catch (error) {
-        // Si hay error con inquirer, continuar sin menú
-        console.log('\n💡 Interactive menu not available - Press Ctrl+C to stop');
+      ]);
+
+      if (action === '📊 Server Status') {
+        console.log(`\n📈 Server Status:`);
+        console.log(`   🔗 URL: http://localhost:${PORT}`);
+        console.log(`   📁 Mode: ${runMode}`);
+        console.log(`   📂 Serving: /${folderDeployed}`);
+        console.log(`   ⏰ Uptime: ${Math.floor(process.uptime())}s`);
+      } else if (action === '🌐 Open in Browser') {
+        const { default: open } = await import('open');
+        await open(`http://localhost:${PORT}`);
+        console.log('🌐 Opening browser...');
+      } else if (action === '🛑 Stop Server') {
+        console.log('\n🛑 Stopping server...');
+        server.close(() => {
+          console.log('✅ Server stopped successfully');
+          process.exit(0);
+        });
+        break;
+      } else if (action === '🔄 Restart Server') {
+        console.log('\nRestarting server...');
+        server.close(() => {
+          console.log('Server stopped. Restarting...');
+          startServer();
+        });
         break;
       }
-   }
+    } catch (error) {
+      // Si hay error con inquirer, continuar sin menú
+      console.log('\n💡 Interactive menu not available - Press Ctrl+C to stop');
+      break;
+    }
+  }
 }
 
 // Manejar cierre del proceso
 process.on('SIGINT', () => {
-  if (IS_CLI_MODE) {
-    console.log('\n🛑 Server stopped');
-  } else {
-    console.log('\n🛑 Slice server stopped');
-  }
+  console.log('\n🛑 Slice server stopped');
   process.exit(0);
 });
 
