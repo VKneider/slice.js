@@ -14,34 +14,19 @@ const app = express();
 
 // Parsear argumentos de línea de comandos
 const args = process.argv.slice(2);
-let runMode = 'development'; // Default
 
-// Detectar modo basado en argumentos
-if (args.includes('--production') || args.includes('--prod')) {
-  runMode = 'production';
-} else if (args.includes('--development') || args.includes('--dev')) {
-  runMode = 'development';
-}
-
-// También mantener compatibilidad con NODE_ENV como fallback
-if (!args.length) {
-  const NODE_ENV = process.env.NODE_ENV || 'development';
-  runMode = NODE_ENV === 'production' ? 'production' : 'development';
-}
+// Siempre usar development mode (ignorar argumentos de production)
+const runMode = 'development';
+const folderDeployed = 'src';
 
 // Obtener puerto desde sliceConfig.json, con fallback a process.env.PORT
 const PORT = sliceConfig.server?.port || process.env.PORT || 3001;
 
-// Determinar directorio a servir basado en argumentos
-let folderDeployed;
-if (runMode === 'production') {
-  folderDeployed = 'dist';
-} else {
-  folderDeployed = 'src';
-}
-
 console.log(`🚀 Starting Slice.js server in ${runMode} mode`);
 console.log(`📁 Serving files from: /${folderDeployed}`);
+
+app.use('/Slice/', express.static(path.join(__dirname, '..', 'node_modules', 'slicejs-web-framework', 'Slice')));
+
 
 // Middleware para servir archivos estáticos
 app.use(express.static(path.join(__dirname, `../${folderDeployed}`)));
@@ -77,7 +62,7 @@ app.get('/api/status', (req, res) => {
 
 // SPA fallback - servir index.html para rutas no encontradas
 app.get('*', (req, res) => {
-  const indexPath = path.join(__dirname, `../${folderDeployed}`, 'index.html');
+  const indexPath = path.join(__dirname, `../${folderDeployed}`,"App", 'index.html');
   res.sendFile(indexPath, (err) => {
     if (err) {
       res.status(404).send(`
@@ -95,24 +80,29 @@ app.get('*', (req, res) => {
 
 function startServer() {
   server = app.listen(PORT, () => {
-    console.log(`✅ Server running at http://localhost:${PORT}`);
-    console.log(`📂 Mode: ${runMode} (serving from /${folderDeployed})`);
+    // Limpiar consola y mostrar banner de inicio
+    console.clear();
+    showWelcomeBanner();
     
-    if (runMode === 'development') {
-      console.log('🔄 Development mode: Changes in /src will require server restart');
-    } else {
-      console.log('⚡ Production mode: Serving optimized files from /dist');
-    }
-    
-    console.log('🛑 Press Ctrl+C to stop');
-    console.log('\n💡 Available commands:');
-    console.log('  - Development: npm run slice:dev');
-    console.log('  - Production:  npm run slice:start');
-    console.log('  - Build:       npm run slice:build');
+    // Información del servidor
+    console.log(`✅ Server running at ${'\x1b[36m'}http://localhost:${PORT}${'\x1b[0m'}`);
+    console.log(`📂 Mode: ${'\x1b[32m'}${runMode}${'\x1b[0m'} (serving from ${'\x1b[33m'}/${folderDeployed}${'\x1b[0m'})`);
+    console.log(`🔄 ${'\x1b[32m'}Development mode${'\x1b[0m'}: Changes in /src are served instantly`);
+    console.log(`🛑 Press ${'\x1b[31m'}Ctrl+C${'\x1b[0m'} to stop\n`);
   });
 
-  // Siempre mostrar menú interactivo
-  setTimeout(showInteractiveMenu, 1000);
+  // Mostrar menú interactivo después de un momento
+  setTimeout(showInteractiveMenu, 1500);
+}
+
+function showWelcomeBanner() {
+  const banner = `
+${'\x1b[36m'}╔══════════════════════════════════════════════════╗${'\x1b[0m'}
+${'\x1b[36m'}║${'\x1b[0m'}              ${'\x1b[1m'}🍰 SLICE.JS SERVER${'\x1b[0m'}                ${'\x1b[36m'}║${'\x1b[0m'}
+${'\x1b[36m'}║${'\x1b[0m'}            ${'\x1b[90m'}Development Environment${'\x1b[0m'}             ${'\x1b[36m'}║${'\x1b[0m'}
+${'\x1b[36m'}╚══════════════════════════════════════════════════╝${'\x1b[0m'}
+`;
+  console.log(banner);
 }
 
 async function showInteractiveMenu() {
