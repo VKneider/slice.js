@@ -276,10 +276,126 @@ export default class Controller {
       return usedProps;
    }
 
-   destroyComponent(component) {
-      const sliceId = component.sliceId;
-      this.activeComponents.delete(sliceId);
-      component.remove();
+   /**
+    * Destruye uno o múltiples componentes
+    * @param {HTMLElement|Array<HTMLElement>|string|Array<string>} components 
+    *        - Componente individual (HTMLElement)
+    *        - Array de componentes
+    *        - sliceId individual (string)
+    *        - Array de sliceIds
+    * @returns {number} Cantidad de componentes destruidos
+    */
+   destroyComponent(components) {
+      // Normalizar entrada a array
+      const toDestroy = Array.isArray(components) ? components : [components];
+      let destroyedCount = 0;
+
+      for (const item of toDestroy) {
+         let component = null;
+
+         // Si es string, buscar el componente por sliceId
+         if (typeof item === 'string') {
+            component = this.activeComponents.get(item);
+            
+            if (!component) {
+               slice.logger.logWarning('Controller', `Component with sliceId "${item}" not found`);
+               continue;
+            }
+         } 
+         // Si es un componente directamente
+         else if (item && item.sliceId) {
+            component = item;
+         } 
+         else {
+            slice.logger.logWarning('Controller', `Invalid component or sliceId provided to destroyComponent`);
+            continue;
+         }
+
+         // Ejecutar hook beforeDestroy si existe
+         if (typeof component.beforeDestroy === 'function') {
+            try {
+               component.beforeDestroy();
+            } catch (error) {
+               slice.logger.logError('Controller', `Error in beforeDestroy for ${component.sliceId}`, error);
+            }
+         }
+
+         // Eliminar del mapa de componentes activos
+         this.activeComponents.delete(component.sliceId);
+
+         // Remover del DOM si está conectado
+         if (component.isConnected) {
+            component.remove();
+         }
+
+         destroyedCount++;
+      }
+
+      if (destroyedCount > 0) {
+         slice.logger.logInfo('Controller', `Destroyed ${destroyedCount} component(s)`);
+      }
+
+      return destroyedCount;
+   }
+
+   /**
+    * Destruye todos los componentes Slice dentro de un contenedor
+    * @param {HTMLElement} container - Elemento contenedor
+    * @returns {number} Cantidad de componentes destruidos
+    */
+   destroyByContainer(container) {
+      if (!container) {
+         slice.logger.logWarning('Controller', 'No container provided to destroyByContainer');
+         return 0;
+      }
+
+      // Buscar todos los elementos que sean componentes Slice
+      const sliceComponents = container.querySelectorAll('[slice-id]');
+      const sliceIdsToDestroy = [];
+
+      sliceComponents.forEach(element => {
+         const sliceId = element.getAttribute('slice-id') || element.sliceId;
+         if (sliceId && this.activeComponents.has(sliceId)) {
+            sliceIdsToDestroy.push(sliceId);
+         }
+      });
+
+      // Destruir usando el método principal
+      const count = this.destroyComponent(sliceIdsToDestroy);
+      
+      if (count > 0) {
+         slice.logger.logInfo('Controller', `Destroyed ${count} component(s) from container`);
+      }
+
+      return count;
+   }
+
+   /**
+    * Destruye componentes cuyos sliceId coincidan con un patrón
+    * @param {string|RegExp} pattern - Patrón a buscar (string o expresión regular)
+    * @returns {number} Cantidad de componentes destruidos
+    */
+   destroyByPattern(pattern) {
+      const componentsToDestroy = [];
+      
+      // Convertir string a RegExp si es necesario
+      const regex = pattern instanceof RegExp ? pattern : new RegExp(pattern);
+
+      // Buscar componentes que coincidan con el patrón
+      for (const [sliceId, component] of this.activeComponents) {
+         if (regex.test(sliceId)) {
+            componentsToDestroy.push(component);
+         }
+      }
+
+      // Destruir usando el método principal
+      const count = this.destroyComponent(componentsToDestroy);
+      
+      if (count > 0) {
+         slice.logger.logInfo('Controller', `Destroyed ${count} component(s) matching pattern: ${pattern}`);
+      }
+
+      return count;
    }
 }
 
