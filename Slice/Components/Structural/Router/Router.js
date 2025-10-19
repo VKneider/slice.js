@@ -8,6 +8,10 @@ export default class Router {
       this._beforeEachGuard = null;
       this._afterEachGuard = null;
       
+      // Router state
+      this._started = false;
+      this._autoStartTimeout = null;
+      
       // Sistema de caché optimizado
       this.routeContainersCache = new Map();
       this.lastCacheUpdate = 0;
@@ -17,9 +21,43 @@ export default class Router {
       this.setupMutationObserver();
    }
 
-   async init() {
-      await this.loadInitialRoute();
+   /**
+    * Inicializa el router
+    * Si el usuario no llama start() manualmente, se auto-inicia después de un delay
+    */
+   init() {
       window.addEventListener('popstate', this.onRouteChange.bind(this));
+      
+      // Auto-start después de 50ms si el usuario no llama start() manualmente
+      // Esto da tiempo para que el usuario configure guards si lo necesita
+      this._autoStartTimeout = setTimeout(async () => {
+         if (!this._started) {
+            slice.logger.logInfo('Router', 'Auto-starting router (no manual start() called)');
+            await this.start();
+         }
+      }, 50);
+   }
+
+   /**
+    * Inicia el router y carga la ruta inicial
+    * OPCIONAL: Solo necesario si usas guards (beforeEach/afterEach)
+    * Si no lo llamas, el router se auto-inicia después de 50ms
+    */
+   async start() {
+      // Prevenir múltiples llamadas
+      if (this._started) {
+         slice.logger.logWarning('Router', 'start() already called');
+         return;
+      }
+      
+      // Cancelar auto-start si existe
+      if (this._autoStartTimeout) {
+         clearTimeout(this._autoStartTimeout);
+         this._autoStartTimeout = null;
+      }
+      
+      this._started = true;
+      await this.loadInitialRoute();
    }
 
    // ============================================
@@ -56,12 +94,13 @@ export default class Router {
     * Crea un objeto con información de ruta para los guards
     * @param {Object} route - Objeto de ruta
     * @param {Object} params - Parámetros de la ruta
+    * @param {String} requestedPath - Path original solicitado
     * @returns {Object} Objeto con path, component, params, query, metadata
     */
-   _createRouteInfo(route, params = {}) {
+   _createRouteInfo(route, params = {}, requestedPath = null) {
       if (!route) {
          return {
-            path: '/404',
+            path: requestedPath || '/404',
             component: 'NotFound',
             params: {},
             query: this._parseQueryParams(),
@@ -70,7 +109,7 @@ export default class Router {
       }
 
       return {
-         path: route.fullPath || route.path,
+         path: requestedPath || route.fullPath || route.path,
          component: route.parentRoute ? route.parentRoute.component : route.component,
          params: params,
          query: this._parseQueryParams(),
@@ -161,31 +200,48 @@ export default class Router {
    // ROUTING CORE (MODIFICADO CON GUARDS)
    // ============================================
 
-   async navigate(path) {
+   async navigate(path, _redirectChain = []) {
       const currentPath = window.location.pathname;
+      
+      
+      // Detectar loops infinitos: si ya visitamos esta ruta en la cadena de redirecciones
+      if (_redirectChain.includes(path)) {
+         slice.logger.logError(
+            'Router', 
+            `Guard redirection loop detected: ${_redirectChain.join(' → ')} → ${path}`
+         );
+         return;
+      }
+      
+      // Límite de seguridad: máximo 10 redirecciones
+      if (_redirectChain.length >= 10) {
+         slice.logger.logError(
+            'Router',
+            `Too many redirections: ${_redirectChain.join(' → ')} → ${path}`
+         );
+         return;
+      }
       
       // Obtener información de ruta actual
       const { route: fromRoute, params: fromParams } = this.matchRoute(currentPath);
-      const from = this._createRouteInfo(fromRoute, fromParams);
+      const from = this._createRouteInfo(fromRoute, fromParams, currentPath);
 
       // Obtener información de ruta destino
       const { route: toRoute, params: toParams } = this.matchRoute(path);
-      const to = this._createRouteInfo(toRoute, toParams);
+      const to = this._createRouteInfo(toRoute, toParams, path); // ← PASAR EL PATH AQUÍ
+
 
       // EJECUTAR BEFORE EACH GUARD
       const redirectPath = await this._executeBeforeEachGuard(to, from);
 
-      // Si el guard redirige, navegar a la nueva ruta
+      // Si el guard redirige, agregar ruta actual a la cadena y navegar a la nueva ruta
       if (redirectPath) {
-         // Evitar loops infinitos
-         if (redirectPath === path) {
-            slice.logger.logError('Router', `Guard redirection loop detected: ${path}`);
-            return;
-         }
-         return this.navigate(redirectPath);
+         const newChain = [..._redirectChain, path];
+
+         return this.navigate(redirectPath, newChain);
       }
 
-      // Continuar con la navegación normal
+      // No hay redirección - continuar con la navegación normal
       window.history.pushState({}, path, window.location.origin + path);
       await this._performNavigation(to, from);
    }
@@ -272,8 +328,8 @@ export default class Router {
       const { route, params } = this.matchRoute(path);
 
       // Para la carga inicial, también ejecutar guards
-      const from = this._createRouteInfo(null, {});
-      const to = this._createRouteInfo(route, params);
+      const from = this._createRouteInfo(null, {}, null);
+      const to = this._createRouteInfo(route, params, path); // ← PASAR EL PATH AQUÍ
 
       // EJECUTAR BEFORE EACH GUARD en carga inicial
       const redirectPath = await this._executeBeforeEachGuard(to, from);
