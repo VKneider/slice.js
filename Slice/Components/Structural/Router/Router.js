@@ -4,12 +4,16 @@ export default class Router {
       this.activeRoute = null;
       this.pathToRouteMap = this.createPathToRouteMap(routes);
       
-      // NUEVO: Sistema de caché optimizado
+      // Navigation Guards
+      this._beforeEachGuard = null;
+      this._afterEachGuard = null;
+      
+      // Sistema de caché optimizado
       this.routeContainersCache = new Map();
       this.lastCacheUpdate = 0;
       this.CACHE_DURATION = 100; // ms - caché muy corto pero efectivo
       
-      // NUEVO: Observer para invalidar caché automáticamente
+      // Observer para invalidar caché automáticamente
       this.setupMutationObserver();
    }
 
@@ -18,7 +22,276 @@ export default class Router {
       window.addEventListener('popstate', this.onRouteChange.bind(this));
    }
 
-   // NUEVO: Observer para detectar cambios en el DOM
+   // ============================================
+   // NAVIGATION GUARDS API
+   // ============================================
+
+   /**
+    * Registra un guard que se ejecuta ANTES de cada navegación
+    * Puede bloquear o redirigir la navegación
+    * @param {Function} guard - Función (to, from, next) => {}
+    */
+   beforeEach(guard) {
+      if (typeof guard !== 'function') {
+         slice.logger.logError('Router', 'beforeEach expects a function');
+         return;
+      }
+      this._beforeEachGuard = guard;
+   }
+
+   /**
+    * Registra un guard que se ejecuta DESPUÉS de cada navegación
+    * No puede bloquear la navegación
+    * @param {Function} guard - Función (to, from) => {}
+    */
+   afterEach(guard) {
+      if (typeof guard !== 'function') {
+         slice.logger.logError('Router', 'afterEach expects a function');
+         return;
+      }
+      this._afterEachGuard = guard;
+   }
+
+   /**
+    * Crea un objeto con información de ruta para los guards
+    * @param {Object} route - Objeto de ruta
+    * @param {Object} params - Parámetros de la ruta
+    * @returns {Object} Objeto con path, component, params, query, metadata
+    */
+   _createRouteInfo(route, params = {}) {
+      if (!route) {
+         return {
+            path: '/404',
+            component: 'NotFound',
+            params: {},
+            query: this._parseQueryParams(),
+            metadata: {}
+         };
+      }
+
+      return {
+         path: route.fullPath || route.path,
+         component: route.parentRoute ? route.parentRoute.component : route.component,
+         params: params,
+         query: this._parseQueryParams(),
+         metadata: route.metadata || {}
+      };
+   }
+
+   /**
+    * Parsea los query parameters de la URL actual
+    * @returns {Object} Objeto con los query params
+    */
+   _parseQueryParams() {
+      const queryString = window.location.search;
+      if (!queryString) return {};
+
+      const params = {};
+      const urlParams = new URLSearchParams(queryString);
+      
+      for (const [key, value] of urlParams) {
+         params[key] = value;
+      }
+      
+      return params;
+   }
+
+   /**
+    * Ejecuta el beforeEach guard si existe
+    * @param {Object} to - Información de ruta destino
+    * @param {Object} from - Información de ruta origen
+    * @returns {String|null} Path de redirección o null si continúa
+    */
+   async _executeBeforeEachGuard(to, from) {
+      if (!this._beforeEachGuard) {
+         return null;
+      }
+
+      let redirectPath = null;
+      let nextCalled = false;
+
+      const next = (path) => {
+         if (nextCalled) {
+            slice.logger.logWarning('Router', 'next() called multiple times in guard');
+            return;
+         }
+         nextCalled = true;
+
+         if (path && typeof path === 'string') {
+            redirectPath = path;
+         }
+      };
+
+      try {
+         await this._beforeEachGuard(to, from, next);
+
+         // Si no se llamó next(), loguear advertencia pero continuar
+         if (!nextCalled) {
+            slice.logger.logWarning(
+               'Router', 
+               'beforeEach guard did not call next(). Navigation will continue.'
+            );
+         }
+
+         return redirectPath;
+      } catch (error) {
+         slice.logger.logError('Router', 'Error in beforeEach guard', error);
+         return null; // En caso de error, continuar con la navegación
+      }
+   }
+
+   /**
+    * Ejecuta el afterEach guard si existe
+    * @param {Object} to - Información de ruta destino
+    * @param {Object} from - Información de ruta origen
+    */
+   _executeAfterEachGuard(to, from) {
+      if (!this._afterEachGuard) {
+         return;
+      }
+
+      try {
+         this._afterEachGuard(to, from);
+      } catch (error) {
+         slice.logger.logError('Router', 'Error in afterEach guard', error);
+      }
+   }
+
+   // ============================================
+   // ROUTING CORE (MODIFICADO CON GUARDS)
+   // ============================================
+
+   async navigate(path) {
+      const currentPath = window.location.pathname;
+      
+      // Obtener información de ruta actual
+      const { route: fromRoute, params: fromParams } = this.matchRoute(currentPath);
+      const from = this._createRouteInfo(fromRoute, fromParams);
+
+      // Obtener información de ruta destino
+      const { route: toRoute, params: toParams } = this.matchRoute(path);
+      const to = this._createRouteInfo(toRoute, toParams);
+
+      // EJECUTAR BEFORE EACH GUARD
+      const redirectPath = await this._executeBeforeEachGuard(to, from);
+
+      // Si el guard redirige, navegar a la nueva ruta
+      if (redirectPath) {
+         // Evitar loops infinitos
+         if (redirectPath === path) {
+            slice.logger.logError('Router', `Guard redirection loop detected: ${path}`);
+            return;
+         }
+         return this.navigate(redirectPath);
+      }
+
+      // Continuar con la navegación normal
+      window.history.pushState({}, path, window.location.origin + path);
+      await this._performNavigation(to, from);
+   }
+
+   /**
+    * Método interno para ejecutar la navegación después de pasar los guards
+    * @param {Object} to - Información de ruta destino
+    * @param {Object} from - Información de ruta origen
+    */
+   async _performNavigation(to, from) {
+      // Renderizar la nueva ruta
+      await this.onRouteChange();
+
+      // EJECUTAR AFTER EACH GUARD
+      this._executeAfterEachGuard(to, from);
+   }
+
+   async onRouteChange() {
+      // Cancelar el timeout anterior si existe
+      if (this.routeChangeTimeout) {
+         clearTimeout(this.routeChangeTimeout);
+      }
+
+      // Debounce de 10ms para evitar múltiples llamadas seguidas
+      this.routeChangeTimeout = setTimeout(async () => {
+         const path = window.location.pathname;
+         const routeContainersFlag = await this.renderRoutesComponentsInPage();
+
+         if (routeContainersFlag) {
+            return;
+         }
+
+         const { route, params } = this.matchRoute(path);
+         if (route) {
+            await this.handleRoute(route, params);
+         }
+      }, 10);
+   }
+
+   async handleRoute(route, params) {
+      const targetElement = document.querySelector('#app');
+      
+      const componentName = route.parentRoute ? route.parentRoute.component : route.component;
+      const sliceId = `route-${componentName}`;
+      
+      const existingComponent = slice.controller.getComponent(sliceId);
+
+      if (slice.loading) {
+         slice.loading.start();
+      }
+
+      if (existingComponent) {
+         targetElement.innerHTML = '';
+         if (existingComponent.update) {
+            existingComponent.props = { ...existingComponent.props, ...params };
+            await existingComponent.update();
+         }
+         targetElement.appendChild(existingComponent);
+         await this.renderRoutesInComponent(existingComponent);
+      } else {
+         const component = await slice.build(componentName, {
+            params,
+            sliceId: sliceId,
+         });
+
+         targetElement.innerHTML = '';
+         targetElement.appendChild(component);
+         
+         await this.renderRoutesInComponent(component);
+      }
+
+      // Invalidar caché después de cambios importantes en el DOM
+      this.invalidateCache();
+
+      if (slice.loading) {
+         slice.loading.stop();
+      }
+
+      slice.router.activeRoute = route;
+   }
+
+   async loadInitialRoute() {
+      const path = window.location.pathname;
+      const { route, params } = this.matchRoute(path);
+
+      // Para la carga inicial, también ejecutar guards
+      const from = this._createRouteInfo(null, {});
+      const to = this._createRouteInfo(route, params);
+
+      // EJECUTAR BEFORE EACH GUARD en carga inicial
+      const redirectPath = await this._executeBeforeEachGuard(to, from);
+
+      if (redirectPath) {
+         return this.navigate(redirectPath);
+      }
+
+      await this.handleRoute(route, params);
+
+      // EJECUTAR AFTER EACH GUARD en carga inicial
+      this._executeAfterEachGuard(to, from);
+   }
+
+   // ============================================
+   // MÉTODOS EXISTENTES (SIN CAMBIOS)
+   // ============================================
+
    setupMutationObserver() {
       if (typeof MutationObserver !== 'undefined') {
          this.observer = new MutationObserver((mutations) => {
@@ -26,7 +299,6 @@ export default class Router {
             
             mutations.forEach((mutation) => {
                if (mutation.type === 'childList') {
-                  // Solo invalidar si se añadieron/removieron nodos que podrían ser rutas
                   const addedNodes = Array.from(mutation.addedNodes);
                   const removedNodes = Array.from(mutation.removedNodes);
                   
@@ -55,7 +327,6 @@ export default class Router {
       }
    }
 
-   // NUEVO: Invalidar caché
    invalidateCache() {
       this.routeContainersCache.clear();
       this.lastCacheUpdate = 0;
@@ -92,14 +363,12 @@ export default class Router {
       return pathToRouteMap;
    }
 
-   // OPTIMIZADO: Sistema de caché inteligente
    async renderRoutesComponentsInPage(searchContainer = document) {
       let routerContainersFlag = false;
       const routeContainers = this.getCachedRouteContainers(searchContainer);
 
       for (const routeContainer of routeContainers) {
          try {
-            // Verificar que el componente aún esté conectado al DOM
             if (!routeContainer.isConnected) {
                this.invalidateCache();
                continue;
@@ -118,18 +387,15 @@ export default class Router {
       return routerContainersFlag;
    }
 
-   // NUEVO: Obtener contenedores con caché
    getCachedRouteContainers(container) {
       const containerKey = container === document ? 'document' : container.sliceId || 'anonymous';
       const now = Date.now();
       
-      // Verificar si el caché es válido
       if (this.routeContainersCache.has(containerKey) && 
           (now - this.lastCacheUpdate) < this.CACHE_DURATION) {
          return this.routeContainersCache.get(containerKey);
       }
 
-      // Regenerar caché
       const routeContainers = this.findAllRouteContainersOptimized(container);
       this.routeContainersCache.set(containerKey, routeContainers);
       this.lastCacheUpdate = now;
@@ -137,17 +403,14 @@ export default class Router {
       return routeContainers;
    }
 
-   // OPTIMIZADO: Búsqueda más eficiente usando TreeWalker
    findAllRouteContainersOptimized(container) {
       const routeContainers = [];
       
-      // Usar TreeWalker para una búsqueda más eficiente
       const walker = document.createTreeWalker(
          container,
          NodeFilter.SHOW_ELEMENT,
          {
             acceptNode: (node) => {
-               // Solo aceptar nodos que sean slice-route o slice-multi-route
                if (node.tagName === 'SLICE-ROUTE' || node.tagName === 'SLICE-MULTI-ROUTE') {
                   return NodeFilter.FILTER_ACCEPT;
                }
@@ -164,7 +427,6 @@ export default class Router {
       return routeContainers;
    }
 
-   // NUEVO: Método específico para renderizar rutas dentro de un componente
    async renderRoutesInComponent(component) {
       if (!component) {
          slice.logger.logWarning('Router', 'No component provided for route rendering');
@@ -172,85 +434,6 @@ export default class Router {
       }
 
       return await this.renderRoutesComponentsInPage(component);
-   }
-
-   // OPTIMIZADO: Debouncing para evitar múltiples llamadas seguidas
-   async onRouteChange() {
-      // Cancelar el timeout anterior si existe
-      if (this.routeChangeTimeout) {
-         clearTimeout(this.routeChangeTimeout);
-      }
-
-      // Debounce de 10ms para evitar múltiples llamadas seguidas
-      this.routeChangeTimeout = setTimeout(async () => {
-         const path = window.location.pathname;
-         const routeContainersFlag = await this.renderRoutesComponentsInPage();
-
-         if (routeContainersFlag) {
-            return;
-         }
-
-         const { route, params } = this.matchRoute(path);
-         if (route) {
-            await this.handleRoute(route, params);
-         }
-      }, 10);
-   }
-
-   async navigate(path) {
-      window.history.pushState({}, path, window.location.origin + path);
-      await this.onRouteChange();
-   }
-
-   async handleRoute(route, params) {
-   const targetElement = document.querySelector('#app');
-   
-   const componentName = route.parentRoute ? route.parentRoute.component : route.component;
-   const sliceId = `route-${componentName}`;
-   
-   const existingComponent = slice.controller.getComponent(sliceId);
-
-   if (slice.loading) {
-      slice.loading.start();
-   }
-
-   if (existingComponent) {
-      targetElement.innerHTML = '';
-      if (existingComponent.update) {
-         existingComponent.props = { ...existingComponent.props, ...params };
-         await existingComponent.update();
-      }
-      targetElement.appendChild(existingComponent);
-      // Renderizar DESPUÉS de insertar (pero antes de mostrar)
-      await this.renderRoutesInComponent(existingComponent);
-   } else {
-      const component = await slice.build(componentName, {
-         params,
-         sliceId: sliceId,
-      });
-
-      targetElement.innerHTML = '';
-      targetElement.appendChild(component);
-      
-      // Renderizar INMEDIATAMENTE después de insertar
-      await this.renderRoutesInComponent(component);
-   }
-
-   // Invalidar caché después de cambios importantes en el DOM
-   this.invalidateCache();
-
-   if (slice.loading) {
-      slice.loading.stop();
-   }
-
-   slice.router.activeRoute = route;
-}
-
-   async loadInitialRoute() {
-      const path = window.location.pathname;
-      const { route, params } = this.matchRoute(path);
-
-      await this.handleRoute(route, params);
    }
 
    matchRoute(path) {
