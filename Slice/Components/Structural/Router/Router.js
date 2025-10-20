@@ -139,7 +139,7 @@ export default class Router {
     * Ejecuta el beforeEach guard si existe
     * @param {Object} to - Información de ruta destino
     * @param {Object} from - Información de ruta origen
-    * @returns {String|null} Path de redirección o null si continúa
+    * @returns {Object|null} Objeto con redirectPath y options, o null si continúa
     */
    async _executeBeforeEachGuard(to, from) {
       if (!this._beforeEachGuard) {
@@ -147,18 +147,45 @@ export default class Router {
       }
 
       let redirectPath = null;
+      let redirectOptions = {};
       let nextCalled = false;
 
-      const next = (path) => {
+      const next = (arg) => {
          if (nextCalled) {
             slice.logger.logWarning('Router', 'next() called multiple times in guard');
             return;
          }
          nextCalled = true;
 
-         if (path && typeof path === 'string') {
-            redirectPath = path;
+         // Caso 1: Sin argumentos - continuar navegación
+         if (arg === undefined) {
+            return;
          }
+
+         // Caso 2: false - cancelar navegación
+         if (arg === false) {
+            redirectPath = false;
+            return;
+         }
+
+         // Caso 3: String - redirección simple (backward compatibility)
+         if (typeof arg === 'string') {
+            redirectPath = arg;
+            redirectOptions = { replace: false };
+            return;
+         }
+
+         // Caso 4: Objeto - redirección con opciones
+         if (typeof arg === 'object' && arg.path) {
+            redirectPath = arg.path;
+            redirectOptions = {
+               replace: arg.replace || false
+            };
+            return;
+         }
+
+         // Argumento inválido
+         slice.logger.logError('Router', 'Invalid argument passed to next(). Expected string, object with path, false, or undefined.');
       };
 
       try {
@@ -172,7 +199,8 @@ export default class Router {
             );
          }
 
-         return redirectPath;
+         // Retornar tanto el path como las opciones
+         return redirectPath ? { path: redirectPath, options: redirectOptions } : null;
       } catch (error) {
          slice.logger.logError('Router', 'Error in beforeEach guard', error);
          return null; // En caso de error, continuar con la navegación
@@ -200,7 +228,7 @@ export default class Router {
    // ROUTING CORE (MODIFICADO CON GUARDS)
    // ============================================
 
-   async navigate(path, _redirectChain = []) {
+    async navigate(path, _redirectChain = [], _options = {}) {
       const currentPath = window.location.pathname;
       
       
@@ -228,21 +256,32 @@ export default class Router {
 
       // Obtener información de ruta destino
       const { route: toRoute, params: toParams } = this.matchRoute(path);
-      const to = this._createRouteInfo(toRoute, toParams, path); // ← PASAR EL PATH AQUÍ
+      const to = this._createRouteInfo(toRoute, toParams, path);
 
 
       // EJECUTAR BEFORE EACH GUARD
-      const redirectPath = await this._executeBeforeEachGuard(to, from);
+      const guardResult = await this._executeBeforeEachGuard(to, from);
 
-      // Si el guard redirige, agregar ruta actual a la cadena y navegar a la nueva ruta
-      if (redirectPath) {
+      // Si el guard redirige
+      if (guardResult && guardResult.path) {
          const newChain = [..._redirectChain, path];
+         return this.navigate(guardResult.path, newChain, guardResult.options);
+      }
 
-         return this.navigate(redirectPath, newChain);
+      // Si el guard cancela la navegación (next(false))
+      if (guardResult && guardResult.path === false) {
+         slice.logger.logInfo('Router', 'Navigation cancelled by guard');
+         return;
       }
 
       // No hay redirección - continuar con la navegación normal
-      window.history.pushState({}, path, window.location.origin + path);
+      // Usar replace o push según las opciones
+      if (_options.replace) {
+         window.history.replaceState({}, path, window.location.origin + path);
+      } else {
+         window.history.pushState({}, path, window.location.origin + path);
+      }
+      
       await this._performNavigation(to, from);
    }
 
@@ -323,19 +362,25 @@ export default class Router {
       slice.router.activeRoute = route;
    }
 
-   async loadInitialRoute() {
+    async loadInitialRoute() {
       const path = window.location.pathname;
       const { route, params } = this.matchRoute(path);
 
       // Para la carga inicial, también ejecutar guards
       const from = this._createRouteInfo(null, {}, null);
-      const to = this._createRouteInfo(route, params, path); // ← PASAR EL PATH AQUÍ
+      const to = this._createRouteInfo(route, params, path);
 
       // EJECUTAR BEFORE EACH GUARD en carga inicial
-      const redirectPath = await this._executeBeforeEachGuard(to, from);
+      const guardResult = await this._executeBeforeEachGuard(to, from);
 
-      if (redirectPath) {
-         return this.navigate(redirectPath);
+      if (guardResult && guardResult.path) {
+         return this.navigate(guardResult.path, [], guardResult.options);
+      }
+
+      // Si el guard cancela la navegación inicial (caso raro pero posible)
+      if (guardResult && guardResult.path === false) {
+         slice.logger.logWarning('Router', 'Initial route navigation cancelled by guard');
+         return;
       }
 
       await this.handleRoute(route, params);

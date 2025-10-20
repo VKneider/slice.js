@@ -7,7 +7,7 @@ slice.router.beforeEach(async (to, from, next) => {
    if(to.metadata.private){
       const isAuthenticated = await //fetchlogic for validation
       if(!isAuthenticated){
-         return next({ path: '/login' });
+         return next({ path: '/login', replace: true });
       }
       return next();
    }
