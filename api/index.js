@@ -22,8 +22,6 @@ const folderDeployed = 'src';
 // Obtener puerto desde sliceConfig.json, con fallback a process.env.PORT
 const PORT = sliceConfig.server?.port || process.env.PORT || 3001;
 
-console.log(`🚀 Starting Slice.js server in ${runMode} mode`);
-console.log(`📁 Serving files from: /${folderDeployed}`);
 
 app.use('/Slice/', express.static(path.join(__dirname, '..', 'node_modules', 'slicejs-web-framework', 'Slice')));
 
@@ -80,81 +78,7 @@ app.get('*', (req, res) => {
 
 function startServer() {
   server = app.listen(PORT, () => {
-    // Limpiar consola y mostrar banner de inicio
-    console.clear();
-    showWelcomeBanner();
-    
-    // Información del servidor
-    console.log(`✅ Server running at ${'\x1b[36m'}http://localhost:${PORT}${'\x1b[0m'}`);
-    console.log(`📂 Mode: ${'\x1b[32m'}${runMode}${'\x1b[0m'} (serving from ${'\x1b[33m'}/${folderDeployed}${'\x1b[0m'})`);
-    console.log(`🔄 ${'\x1b[32m'}Development mode${'\x1b[0m'}: Changes in /src are served instantly`);
-    console.log(`🛑 Press ${'\x1b[31m'}Ctrl+C${'\x1b[0m'} to stop\n`);
   });
-
-  // Mostrar menú interactivo después de un momento
-  setTimeout(showInteractiveMenu, 1500);
-}
-
-function showWelcomeBanner() {
-  const banner = `
-${'\x1b[36m'}╔══════════════════════════════════════════════════╗${'\x1b[0m'}
-${'\x1b[36m'}║${'\x1b[0m'}              ${'\x1b[1m'}🍰 SLICE.JS SERVER${'\x1b[0m'}                ${'\x1b[36m'}║${'\x1b[0m'}
-${'\x1b[36m'}║${'\x1b[0m'}            ${'\x1b[90m'}Development Environment${'\x1b[0m'}             ${'\x1b[36m'}║${'\x1b[0m'}
-${'\x1b[36m'}╚══════════════════════════════════════════════════╝${'\x1b[0m'}
-`;
-  console.log(banner);
-}
-
-async function showInteractiveMenu() {
-  while (true) {
-    try {
-      console.log('\n' + '='.repeat(50));
-      
-      const { action } = await inquirer.prompt([
-        {
-          type: 'list',
-          name: 'action',
-          message: '🎛️  Server Control Menu',
-          choices: [
-            '📊 Server Status',
-            '🌐 Open in Browser',
-            '🔄 Restart Server',
-            '🛑 Stop Server'
-          ]
-        }
-      ]);
-
-      if (action === '📊 Server Status') {
-        console.log(`\n📈 Server Status:`);
-        console.log(`   🔗 URL: http://localhost:${PORT}`);
-        console.log(`   📁 Mode: ${runMode}`);
-        console.log(`   📂 Serving: /${folderDeployed}`);
-        console.log(`   ⏰ Uptime: ${Math.floor(process.uptime())}s`);
-      } else if (action === '🌐 Open in Browser') {
-        const { default: open } = await import('open');
-        await open(`http://localhost:${PORT}`);
-        console.log('🌐 Opening browser...');
-      } else if (action === '🛑 Stop Server') {
-        console.log('\n🛑 Stopping server...');
-        server.close(() => {
-          console.log('✅ Server stopped successfully');
-          process.exit(0);
-        });
-        break;
-      } else if (action === '🔄 Restart Server') {
-        console.log('\nRestarting server...');
-        server.close(() => {
-          console.log('Server stopped. Restarting...');
-          startServer();
-        });
-        break;
-      }
-    } catch (error) {
-      // Si hay error con inquirer, continuar sin menú
-      console.log('\n💡 Interactive menu not available - Press Ctrl+C to stop');
-      break;
-    }
-  }
 }
 
 // Manejar cierre del proceso
