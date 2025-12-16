@@ -25,4 +25,6 @@ const components = {
   "Link": "Service",
   "LocalStorageManager": "Service",
   "Translator": "Service"
-}; export default components;
+};
+
+export default components;
