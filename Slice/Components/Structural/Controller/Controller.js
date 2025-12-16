@@ -7,12 +7,363 @@ export default class Controller {
       this.classes = new Map();
       this.requestedStyles = new Set(); // ✅ CRÍTICO: Para tracking de CSS cargados
       this.activeComponents = new Map();
-      
+
       // 🚀 OPTIMIZACIÓN: Índice inverso para búsqueda rápida de hijos
       // parentSliceId → Set<childSliceId>
       this.childrenIndex = new Map();
-      
+
+      // 📦 Bundle system
+      this.loadedBundles = new Set();
+      this.bundleConfig = null;
+      this.criticalBundleLoaded = false;
+
       this.idCounter = 0;
+   }
+
+   /**
+    * 📦 Initializes bundle system (called automatically when config is loaded)
+    */
+   initializeBundles(config = null) {
+      if (config) {
+         this.bundleConfig = config;
+
+         // Register critical bundle components if available
+         if (config.bundles?.critical) {
+            // The critical bundle should already be loaded, register its components
+            this.loadedBundles.add('critical');
+            // Note: Critical bundle registration is handled by the auto-import
+         }
+         this.criticalBundleLoaded = true;
+      } else {
+         // No bundles available, will use individual component loading
+         this.bundleConfig = null;
+         this.criticalBundleLoaded = false;
+      }
+   }
+
+   /**
+    * 📦 Loads a bundle by name or category
+    */
+   async loadBundle(bundleName) {
+      if (this.loadedBundles.has(bundleName)) {
+         return; // Already loaded
+      }
+
+      try {
+         const bundleInfo = this.bundleConfig?.bundles?.routes?.[bundleName];
+
+         if (!bundleInfo) {
+            console.warn(`Bundle ${bundleName} not found in configuration`);
+            return;
+         }
+
+         const bundlePath = `/bundles/${bundleInfo.file}`;
+
+         // Dynamic import of the bundle
+         const bundleModule = await import(bundlePath);
+
+         // Manually register components from the imported bundle
+         if (bundleModule.SLICE_BUNDLE) {
+            this.registerBundle(bundleModule.SLICE_BUNDLE);
+         }
+
+         this.loadedBundles.add(bundleName);
+
+      } catch (error) {
+         console.warn(`Failed to load bundle ${bundleName}:`, error);
+      }
+   }
+
+   /**
+    * 📦 Registers a bundle's components (called automatically by bundle files)
+    */
+   registerBundleLegacy(bundle) {
+      const { components, metadata } = bundle;
+
+      console.log(`📦 Registering bundle: ${metadata.type} (${metadata.componentCount} components)`);
+
+      // Phase 1: Register templates and CSS for all components first
+      for (const [componentName, componentData] of Object.entries(components)) {
+         try {
+            // Register HTML template
+            if (componentData.html !== undefined && !this.templates.has(componentName)) {
+               const template = document.createElement('template');
+               template.innerHTML = componentData.html || '';
+               this.templates.set(componentName, template);
+            }
+
+            // Register CSS styles
+            if (componentData.css !== undefined && !this.requestedStyles.has(componentName)) {
+               // Use the existing stylesManager to register component styles
+               if (window.slice && window.slice.stylesManager) {
+                  window.slice.stylesManager.registerComponentStyles(componentName, componentData.css || '');
+                  this.requestedStyles.add(componentName);
+               }
+            }
+         } catch (error) {
+            console.warn(`❌ Failed to register assets for ${componentName}:`, error);
+         }
+      }
+
+      // Phase 2: Evaluate all external file dependencies
+      const processedDeps = new Set();
+      for (const [componentName, componentData] of Object.entries(components)) {
+         if (componentData.dependencies) {
+            for (const [depName, depContent] of Object.entries(componentData.dependencies)) {
+               if (!processedDeps.has(depName)) {
+                  try {
+                     // Convert ES6 exports to global assignments
+                     let processedContent = depContent
+                        .replace(/export\s+const\s+(\w+)\s*=/g, 'window.$1 =')
+                        .replace(/export\s+let\s+(\w+)\s*=/g, 'window.$1 =')
+                        .replace(/export\s+var\s+(\w+)\s*=/g, 'window.$1 =')
+                        .replace(/export\s+function\s+(\w+)/g, 'window.$1 = function')
+                        .replace(/export\s+default\s+/g, 'window.defaultExport =')
+                        .replace(/export\s*{\s*([^}]+)\s*}/g, (match, exports) => {
+                           return exports.split(',').map(exp => {
+                              const cleanExp = exp.trim();
+                              const varName = cleanExp.split(' as ')[0].trim();
+                              return `window.${varName} = ${varName};`;
+                           }).join('\n');
+                        })
+                        // Remove any remaining export keywords
+                        .replace(/^\s*export\s+/gm, '');
+
+                     // Evaluate the dependency
+                     try {
+                        new Function('slice', 'customElements', 'window', 'document', processedContent)
+                           (window.slice, window.customElements, window, window.document);
+                     } catch (evalError) {
+                        console.warn(`❌ Failed to evaluate processed dependency ${depName}:`, evalError);
+                        console.warn('Processed content preview:', processedContent.substring(0, 200));
+                        // Try evaluating the original content as fallback
+                        try {
+                           new Function('slice', 'customElements', 'window', 'document', depContent)
+                              (window.slice, window.customElements, window, window.document);
+                           console.log(`✅ Fallback evaluation succeeded for ${depName}`);
+                        } catch (fallbackError) {
+                           console.warn(`❌ Fallback evaluation also failed for ${depName}:`, fallbackError);
+                        }
+                     }
+
+                     processedDeps.add(depName);
+                     console.log(`📄 Dependency loaded: ${depName}`);
+                  } catch (depError) {
+                     console.warn(`⚠️ Failed to load dependency ${depName} for ${componentName}:`, depError);
+                  }
+               }
+            }
+         }
+      }
+
+      // Phase 3: Evaluate all component classes (now that dependencies are available)
+      for (const [componentName, componentData] of Object.entries(components)) {
+         // For JavaScript classes, we need to evaluate the code
+         if (componentData.js && !this.classes.has(componentName)) {
+               try {
+                  // Create evaluation context with dependencies
+                  let evalCode = componentData.js;
+
+                  // Prepend dependencies to make them available
+                  if (componentData.dependencies) {
+                     const depCode = Object.entries(componentData.dependencies)
+                        .map(([depName, depContent]) => {
+                           // Convert ES6 exports to global assignments
+                           return depContent
+                              .replace(/export\s+const\s+(\w+)\s*=/g, 'window.$1 =')
+                              .replace(/export\s+let\s+(\w+)\s*=/g, 'window.$1 =')
+                              .replace(/export\s+function\s+(\w+)/g, 'window.$1 = function')
+                              .replace(/export\s+default\s+/g, 'window.defaultExport =')
+                              .replace(/export\s*{\s*([^}]+)\s*}/g, (match, exports) => {
+                                 return exports.split(',').map(exp => {
+                                    const cleanExp = exp.trim();
+                                    return `window.${cleanExp} = ${cleanExp};`;
+                                 }).join('\n');
+                              });
+                        })
+                        .join('\n\n');
+
+                     evalCode = depCode + '\n\n' + evalCode;
+                  }
+
+                  // Evaluate the complete code
+                  const componentClass = new Function('slice', 'customElements', 'window', 'document', `
+                     "use strict";
+                     ${evalCode}
+                     return ${componentName};
+                  `)(window.slice, window.customElements, window, window.document);
+
+                  if (componentClass) {
+                     this.classes.set(componentName, componentClass);
+                     console.log(`📝 Class registered for: ${componentName}`);
+                  }
+               } catch (error) {
+                  console.warn(`❌ Failed to evaluate class for ${componentName}:`, error);
+                  console.warn('Code that failed:', componentData.js.substring(0, 200) + '...');
+               }
+            }
+         }
+      }
+
+
+
+   /**
+    * 📦 New bundle registration method (simplified and robust)
+    */
+   registerBundle(bundle) {
+      const { components, metadata } = bundle;
+
+      console.log(`📦 Registering bundle: ${metadata.type} (${metadata.componentCount} components)`);
+
+      // Phase 1: Register all templates and CSS first
+      for (const [componentName, componentData] of Object.entries(components)) {
+         try {
+            if (componentData.html !== undefined && !this.templates.has(componentName)) {
+               const template = document.createElement('template');
+               template.innerHTML = componentData.html || '';
+               this.templates.set(componentName, template);
+            }
+
+            if (componentData.css !== undefined && !this.requestedStyles.has(componentName)) {
+               if (window.slice && window.slice.stylesManager) {
+                  window.slice.stylesManager.registerComponentStyles(componentName, componentData.css || '');
+                  this.requestedStyles.add(componentName);
+                  console.log(`🎨 CSS registered for: ${componentName}`);
+               }
+            }
+         } catch (error) {
+            console.warn(`❌ Failed to register assets for ${componentName}:`, error);
+         }
+      }
+
+      // Phase 2: Evaluate all external file dependencies first
+      const processedDeps = new Set();
+      for (const [componentName, componentData] of Object.entries(components)) {
+         if (componentData.externalDependencies) {
+            for (const [depName, depContent] of Object.entries(componentData.externalDependencies)) {
+               if (!processedDeps.has(depName)) {
+                  try {
+                     // Process ES6 exports to make the code evaluable
+                     let processedContent = depContent
+                        // Convert named exports: export const varName = ... → window.varName = ...
+                        .replace(/export\s+const\s+(\w+)\s*=\s*/g, 'window.$1 = ')
+                        .replace(/export\s+let\s+(\w+)\s*=\s*/g, 'window.$1 = ')
+                        .replace(/export\s+function\s+(\w+)/g, 'window.$1 = function')
+                        .replace(/export\s+default\s+/g, 'window.defaultExport = ')
+                        // Handle export { var1, var2 } statements
+                        .replace(/export\s*{\s*([^}]+)\s*}/g, (match, exportsStr) => {
+                           const exports = exportsStr.split(',').map(exp => exp.trim().split(' as ')[0].trim());
+                           return exports.map(varName => `window.${varName} = ${varName};`).join('\n');
+                        })
+                        // Remove any remaining export keywords
+                        .replace(/^\s*export\s+/gm, '');
+
+                     // Evaluate the processed content
+                     new Function('slice', 'customElements', 'window', 'document', processedContent)
+                        (window.slice, window.customElements, window, window.document);
+
+                     processedDeps.add(depName);
+                     console.log(`📄 External dependency loaded: ${depName}`);
+                  } catch (depError) {
+                     console.warn(`⚠️ Failed to load external dependency ${depName}:`, depError);
+                     console.warn('Original content preview:', depContent.substring(0, 200));
+                  }
+               }
+            }
+         }
+      }
+
+      // Phase 3: Evaluate all component classes (external dependencies are now available)
+      for (const [componentName, componentData] of Object.entries(components)) {
+         if (componentData.js && !this.classes.has(componentName)) {
+            try {
+               // Simple evaluation
+               const componentClass = new Function('slice', 'customElements', 'window', 'document', `
+                  ${componentData.js}
+                  return ${componentName};
+               `)(window.slice, window.customElements, window, window.document);
+
+               if (componentClass) {
+                  this.classes.set(componentName, componentClass);
+                  console.log(`📝 Class registered for: ${componentName}`);
+               }
+            } catch (error) {
+               console.warn(`❌ Failed to evaluate class for ${componentName}:`, error);
+               // Continue with other components instead of failing completely
+            }
+         }
+      }
+
+      console.log(`✅ Bundle registration completed: ${metadata.componentCount} components processed`);
+   }
+
+   /**
+    * 📦 Determines which bundle to load for a component
+    */
+   getBundleForComponent(componentName) {
+      if (!this.bundleConfig?.bundles) return null;
+
+      // Check if component is in critical bundle
+      if (this.bundleConfig.bundles.critical?.components?.includes(componentName)) {
+         return 'critical';
+      }
+
+      // Find component in route bundles
+      if (this.bundleConfig.bundles.routes) {
+         for (const [bundleName, bundleInfo] of Object.entries(this.bundleConfig.bundles.routes)) {
+            if (bundleInfo.components?.includes(componentName)) {
+               return bundleName;
+            }
+         }
+      }
+
+      return null;
+   }
+
+   /**
+    * 📦 Checks if a component is available from loaded bundles
+    */
+   isComponentFromBundle(componentName) {
+      if (!this.bundleConfig?.bundles) return false;
+
+      // Check critical bundle
+      if (this.bundleConfig.bundles.critical?.components?.includes(componentName)) {
+         return this.criticalBundleLoaded;
+      }
+
+      // Check route bundles
+      if (this.bundleConfig.bundles.routes) {
+         for (const [bundleName, bundleInfo] of Object.entries(this.bundleConfig.bundles.routes)) {
+            if (bundleInfo.components?.includes(componentName)) {
+               return this.loadedBundles.has(bundleName);
+            }
+         }
+      }
+
+      return false;
+   }
+
+   /**
+    * 📦 Gets component data from loaded bundles
+    */
+   getComponentFromBundle(componentName) {
+      if (!this.bundleConfig?.bundles) return null;
+
+      // Find component in any loaded bundle
+      const allBundles = [
+         { name: 'critical', data: this.bundleConfig.bundles.critical },
+         ...Object.entries(this.bundleConfig.bundles.routes || {}).map(([name, data]) => ({ name, data }))
+      ];
+
+      for (const { name: bundleName, data: bundleData } of allBundles) {
+         if (bundleData?.components?.includes(componentName) && this.loadedBundles.has(bundleName)) {
+            // Find the bundle file and extract component data
+            // This is a simplified version - in practice you'd need to access the loaded bundle data
+            return { bundleName, componentName };
+         }
+      }
+
+      return null;
    }
 
    logActiveComponents() {

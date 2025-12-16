@@ -11,6 +11,8 @@ export default class Slice {
       this.loggerConfig = sliceConfig.logger;
       this.debuggerConfig = sliceConfig.debugger;
       this.loadingConfig = sliceConfig.loading;
+
+      // 📦 Bundle system is initialized automatically via import in index.js
    }
 
    async getClass(module) {
@@ -46,7 +48,16 @@ export default class Slice {
          return null;
       }
 
+      // 📦 Try to load from bundles first
+      const bundleName = this.controller.getBundleForComponent(componentName);
+      if (bundleName && !this.controller.loadedBundles.has(bundleName)) {
+         await this.controller.loadBundle(bundleName);
+      }
+
       let componentCategory = this.controller.componentCategories.get(componentName);
+
+      // 📦 Check if component is already available from loaded bundles
+      const isFromBundle = this.controller.isComponentFromBundle(componentName);
 
       if (componentCategory === 'Structural') {
          this.logger.logError(
@@ -57,26 +68,30 @@ export default class Slice {
          return null;
       }
 
-      let isVisual = slice.paths.components[componentCategory].type === "Visual";     
+      let isVisual = slice.paths.components[componentCategory].type === "Visual";
       let modulePath = `${slice.paths.components[componentCategory].path}/${componentName}/${componentName}.js`;
 
       // Load template, class, and CSS concurrently if needed
       try {
-         const loadTemplate =
-            isVisual && !this.controller.templates.has(componentName)
-               ? this.controller.fetchText(componentName, 'html', componentCategory)
-               : Promise.resolve(null);
+         // 📦 Skip individual loading if component is available from bundles
+         const loadTemplate = (isFromBundle || !isVisual || this.controller.templates.has(componentName))
+            ? Promise.resolve(null)
+            : this.controller.fetchText(componentName, 'html', componentCategory);
 
-         const loadClass = !this.controller.classes.has(componentName)
-            ? this.getClass(modulePath)
-            : Promise.resolve(null);
+         const loadClass = (isFromBundle || this.controller.classes.has(componentName))
+            ? Promise.resolve(null)
+            : this.getClass(modulePath);
 
-         const loadCSS =
-            isVisual && !this.controller.requestedStyles.has(componentName)
-               ? this.controller.fetchText(componentName, 'css', componentCategory)
-               : Promise.resolve(null);
+         const loadCSS = (isFromBundle || !isVisual || this.controller.requestedStyles.has(componentName))
+            ? Promise.resolve(null)
+            : this.controller.fetchText(componentName, 'css', componentCategory);
 
          const [html, ComponentClass, css] = await Promise.all([loadTemplate, loadClass, loadCSS]);
+
+         // 📦 If component is from bundle but not in cache, it should have been registered by registerBundle
+         if (isFromBundle) {
+            console.log(`📦 Using bundled component: ${componentName}`);
+         }
 
          if (html || html === '') {
             const template = document.createElement('template');
@@ -219,4 +234,16 @@ async function init() {
    
 }
 
-await init();
+   await init();
+
+   // Initialize bundles if available
+   try {
+      const { initializeBundles } = await import('/bundles/bundle.config.js');
+      if (initializeBundles) {
+         await initializeBundles(window.slice);
+         console.log('📦 Bundles initialized automatically');
+      }
+   } catch (error) {
+      // Bundles not available, continue with individual component loading
+      console.log('📄 Using individual component loading (no bundles found)');
+   }

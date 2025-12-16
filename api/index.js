@@ -1,6 +1,7 @@
 // api/index.js - Seguridad automática sin configuración
 import express from 'express';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { 
@@ -60,6 +61,15 @@ app.use(securityMiddleware({
 // MIDDLEWARES DE APLICACIÓN
 // ==============================================
 
+// Middleware global para archivos JavaScript con MIME types correctos
+app.use((req, res, next) => {
+  if (req.path.endsWith('.js')) {
+    // Forzar headers correctos para TODOS los archivos .js
+    res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+  }
+  next();
+});
+
 // Middleware para parsear JSON y formularios
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -80,6 +90,76 @@ app.use((req, res, next) => {
 // ==============================================
 // ARCHIVOS ESTÁTICOS (DESPUÉS DE SEGURIDAD)
 // ==============================================
+
+// Función de utilidad para verificar si existe el directorio bundles
+function bundlesDirectoryExists() {
+  const bundleDir = path.join(__dirname, `../${folderDeployed}`, 'bundles');
+  return fs.existsSync(bundleDir) && fs.statSync(bundleDir).isDirectory();
+}
+
+// Capturar todas las peticiones a bundles para debugging
+app.use('/bundles/', (req, res, next) => {
+  console.log(`🔍 Bundle request: ${req.method} ${req.originalUrl}`);
+  next();
+});
+
+// Middleware personalizado para archivos de bundles con MIME types correctos
+// ⚠️ DEBE IR ANTES del middleware general para tener prioridad
+app.use('/bundles/', (req, res, next) => {
+  // Verificar si existe el directorio bundles
+  if (!bundlesDirectoryExists()) {
+    console.log(`ℹ️ Bundles directory does not exist, skipping bundle processing`);
+    return next(); // Continuar con el siguiente middleware
+  }
+
+  // Solo procesar archivos .js
+  if (req.path.endsWith('.js')) {
+    const filePath = path.join(__dirname, `../${folderDeployed}`, 'bundles', req.path);
+    console.log(`📂 Processing bundle: ${req.path} -> ${filePath}`);
+
+    // Verificar que el archivo existe
+    if (fs.existsSync(filePath)) {
+      try {
+        // Leer y servir el archivo con headers correctos
+        const fileContent = fs.readFileSync(filePath, 'utf8');
+        res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate'); // No cachear para permitir actualizaciones en tiempo real
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+        console.log(`✅ Serving bundle: ${req.path} (${fileContent.length} bytes, ${Buffer.byteLength(fileContent, 'utf8')} bytes UTF-8)`);
+        return res.send(fileContent);
+      } catch (error) {
+        console.log(`❌ Error reading bundle file: ${error.message}`);
+        return res.status(500).send('Error reading bundle file');
+      }
+    } else {
+      console.log(`❌ Bundle file not found: ${filePath}`);
+      // Listar archivos disponibles para debugging
+      try {
+        const bundleDir = path.join(__dirname, `../${folderDeployed}`, 'bundles');
+        if (fs.existsSync(bundleDir)) {
+          const files = fs.readdirSync(bundleDir);
+          console.log(`📁 Available files in bundles: ${files.join(', ')}`);
+        }
+      } catch (e) {
+        console.log(`❌ Could not list bundle directory: ${e.message}`);
+      }
+      return res.status(404).send('Bundle file not found');
+    }
+  }
+
+  // Para archivos no .js, continuar con el middleware estático normal
+  next();
+});
+
+// Servir otros archivos de bundles (CSS, etc.) con el middleware estático normal
+// Solo si existe el directorio bundles
+if (bundlesDirectoryExists()) {
+  app.use('/bundles/', express.static(path.join(__dirname, `../${folderDeployed}`, 'bundles')));
+  console.log(`📦 Bundles directory found, serving static files`);
+} else {
+  console.log(`ℹ️ Bundles directory not found, skipping static bundle serving`);
+}
 
 // Servir framework Slice.js
 app.use('/Slice/', express.static(path.join(__dirname, '..', 'node_modules', 'slicejs-web-framework', 'Slice')));
@@ -108,40 +188,6 @@ app.get('/api/status', (req, res) => {
   });
 });
 
-// Ruta para verificar estado de seguridad
-app.get('/api/security-status', (req, res) => {
-  const host = req.get('Host');
-  
-  res.json({
-    frameworkProtection: {
-      status: 'active',
-      mode: 'automatic',
-      description: 'Allows framework file loading from application, blocks direct browser access',
-      detectedHost: host
-    },
-    blockedPaths: [
-      '/node_modules/*',
-      '/package.json',
-      '/.env',
-      '/.git/*'
-    ],
-    protectedPaths: {
-      directAccessBlocked: [
-        '/Slice/Components/Structural/*',
-        '/Slice/Core/*',
-        '/Slice/Services/*'
-      ],
-      allowedFrom: 'Any request with valid Referer matching current host'
-    },
-    howItWorks: {
-      automatic: true,
-      config: 'No configuration needed',
-      localhost: 'Works automatically',
-      customDomain: 'Works automatically',
-      detection: 'Uses Referer and Host headers'
-    }
-  });
-});
 
 // ==============================================
 // SPA FALLBACK
