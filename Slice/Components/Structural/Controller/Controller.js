@@ -50,7 +50,16 @@ export default class Controller {
       }
 
       try {
-         const bundleInfo = this.bundleConfig?.bundles?.routes?.[bundleName];
+         let bundleInfo = this.bundleConfig?.bundles?.routes?.[bundleName];
+
+         if (!bundleInfo && this.bundleConfig?.bundles?.routes) {
+            const normalizedName = bundleName?.toLowerCase();
+            const matchedKey = Object.keys(this.bundleConfig.bundles.routes)
+               .find(key => key.toLowerCase() === normalizedName);
+            if (matchedKey) {
+               bundleInfo = this.bundleConfig.bundles.routes[matchedKey];
+            }
+         }
 
          if (!bundleInfo) {
             console.warn(`Bundle ${bundleName} not found in configuration`);
