@@ -249,9 +249,19 @@ export default class Controller {
       const processedDeps = new Set();
       for (const [componentName, componentData] of Object.entries(components)) {
          if (componentData.externalDependencies) {
-            for (const [depName, depContent] of Object.entries(componentData.externalDependencies)) {
-               if (!processedDeps.has(depName)) {
+            for (const [depName, depEntry] of Object.entries(componentData.externalDependencies)) {
+               const depKey = depName || '';
+               if (!processedDeps.has(depKey)) {
                   try {
+                     const depContent = typeof depEntry === 'string' ? depEntry : depEntry.content;
+                     const bindings = typeof depEntry === 'string' ? [] : (depEntry.bindings || []);
+
+                     const fileBaseName = depKey
+                        ? depKey.split('/').pop().replace(/\.[^.]+$/, '')
+                        : '';
+                     const dataName = fileBaseName ? `${fileBaseName}Data` : '';
+                     const exportPrefix = dataName ? `window.${dataName} = ` : '';
+
                      // Process ES6 exports to make the code evaluable
                      let processedContent = depContent
                         // Convert named exports: export const varName = ... → window.varName = ...
@@ -259,6 +269,8 @@ export default class Controller {
                         .replace(/export\s+let\s+(\w+)\s*=\s*/g, 'window.$1 = ')
                         .replace(/export\s+function\s+(\w+)/g, 'window.$1 = function')
                         .replace(/export\s+default\s+/g, 'window.defaultExport = ')
+                        // Promote default export to <file>Data for data modules
+                        .replace(/window\.defaultExport\s*=\s*/g, exportPrefix || 'window.defaultExport = ')
                         // Handle export { var1, var2 } statements
                         .replace(/export\s*{\s*([^}]+)\s*}/g, (match, exportsStr) => {
                            const exports = exportsStr.split(',').map(exp => exp.trim().split(' as ')[0].trim());
@@ -271,11 +283,42 @@ export default class Controller {
                      new Function('slice', 'customElements', 'window', 'document', processedContent)
                         (window.slice, window.customElements, window, window.document);
 
-                     processedDeps.add(depName);
+                     // Apply import bindings to map local identifiers to globals
+                     for (const binding of bindings) {
+                        if (!binding?.localName) continue;
+
+                        if (binding.type === 'default') {
+                           if (!window[binding.localName]) {
+                              const fallbackValue = dataName && window[dataName] !== undefined
+                                 ? window[dataName]
+                                 : window.defaultExport;
+                              if (fallbackValue !== undefined) {
+                                 window[binding.localName] = fallbackValue;
+                              }
+                           }
+                        }
+
+                        if (binding.type === 'named') {
+                           if (!window[binding.localName] && window[binding.importedName] !== undefined) {
+                              window[binding.localName] = window[binding.importedName];
+                           }
+                        }
+
+                        if (binding.type === 'namespace' && !window[binding.localName]) {
+                           const namespace = {};
+                           Object.keys(window).forEach((key) => {
+                              namespace[key] = window[key];
+                           });
+                           window[binding.localName] = namespace;
+                        }
+                     }
+
+                     processedDeps.add(depKey);
                      console.log(`📄 External dependency loaded: ${depName}`);
                   } catch (depError) {
                      console.warn(`⚠️ Failed to load external dependency ${depName}:`, depError);
-                     console.warn('Original content preview:', depContent.substring(0, 200));
+                     const preview = typeof depEntry === 'string' ? depEntry : depEntry.content;
+                     console.warn('Original content preview:', preview.substring(0, 200));
                   }
                }
             }
