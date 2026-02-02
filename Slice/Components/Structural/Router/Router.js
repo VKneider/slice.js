@@ -3,20 +3,20 @@ export default class Router {
       this.routes = routes;
       this.activeRoute = null;
       this.pathToRouteMap = this.createPathToRouteMap(routes);
-      
+
       // Navigation Guards
       this._beforeEachGuard = null;
       this._afterEachGuard = null;
-      
+
       // Router state
       this._started = false;
       this._autoStartTimeout = null;
-      
+
       // Sistema de caché optimizado
       this.routeContainersCache = new Map();
       this.lastCacheUpdate = 0;
       this.CACHE_DURATION = 100; // ms - caché muy corto pero efectivo
-      
+
       // Observer para invalidar caché automáticamente
       this.setupMutationObserver();
    }
@@ -27,7 +27,7 @@ export default class Router {
     */
    init() {
       window.addEventListener('popstate', this.onRouteChange.bind(this));
-      
+
       // Auto-start después de 50ms si el usuario no llama start() manualmente
       // Esto da tiempo para que el usuario configure guards si lo necesita
       this._autoStartTimeout = setTimeout(async () => {
@@ -49,13 +49,13 @@ export default class Router {
          slice.logger.logWarning('Router', 'start() already called');
          return;
       }
-      
+
       // Cancelar auto-start si existe
       if (this._autoStartTimeout) {
          clearTimeout(this._autoStartTimeout);
          this._autoStartTimeout = null;
       }
-      
+
       this._started = true;
       await this.loadInitialRoute();
    }
@@ -104,7 +104,7 @@ export default class Router {
             component: 'NotFound',
             params: {},
             query: this._parseQueryParams(),
-            metadata: {}
+            metadata: {},
          };
       }
 
@@ -113,7 +113,7 @@ export default class Router {
          component: route.parentRoute ? route.parentRoute.component : route.component,
          params: params,
          query: this._parseQueryParams(),
-         metadata: route.metadata || {}
+         metadata: route.metadata || {},
       };
    }
 
@@ -127,11 +127,11 @@ export default class Router {
 
       const params = {};
       const urlParams = new URLSearchParams(queryString);
-      
+
       for (const [key, value] of urlParams) {
          params[key] = value;
       }
-      
+
       return params;
    }
 
@@ -179,13 +179,16 @@ export default class Router {
          if (typeof arg === 'object' && arg.path) {
             redirectPath = arg.path;
             redirectOptions = {
-               replace: arg.replace || false
+               replace: arg.replace || false,
             };
             return;
          }
 
          // Argumento inválido
-         slice.logger.logError('Router', 'Invalid argument passed to next(). Expected string, object with path, false, or undefined.');
+         slice.logger.logError(
+            'Router',
+            'Invalid argument passed to next(). Expected string, object with path, false, or undefined.'
+         );
       };
 
       try {
@@ -193,10 +196,7 @@ export default class Router {
 
          // Si no se llamó next(), loguear advertencia pero continuar
          if (!nextCalled) {
-            slice.logger.logWarning(
-               'Router', 
-               'beforeEach guard did not call next(). Navigation will continue.'
-            );
+            slice.logger.logWarning('Router', 'beforeEach guard did not call next(). Navigation will continue.');
          }
 
          // Retornar tanto el path como las opciones
@@ -228,28 +228,21 @@ export default class Router {
    // ROUTING CORE (MODIFICADO CON GUARDS)
    // ============================================
 
-    async navigate(path, _redirectChain = [], _options = {}) {
+   async navigate(path, _redirectChain = [], _options = {}) {
       const currentPath = window.location.pathname;
-      
-      
+
       // Detectar loops infinitos: si ya visitamos esta ruta en la cadena de redirecciones
       if (_redirectChain.includes(path)) {
-         slice.logger.logError(
-            'Router', 
-            `Guard redirection loop detected: ${_redirectChain.join(' → ')} → ${path}`
-         );
+         slice.logger.logError('Router', `Guard redirection loop detected: ${_redirectChain.join(' → ')} → ${path}`);
          return;
       }
-      
+
       // Límite de seguridad: máximo 10 redirecciones
       if (_redirectChain.length >= 10) {
-         slice.logger.logError(
-            'Router',
-            `Too many redirections: ${_redirectChain.join(' → ')} → ${path}`
-         );
+         slice.logger.logError('Router', `Too many redirections: ${_redirectChain.join(' → ')} → ${path}`);
          return;
       }
-      
+
       // Obtener información de ruta actual
       const { route: fromRoute, params: fromParams } = this.matchRoute(currentPath);
       const from = this._createRouteInfo(fromRoute, fromParams, currentPath);
@@ -257,7 +250,6 @@ export default class Router {
       // Obtener información de ruta destino
       const { route: toRoute, params: toParams } = this.matchRoute(path);
       const to = this._createRouteInfo(toRoute, toParams, path);
-
 
       // EJECUTAR BEFORE EACH GUARD
       const guardResult = await this._executeBeforeEachGuard(to, from);
@@ -281,7 +273,7 @@ export default class Router {
       } else {
          window.history.pushState({}, path, window.location.origin + path);
       }
-      
+
       await this._performNavigation(to, from);
    }
 
@@ -296,6 +288,9 @@ export default class Router {
 
       // EJECUTAR AFTER EACH GUARD
       this._executeAfterEachGuard(to, from);
+
+      // Emitir evento de cambio de ruta
+      this._emitRouteChange(to, from);
    }
 
    async onRouteChange() {
@@ -322,10 +317,10 @@ export default class Router {
 
    async handleRoute(route, params) {
       const targetElement = document.querySelector('#app');
-      
+
       const componentName = route.parentRoute ? route.parentRoute.component : route.component;
       const sliceId = `route-${componentName}`;
-      
+
       const existingComponent = slice.controller.getComponent(sliceId);
 
       if (slice.loading) {
@@ -348,7 +343,7 @@ export default class Router {
 
          targetElement.innerHTML = '';
          targetElement.appendChild(component);
-         
+
          await this.renderRoutesInComponent(component);
       }
 
@@ -362,7 +357,7 @@ export default class Router {
       slice.router.activeRoute = route;
    }
 
-    async loadInitialRoute() {
+   async loadInitialRoute() {
       const path = window.location.pathname;
       const { route, params } = this.matchRoute(path);
 
@@ -387,6 +382,25 @@ export default class Router {
 
       // EJECUTAR AFTER EACH GUARD en carga inicial
       this._executeAfterEachGuard(to, from);
+
+      // Emitir evento de cambio de ruta
+      this._emitRouteChange(to, from);
+   }
+
+   /**
+    * Emitir evento de cambio de ruta
+    * @param {Object} to
+    * @param {Object} from
+    */
+   _emitRouteChange(to, from) {
+      const payload = { to, from };
+
+      if (slice.eventsConfig?.enabled && slice.events && typeof slice.events.emit === 'function') {
+         slice.events.emit('router:change', payload);
+         return;
+      }
+
+      window.dispatchEvent(new CustomEvent('router:change', { detail: payload }));
    }
 
    // ============================================
@@ -397,33 +411,34 @@ export default class Router {
       if (typeof MutationObserver !== 'undefined') {
          this.observer = new MutationObserver((mutations) => {
             let shouldInvalidateCache = false;
-            
+
             mutations.forEach((mutation) => {
                if (mutation.type === 'childList') {
                   const addedNodes = Array.from(mutation.addedNodes);
                   const removedNodes = Array.from(mutation.removedNodes);
-                  
-                  const hasRouteNodes = [...addedNodes, ...removedNodes].some(node => 
-                     node.nodeType === Node.ELEMENT_NODE && 
-                     (node.tagName === 'SLICE-ROUTE' || 
-                      node.tagName === 'SLICE-MULTI-ROUTE' ||
-                      node.querySelector?.('slice-route, slice-multi-route'))
+
+                  const hasRouteNodes = [...addedNodes, ...removedNodes].some(
+                     (node) =>
+                        node.nodeType === Node.ELEMENT_NODE &&
+                        (node.tagName === 'SLICE-ROUTE' ||
+                           node.tagName === 'SLICE-MULTI-ROUTE' ||
+                           node.querySelector?.('slice-route, slice-multi-route'))
                   );
-                  
+
                   if (hasRouteNodes) {
                      shouldInvalidateCache = true;
                   }
                }
             });
-            
+
             if (shouldInvalidateCache) {
                this.invalidateCache();
             }
          });
-         
+
          this.observer.observe(document.body, {
             childList: true,
-            subtree: true
+            subtree: true,
          });
       }
    }
@@ -435,32 +450,28 @@ export default class Router {
 
    createPathToRouteMap(routes, basePath = '', parentRoute = null) {
       const pathToRouteMap = new Map();
-  
-      for (const route of routes) {
-          const fullPath = `${basePath}${route.path}`.replace(/\/+/g, '/');
-          
-          const routeWithParent = { 
-              ...route, 
-              fullPath,
-              parentPath: parentRoute ? parentRoute.fullPath : null,
-              parentRoute: parentRoute
-          };
-          
-          pathToRouteMap.set(fullPath, routeWithParent);
 
-          if (route.children) {
-              const childPathToRouteMap = this.createPathToRouteMap(
-                  route.children, 
-                  fullPath, 
-                  routeWithParent
-              );
-              
-              for (const [childPath, childRoute] of childPathToRouteMap.entries()) {
-                  pathToRouteMap.set(childPath, childRoute);
-              }
-          }
+      for (const route of routes) {
+         const fullPath = `${basePath}${route.path}`.replace(/\/+/g, '/');
+
+         const routeWithParent = {
+            ...route,
+            fullPath,
+            parentPath: parentRoute ? parentRoute.fullPath : null,
+            parentRoute: parentRoute,
+         };
+
+         pathToRouteMap.set(fullPath, routeWithParent);
+
+         if (route.children) {
+            const childPathToRouteMap = this.createPathToRouteMap(route.children, fullPath, routeWithParent);
+
+            for (const [childPath, childRoute] of childPathToRouteMap.entries()) {
+               pathToRouteMap.set(childPath, childRoute);
+            }
+         }
       }
-  
+
       return pathToRouteMap;
    }
 
@@ -491,37 +502,32 @@ export default class Router {
    getCachedRouteContainers(container) {
       const containerKey = container === document ? 'document' : container.sliceId || 'anonymous';
       const now = Date.now();
-      
-      if (this.routeContainersCache.has(containerKey) && 
-          (now - this.lastCacheUpdate) < this.CACHE_DURATION) {
+
+      if (this.routeContainersCache.has(containerKey) && now - this.lastCacheUpdate < this.CACHE_DURATION) {
          return this.routeContainersCache.get(containerKey);
       }
 
       const routeContainers = this.findAllRouteContainersOptimized(container);
       this.routeContainersCache.set(containerKey, routeContainers);
       this.lastCacheUpdate = now;
-      
+
       return routeContainers;
    }
 
    findAllRouteContainersOptimized(container) {
       const routeContainers = [];
-      
-      const walker = document.createTreeWalker(
-         container,
-         NodeFilter.SHOW_ELEMENT,
-         {
-            acceptNode: (node) => {
-               if (node.tagName === 'SLICE-ROUTE' || node.tagName === 'SLICE-MULTI-ROUTE') {
-                  return NodeFilter.FILTER_ACCEPT;
-               }
-               return NodeFilter.FILTER_SKIP;
+
+      const walker = document.createTreeWalker(container, NodeFilter.SHOW_ELEMENT, {
+         acceptNode: (node) => {
+            if (node.tagName === 'SLICE-ROUTE' || node.tagName === 'SLICE-MULTI-ROUTE') {
+               return NodeFilter.FILTER_ACCEPT;
             }
-         }
-      );
+            return NodeFilter.FILTER_SKIP;
+         },
+      });
 
       let node;
-      while (node = walker.nextNode()) {
+      while ((node = walker.nextNode())) {
          routeContainers.push(node);
       }
 
@@ -541,15 +547,15 @@ export default class Router {
       const exactMatch = this.pathToRouteMap.get(path);
       if (exactMatch) {
          if (exactMatch.parentRoute) {
-            return { 
-               route: exactMatch.parentRoute, 
+            return {
+               route: exactMatch.parentRoute,
                params: {},
-               childRoute: exactMatch
+               childRoute: exactMatch,
             };
          }
          return { route: exactMatch, params: {} };
       }
-   
+
       for (const [routePattern, route] of this.pathToRouteMap.entries()) {
          if (routePattern.includes('${')) {
             const { regex, paramNames } = this.compilePathPattern(routePattern);
@@ -559,30 +565,33 @@ export default class Router {
                paramNames.forEach((name, i) => {
                   params[name] = match[i + 1];
                });
-               
+
                if (route.parentRoute) {
-                  return { 
-                     route: route.parentRoute, 
+                  return {
+                     route: route.parentRoute,
                      params: params,
-                     childRoute: route
+                     childRoute: route,
                   };
                }
-               
+
                return { route, params };
             }
          }
       }
-   
+
       const notFoundRoute = this.pathToRouteMap.get('/404');
       return { route: notFoundRoute, params: {} };
    }
 
    compilePathPattern(pattern) {
       const paramNames = [];
-      const regexPattern = '^' + pattern.replace(/\$\{([^}]+)\}/g, (_, paramName) => {
-         paramNames.push(paramName);
-         return '([^/]+)';
-      }) + '$';
+      const regexPattern =
+         '^' +
+         pattern.replace(/\$\{([^}]+)\}/g, (_, paramName) => {
+            paramNames.push(paramName);
+            return '([^/]+)';
+         }) +
+         '$';
 
       return { regex: new RegExp(regexPattern), paramNames };
    }

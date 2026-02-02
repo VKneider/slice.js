@@ -11,6 +11,7 @@ export default class Slice {
       this.loggerConfig = sliceConfig.logger;
       this.debuggerConfig = sliceConfig.debugger;
       this.loadingConfig = sliceConfig.loading;
+      this.eventsConfig = sliceConfig.events;
 
       // 📦 Bundle system is initialized automatically via import in index.js
    }
@@ -24,7 +25,7 @@ export default class Slice {
       }
    }
 
-   isProduction(){
+   isProduction() {
       return true;
    }
 
@@ -68,23 +69,26 @@ export default class Slice {
          return null;
       }
 
-      let isVisual = slice.paths.components[componentCategory].type === "Visual";
+      let isVisual = slice.paths.components[componentCategory].type === 'Visual';
       let modulePath = `${slice.paths.components[componentCategory].path}/${componentName}/${componentName}.js`;
 
       // Load template, class, and CSS concurrently if needed
       try {
          // 📦 Skip individual loading if component is available from bundles
-         const loadTemplate = (isFromBundle || !isVisual || this.controller.templates.has(componentName))
-            ? Promise.resolve(null)
-            : this.controller.fetchText(componentName, 'html', componentCategory);
+         const loadTemplate =
+            isFromBundle || !isVisual || this.controller.templates.has(componentName)
+               ? Promise.resolve(null)
+               : this.controller.fetchText(componentName, 'html', componentCategory);
 
-         const loadClass = (isFromBundle || this.controller.classes.has(componentName))
-            ? Promise.resolve(null)
-            : this.getClass(modulePath);
+         const loadClass =
+            isFromBundle || this.controller.classes.has(componentName)
+               ? Promise.resolve(null)
+               : this.getClass(modulePath);
 
-         const loadCSS = (isFromBundle || !isVisual || this.controller.requestedStyles.has(componentName))
-            ? Promise.resolve(null)
-            : this.controller.fetchText(componentName, 'css', componentCategory);
+         const loadCSS =
+            isFromBundle || !isVisual || this.controller.requestedStyles.has(componentName)
+               ? Promise.resolve(null)
+               : this.controller.fetchText(componentName, 'css', componentCategory);
 
          const [html, ComponentClass, css] = await Promise.all([loadTemplate, loadClass, loadCSS]);
 
@@ -142,7 +146,7 @@ export default class Slice {
          }
 
          this.controller.registerComponent(componentInstance);
-         if(isVisual){
+         if (isVisual) {
             this.controller.registerComponentsRecursively(componentInstance);
          }
 
@@ -166,26 +170,22 @@ export default class Slice {
    attachTemplate(componentInstance) {
       this.controller.loadTemplateToComponent(componentInstance);
    }
-
-   
 }
 
-
-async function loadConfig(){
+async function loadConfig() {
    try {
       const response = await fetch('/sliceConfig.json'); // 🔹 Express lo sirve desde `src/`
       if (!response.ok) throw new Error('Error loading sliceConfig.json');
       const json = await response.json();
-      console.log(json)
+      console.log(json);
       return json;
-  } catch (error) {
+   } catch (error) {
       console.error(`Error loading config file: ${error.message}`);
       return null;
-  }
+   }
 }
 
 async function init() {
-
    const sliceConfig = await loadConfig();
    if (!sliceConfig) {
       //Display error message in console with colors and alert in english
@@ -193,11 +193,10 @@ async function init() {
       alert('Error loading Slice configuration');
       return;
    }
-   
 
    window.slice = new Slice(sliceConfig);
 
-   slice.paths.structuralComponentFolderPath = "/Slice/Components/Structural"; 
+   slice.paths.structuralComponentFolderPath = '/Slice/Components/Structural';
 
    if (sliceConfig.logger.enabled) {
       const LoggerModule = await window.slice.getClass(`${slice.paths.structuralComponentFolderPath}/Logger/Logger.js`);
@@ -219,31 +218,80 @@ async function init() {
       document.body.appendChild(window.slice.debugger);
    }
 
+   if (sliceConfig.events?.enabled) {
+      const EventManagerModule = await window.slice.getClass(
+         `${slice.paths.structuralComponentFolderPath}/EventManager/EventManager.js`
+      );
+      window.slice.events = new EventManagerModule();
+      if (typeof window.slice.events.init === 'function') {
+         await window.slice.events.init();
+      }
+      window.slice.logger.logError('Slice', 'EventManager enabled');
+   } else {
+      window.slice.events = {
+         subscribe: () => null,
+         subscribeOnce: () => null,
+         unsubscribe: () => false,
+         emit: () => {},
+         bind: () => ({
+            subscribe: () => null,
+            subscribeOnce: () => null,
+            emit: () => {},
+         }),
+         cleanupComponent: () => 0,
+         hasSubscribers: () => false,
+         subscriberCount: () => 0,
+         clear: () => {},
+      };
+      window.slice.logger.logError('Slice', 'EventManager disabled');
+   }
+
+   if (sliceConfig.context?.enabled) {
+      const ContextManagerModule = await window.slice.getClass(
+         `${slice.paths.structuralComponentFolderPath}/ContextManager/ContextManager.js`
+      );
+      window.slice.context = new ContextManagerModule();
+      if (typeof window.slice.context.init === 'function') {
+         await window.slice.context.init();
+      }
+      window.slice.logger.logError('Slice', 'ContextManager enabled');
+   } else {
+      window.slice.context = {
+         create: () => false,
+         getState: () => null,
+         setState: () => {},
+         watch: () => null,
+         has: () => false,
+         destroy: () => false,
+         list: () => [],
+      };
+      window.slice.logger.logError('Slice', 'ContextManager disabled');
+   }
+
    if (sliceConfig.loading.enabled) {
       const loading = await window.slice.build('Loading', {});
       window.slice.loading = loading;
    }
-   await window.slice.stylesManager.init();
 
+   await window.slice.stylesManager.init();
 
    const routesModule = await import(slice.paths.routesFile);
    const routes = routesModule.default;
    const RouterModule = await window.slice.getClass(`${slice.paths.structuralComponentFolderPath}/Router/Router.js`);
    window.slice.router = new RouterModule(routes);
    await window.slice.router.init();
-   
 }
 
-   await init();
+await init();
 
-   // Initialize bundles if available
-   try {
-      const { initializeBundles } = await import('/bundles/bundle.config.js');
-      if (initializeBundles) {
-         await initializeBundles(window.slice);
-         console.log('📦 Bundles initialized automatically');
-      }
-   } catch (error) {
-      // Bundles not available, continue with individual component loading
-      console.log('📄 Using individual component loading (no bundles found)');
+// Initialize bundles if available
+try {
+   const { initializeBundles } = await import('/bundles/bundle.config.js');
+   if (initializeBundles) {
+      await initializeBundles(window.slice);
+      console.log('📦 Bundles initialized automatically');
    }
+} catch (error) {
+   // Bundles not available, continue with individual component loading
+   console.log('📄 Using individual component loading (no bundles found)');
+}

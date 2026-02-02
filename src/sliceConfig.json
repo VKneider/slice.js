@@ -1,54 +1,60 @@
 {
-    "server": {
-        "port": 3001,
-        "host": "localhost"
-    },
-    "debugger": {
-        "enabled": false,
-        "click": "right"
-    },
-    "stylesManager":{
-        "requestedStyles":["sliceStyles"]
-    },
-    "themeManager": {
-        "enabled":true,
-        "defaultTheme": "Slice",
-        "saveThemeLocally": false,
-        "useBrowserTheme": false
-    },
-    "logger": {
-        "enabled": true,
-        "showLogs": {
-            "console": {
-                "error": true,
-                "warning": true,
-                "info": false
-            }
-        }
-    },
-    "paths": {
-        "components": {
-            "AppComponents":{
-                "path":"/Components/AppComponents",
-                "type":"Visual"
-            },
-            "Visual":{
-                "path":"/Components/Visual",
-                "type":"Visual"
-            },
-            "Service":{
-                "path":"/Components/Service",
-                "type":"Service"
-            }
-        },
-        "themes": "/Themes",
-        "styles": "/Styles",
-        "routesFile":"/routes.js"
-    },
-    "router":{
-        "defaultRoute": "/"        
-    },
-    "loading":{
-        "enabled": true
-    }
+   "server": {
+      "port": 3001,
+      "host": "localhost"
+   },
+   "debugger": {
+      "enabled": false,
+      "click": "right"
+   },
+   "events": {
+      "enabled": true
+   },
+   "context": {
+      "enabled": true
+   },
+   "stylesManager": {
+      "requestedStyles": ["sliceStyles"]
+   },
+   "themeManager": {
+      "enabled": true,
+      "defaultTheme": "Slice",
+      "saveThemeLocally": false,
+      "useBrowserTheme": false
+   },
+   "logger": {
+      "enabled": true,
+      "showLogs": {
+         "console": {
+            "error": true,
+            "warning": true,
+            "info": false
+         }
+      }
+   },
+   "paths": {
+      "components": {
+         "AppComponents": {
+            "path": "/Components/AppComponents",
+            "type": "Visual"
+         },
+         "Visual": {
+            "path": "/Components/Visual",
+            "type": "Visual"
+         },
+         "Service": {
+            "path": "/Components/Service",
+            "type": "Service"
+         }
+      },
+      "themes": "/Themes",
+      "styles": "/Styles",
+      "routesFile": "/routes.js"
+   },
+   "router": {
+      "defaultRoute": "/"
+   },
+   "loading": {
+      "enabled": true
+   }
 }

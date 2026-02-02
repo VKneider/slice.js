@@ -54,8 +54,9 @@ export default class Controller {
 
          if (!bundleInfo && this.bundleConfig?.bundles?.routes) {
             const normalizedName = bundleName?.toLowerCase();
-            const matchedKey = Object.keys(this.bundleConfig.bundles.routes)
-               .find(key => key.toLowerCase() === normalizedName);
+            const matchedKey = Object.keys(this.bundleConfig.bundles.routes).find(
+               (key) => key.toLowerCase() === normalizedName
+            );
             if (matchedKey) {
                bundleInfo = this.bundleConfig.bundles.routes[matchedKey];
             }
@@ -77,7 +78,6 @@ export default class Controller {
          }
 
          this.loadedBundles.add(bundleName);
-
       } catch (error) {
          console.warn(`Failed to load bundle ${bundleName}:`, error);
       }
@@ -129,26 +129,37 @@ export default class Controller {
                         .replace(/export\s+function\s+(\w+)/g, 'window.$1 = function')
                         .replace(/export\s+default\s+/g, 'window.defaultExport =')
                         .replace(/export\s*{\s*([^}]+)\s*}/g, (match, exports) => {
-                           return exports.split(',').map(exp => {
-                              const cleanExp = exp.trim();
-                              const varName = cleanExp.split(' as ')[0].trim();
-                              return `window.${varName} = ${varName};`;
-                           }).join('\n');
+                           return exports
+                              .split(',')
+                              .map((exp) => {
+                                 const cleanExp = exp.trim();
+                                 const varName = cleanExp.split(' as ')[0].trim();
+                                 return `window.${varName} = ${varName};`;
+                              })
+                              .join('\n');
                         })
                         // Remove any remaining export keywords
                         .replace(/^\s*export\s+/gm, '');
 
                      // Evaluate the dependency
                      try {
-                        new Function('slice', 'customElements', 'window', 'document', processedContent)
-                           (window.slice, window.customElements, window, window.document);
+                        new Function('slice', 'customElements', 'window', 'document', processedContent)(
+                           window.slice,
+                           window.customElements,
+                           window,
+                           window.document
+                        );
                      } catch (evalError) {
                         console.warn(`❌ Failed to evaluate processed dependency ${depName}:`, evalError);
                         console.warn('Processed content preview:', processedContent.substring(0, 200));
                         // Try evaluating the original content as fallback
                         try {
-                           new Function('slice', 'customElements', 'window', 'document', depContent)
-                              (window.slice, window.customElements, window, window.document);
+                           new Function('slice', 'customElements', 'window', 'document', depContent)(
+                              window.slice,
+                              window.customElements,
+                              window,
+                              window.document
+                           );
                            console.log(`✅ Fallback evaluation succeeded for ${depName}`);
                         } catch (fallbackError) {
                            console.warn(`❌ Fallback evaluation also failed for ${depName}:`, fallbackError);
@@ -169,52 +180,59 @@ export default class Controller {
       for (const [componentName, componentData] of Object.entries(components)) {
          // For JavaScript classes, we need to evaluate the code
          if (componentData.js && !this.classes.has(componentName)) {
-               try {
-                  // Create evaluation context with dependencies
-                  let evalCode = componentData.js;
+            try {
+               // Create evaluation context with dependencies
+               let evalCode = componentData.js;
 
-                  // Prepend dependencies to make them available
-                  if (componentData.dependencies) {
-                     const depCode = Object.entries(componentData.dependencies)
-                        .map(([depName, depContent]) => {
-                           // Convert ES6 exports to global assignments
-                           return depContent
-                              .replace(/export\s+const\s+(\w+)\s*=/g, 'window.$1 =')
-                              .replace(/export\s+let\s+(\w+)\s*=/g, 'window.$1 =')
-                              .replace(/export\s+function\s+(\w+)/g, 'window.$1 = function')
-                              .replace(/export\s+default\s+/g, 'window.defaultExport =')
-                              .replace(/export\s*{\s*([^}]+)\s*}/g, (match, exports) => {
-                                 return exports.split(',').map(exp => {
+               // Prepend dependencies to make them available
+               if (componentData.dependencies) {
+                  const depCode = Object.entries(componentData.dependencies)
+                     .map(([depName, depContent]) => {
+                        // Convert ES6 exports to global assignments
+                        return depContent
+                           .replace(/export\s+const\s+(\w+)\s*=/g, 'window.$1 =')
+                           .replace(/export\s+let\s+(\w+)\s*=/g, 'window.$1 =')
+                           .replace(/export\s+function\s+(\w+)/g, 'window.$1 = function')
+                           .replace(/export\s+default\s+/g, 'window.defaultExport =')
+                           .replace(/export\s*{\s*([^}]+)\s*}/g, (match, exports) => {
+                              return exports
+                                 .split(',')
+                                 .map((exp) => {
                                     const cleanExp = exp.trim();
                                     return `window.${cleanExp} = ${cleanExp};`;
-                                 }).join('\n');
-                              });
-                        })
-                        .join('\n\n');
+                                 })
+                                 .join('\n');
+                           });
+                     })
+                     .join('\n\n');
 
-                     evalCode = depCode + '\n\n' + evalCode;
-                  }
+                  evalCode = depCode + '\n\n' + evalCode;
+               }
 
-                  // Evaluate the complete code
-                  const componentClass = new Function('slice', 'customElements', 'window', 'document', `
+               // Evaluate the complete code
+               const componentClass = new Function(
+                  'slice',
+                  'customElements',
+                  'window',
+                  'document',
+                  `
                      "use strict";
                      ${evalCode}
                      return ${componentName};
-                  `)(window.slice, window.customElements, window, window.document);
+                  `
+               )(window.slice, window.customElements, window, window.document);
 
-                  if (componentClass) {
-                     this.classes.set(componentName, componentClass);
-                     console.log(`📝 Class registered for: ${componentName}`);
-                  }
-               } catch (error) {
-                  console.warn(`❌ Failed to evaluate class for ${componentName}:`, error);
-                  console.warn('Code that failed:', componentData.js.substring(0, 200) + '...');
+               if (componentClass) {
+                  this.classes.set(componentName, componentClass);
+                  console.log(`📝 Class registered for: ${componentName}`);
                }
+            } catch (error) {
+               console.warn(`❌ Failed to evaluate class for ${componentName}:`, error);
+               console.warn('Code that failed:', componentData.js.substring(0, 200) + '...');
             }
          }
       }
-
-
+   }
 
    /**
     * 📦 New bundle registration method (simplified and robust)
@@ -254,10 +272,13 @@ export default class Controller {
                if (!processedDeps.has(depKey)) {
                   try {
                      const depContent = typeof depEntry === 'string' ? depEntry : depEntry.content;
-                     const bindings = typeof depEntry === 'string' ? [] : (depEntry.bindings || []);
+                     const bindings = typeof depEntry === 'string' ? [] : depEntry.bindings || [];
 
                      const fileBaseName = depKey
-                        ? depKey.split('/').pop().replace(/\.[^.]+$/, '')
+                        ? depKey
+                             .split('/')
+                             .pop()
+                             .replace(/\.[^.]+$/, '')
                         : '';
                      const dataName = fileBaseName ? `${fileBaseName}Data` : '';
                      const exportPrefix = dataName ? `window.${dataName} = ` : '';
@@ -273,15 +294,19 @@ export default class Controller {
                         .replace(/window\.defaultExport\s*=\s*/g, exportPrefix || 'window.defaultExport = ')
                         // Handle export { var1, var2 } statements
                         .replace(/export\s*{\s*([^}]+)\s*}/g, (match, exportsStr) => {
-                           const exports = exportsStr.split(',').map(exp => exp.trim().split(' as ')[0].trim());
-                           return exports.map(varName => `window.${varName} = ${varName};`).join('\n');
+                           const exports = exportsStr.split(',').map((exp) => exp.trim().split(' as ')[0].trim());
+                           return exports.map((varName) => `window.${varName} = ${varName};`).join('\n');
                         })
                         // Remove any remaining export keywords
                         .replace(/^\s*export\s+/gm, '');
 
                      // Evaluate the processed content
-                     new Function('slice', 'customElements', 'window', 'document', processedContent)
-                        (window.slice, window.customElements, window, window.document);
+                     new Function('slice', 'customElements', 'window', 'document', processedContent)(
+                        window.slice,
+                        window.customElements,
+                        window,
+                        window.document
+                     );
 
                      // Apply import bindings to map local identifiers to globals
                      for (const binding of bindings) {
@@ -289,9 +314,8 @@ export default class Controller {
 
                         if (binding.type === 'default') {
                            if (!window[binding.localName]) {
-                              const fallbackValue = dataName && window[dataName] !== undefined
-                                 ? window[dataName]
-                                 : window.defaultExport;
+                              const fallbackValue =
+                                 dataName && window[dataName] !== undefined ? window[dataName] : window.defaultExport;
                               if (fallbackValue !== undefined) {
                                  window[binding.localName] = fallbackValue;
                               }
@@ -330,10 +354,16 @@ export default class Controller {
          if (componentData.js && !this.classes.has(componentName)) {
             try {
                // Simple evaluation
-               const componentClass = new Function('slice', 'customElements', 'window', 'document', `
+               const componentClass = new Function(
+                  'slice',
+                  'customElements',
+                  'window',
+                  'document',
+                  `
                   ${componentData.js}
                   return ${componentName};
-               `)(window.slice, window.customElements, window, window.document);
+               `
+               )(window.slice, window.customElements, window, window.document);
 
                if (componentClass) {
                   this.classes.set(componentName, componentClass);
@@ -404,7 +434,7 @@ export default class Controller {
       // Find component in any loaded bundle
       const allBundles = [
          { name: 'critical', data: this.bundleConfig.bundles.critical },
-         ...Object.entries(this.bundleConfig.bundles.routes || {}).map(([name, data]) => ({ name, data }))
+         ...Object.entries(this.bundleConfig.bundles.routes || {}).map(([name, data]) => ({ name, data })),
       ];
 
       for (const { name: bundleName, data: bundleData } of allBundles) {
@@ -479,13 +509,13 @@ export default class Controller {
     */
    registerComponent(component, parent = null) {
       component.parentComponent = parent;
-      
+
       // 🚀 OPTIMIZACIÓN: Precalcular y guardar profundidad
       component._depth = parent ? (parent._depth || 0) + 1 : 0;
-      
+
       // Registrar en activeComponents
       this.activeComponents.set(component.sliceId, component);
-      
+
       // 🚀 OPTIMIZACIÓN: Actualizar índice inverso de hijos
       if (parent) {
          if (!this.childrenIndex.has(parent.sliceId)) {
@@ -493,7 +523,7 @@ export default class Controller {
          }
          this.childrenIndex.get(parent.sliceId).add(component.sliceId);
       }
-      
+
       return true;
    }
 
@@ -549,11 +579,11 @@ export default class Controller {
          if (isVisual) {
             if (slice.paths.components[componentCategory]) {
                path = `${baseUrl}${slice.paths.components[componentCategory].path}/${componentName}`;
-               resourceType === 'html' ? path += `/${componentName}.html` : path += `/${componentName}.css`;
+               resourceType === 'html' ? (path += `/${componentName}.html`) : (path += `/${componentName}.css`);
             } else {
                if (componentCategory === 'Structural') {
                   path = `${baseUrl}/Slice/Components/Structural/${componentName}`;
-                  resourceType === 'html' ? path += `/${componentName}.html` : path += `/${componentName}.css`;
+                  resourceType === 'html' ? (path += `/${componentName}.html`) : (path += `/${componentName}.css`);
                } else {
                   throw new Error(`Component category '${componentCategory}' not found in paths configuration`);
                }
@@ -612,18 +642,18 @@ export default class Controller {
 
    getComponentPropsForDebugger(component) {
       const ComponentClass = component.constructor;
-      
+
       if (ComponentClass.props) {
          return {
             availableProps: Object.keys(ComponentClass.props),
             propsConfig: ComponentClass.props,
-            usedProps: this.extractUsedProps(component, ComponentClass.props)
+            usedProps: this.extractUsedProps(component, ComponentClass.props),
          };
       } else {
          return {
             availableProps: this.extractUsedProps(component),
             propsConfig: null,
-            usedProps: this.extractUsedProps(component)
+            usedProps: this.extractUsedProps(component),
          };
       }
    }
@@ -640,13 +670,13 @@ export default class Controller {
    validatePropsInDevelopment(ComponentClass, providedProps, componentName) {
       const staticProps = ComponentClass.props;
       const usedProps = Object.keys(providedProps || {});
-      
+
       const availableProps = Object.keys(staticProps);
-      const unknownProps = usedProps.filter(prop => !availableProps.includes(prop));
-      
+      const unknownProps = usedProps.filter((prop) => !availableProps.includes(prop));
+
       if (unknownProps.length > 0) {
          slice.logger.logWarning(
-            'PropsValidator', 
+            'PropsValidator',
             `${componentName}: Unknown props [${unknownProps.join(', ')}]. Available: [${availableProps.join(', ')}]`
          );
       }
@@ -654,34 +684,31 @@ export default class Controller {
       const requiredProps = Object.entries(staticProps)
          .filter(([_, config]) => config.required)
          .map(([prop, _]) => prop);
-      
-      const missingRequired = requiredProps.filter(prop => !(prop in (providedProps || {})));
+
+      const missingRequired = requiredProps.filter((prop) => !(prop in (providedProps || {})));
       if (missingRequired.length > 0) {
-         slice.logger.logError(
-            componentName,
-            `Missing required props: [${missingRequired.join(', ')}]`
-         );
+         slice.logger.logError(componentName, `Missing required props: [${missingRequired.join(', ')}]`);
       }
    }
 
    extractUsedProps(component, staticProps = null) {
       const usedProps = {};
-      
+
       if (staticProps) {
-         Object.keys(staticProps).forEach(prop => {
+         Object.keys(staticProps).forEach((prop) => {
             if (component[prop] !== undefined) {
                usedProps[prop] = component[prop];
             }
          });
       } else {
-         Object.getOwnPropertyNames(component).forEach(key => {
+         Object.getOwnPropertyNames(component).forEach((key) => {
             if (key.startsWith('_') && key !== '_isActive') {
                const propName = key.substring(1);
                usedProps[propName] = component[propName];
             }
          });
       }
-      
+
       return usedProps;
    }
 
@@ -699,16 +726,16 @@ export default class Controller {
    findAllChildComponents(parentSliceId, collected = new Set()) {
       // 🚀 Buscar directamente en el índice: O(1)
       const children = this.childrenIndex.get(parentSliceId);
-      
+
       if (!children) return collected;
-      
+
       // 🚀 Iterar solo los hijos directos: O(k) donde k = número de hijos
       for (const childSliceId of children) {
          collected.add(childSliceId);
          // Recursión solo sobre hijos, no todos los componentes
          this.findAllChildComponents(childSliceId, collected);
       }
-      
+
       return collected;
    }
 
@@ -722,8 +749,8 @@ export default class Controller {
    findAllNestedComponentsInContainer(container, collected = new Set()) {
       // Buscar todos los elementos con slice-id en el contenedor
       const sliceComponents = container.querySelectorAll('[slice-id]');
-      
-      sliceComponents.forEach(element => {
+
+      sliceComponents.forEach((element) => {
          const sliceId = element.getAttribute('slice-id') || element.sliceId;
          if (sliceId && this.activeComponents.has(sliceId)) {
             collected.add(sliceId);
@@ -738,7 +765,7 @@ export default class Controller {
    /**
     * Destruye uno o múltiples componentes DE FORMA RECURSIVA
     * 🚀 OPTIMIZADO: O(m log m) en lugar de O(n*d + m log m)
-    * @param {HTMLElement|Array<HTMLElement>|string|Array<string>} components 
+    * @param {HTMLElement|Array<HTMLElement>|string|Array<string>} components
     * @returns {number} Cantidad de componentes destruidos (incluyendo hijos)
     */
    destroyComponent(components) {
@@ -763,7 +790,7 @@ export default class Controller {
          }
 
          allSliceIdsToDestroy.add(sliceId);
-         
+
          // 🚀 OPTIMIZADO: Usa childrenIndex en lugar de recorrer todos los componentes
          this.findAllChildComponents(sliceId, allSliceIdsToDestroy);
       }
@@ -773,9 +800,9 @@ export default class Controller {
       const sortedSliceIds = Array.from(allSliceIdsToDestroy).sort((a, b) => {
          const compA = this.activeComponents.get(a);
          const compB = this.activeComponents.get(b);
-         
+
          if (!compA || !compB) return 0;
-         
+
          // 🚀 O(1) en lugar de O(d) - usa profundidad precalculada
          return (compB._depth || 0) - (compA._depth || 0);
       });
@@ -785,7 +812,7 @@ export default class Controller {
       // PASO 3: Destruir en orden correcto (hijos antes que padres)
       for (const sliceId of sortedSliceIds) {
          const component = this.activeComponents.get(sliceId);
-         
+
          if (!component) continue;
 
          // Ejecutar hook beforeDestroy si existe
@@ -797,9 +824,14 @@ export default class Controller {
             }
          }
 
+         // Limpiar suscripciones de eventos del componente
+         if (slice.events) {
+            slice.events.cleanupComponent(sliceId);
+         }
+
          // 🚀 Limpiar del índice de hijos
          this.childrenIndex.delete(sliceId);
-         
+
          // Si tiene padre, remover de la lista de hijos del padre
          if (component.parentComponent) {
             const parentChildren = this.childrenIndex.get(component.parentComponent.sliceId);
@@ -844,14 +876,14 @@ export default class Controller {
 
       // 🚀 Recolectar componentes usando índice optimizado
       const allSliceIds = this.findAllNestedComponentsInContainer(container);
-      
+
       if (allSliceIds.size === 0) {
          return 0;
       }
 
       // Destruir usando el método principal optimizado
       const count = this.destroyComponent(Array.from(allSliceIds));
-      
+
       if (count > 0) {
          slice.logger.logInfo('Controller', `Destroyed ${count} component(s) from container (including nested)`);
       }
@@ -880,9 +912,12 @@ export default class Controller {
       }
 
       const count = this.destroyComponent(componentsToDestroy);
-      
+
       if (count > 0) {
-         slice.logger.logInfo('Controller', `Destroyed ${count} component(s) matching pattern: ${pattern} (including nested)`);
+         slice.logger.logInfo(
+            'Controller',
+            `Destroyed ${count} component(s) matching pattern: ${pattern} (including nested)`
+         );
       }
 
       return count;
