@@ -114,7 +114,6 @@ _Below is an example of how you can instruct your audience on installing and set
 - [x] Add Changelog
 - [ ] Add Image visual component
 - [ ] Modify Slice Card Visual Component
-- [ ] Create internationalization Translator Service component.
 
 See the [open issues](https://github.com/VKneider/slice.js/issues) for a full list of proposed features (and known issues).
 

@@ -23,6 +23,5 @@ const components = {
   "FetchManager": "Service",
   "IndexedDbManager": "Service",
   "Link": "Service",
-  "LocalStorageManager": "Service",
-  "Translator": "Service"
+  "LocalStorageManager": "Service"
 }; export default components;

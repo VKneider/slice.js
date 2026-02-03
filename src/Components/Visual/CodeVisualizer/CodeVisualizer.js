@@ -90,8 +90,7 @@ export default class CodeVisualizer extends HTMLElement {
          .replace(/&/g, '&amp;')
          .replace(/</g, '&lt;')
          .replace(/>/g, '&gt;')
-         .replace(/"/g, '&quot;')
-         .replace(/'/g, '&#039;');
+         .replace(/"/g, '&quot;');
    }
 
    highlightJavaScript(code) {
@@ -188,7 +187,7 @@ export default class CodeVisualizer extends HTMLElement {
       });
       
       // 3. Atributos HTML
-      extractTokens(/\s([a-zA-Z0-9-]+)=(&quot;|&#039;)/g, (match, attr, quote) => {
+      extractTokens(/\s([a-zA-Z0-9-]+)=(&quot;|')/g, (match, attr, quote) => {
          const tokenId = generateTokenId(tokens.length);
          tokens.push({ 
             id: tokenId, 
