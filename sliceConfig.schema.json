@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://slicejs.local/sliceConfig.schema.json",
+  "title": "Slice.js Config",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "debugger": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "click": { "type": "string", "enum": ["right", "left"] }
+      }
+    },
+    "stylesManager": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "requestedStyles": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "themeManager": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "defaultTheme": { "type": "string" },
+        "saveThemeLocally": { "type": "boolean" },
+        "useBrowserTheme": { "type": "boolean" }
+      }
+    },
+    "logger": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "showLogs": { "type": "object", "additionalProperties": true }
+      }
+    },
+    "events": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "ui": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "shortcut": { "type": "string" }
+          }
+        }
+      }
+    },
+    "context": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "ui": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "shortcut": { "type": "string" }
+          }
+        }
+      }
+    },
+    "paths": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "components": { "type": "object", "additionalProperties": true },
+        "themes": { "type": "string" },
+        "styles": { "type": "string" },
+        "routesFile": { "type": "string" }
+      },
+      "required": ["components", "themes", "styles", "routesFile"]
+    },
+    "router": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "defaultRoute": { "type": "string" }
+      }
+    },
+    "loading": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "enabled": { "type": "boolean" }
+      }
+    },
+    "server": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "port": { "type": "number" },
+        "host": { "type": "string" }
+      }
+    }
+  }
+}
