@@ -1,7 +1,13 @@
 import Controller from './Components/Structural/Controller/Controller.js';
 import StylesManager from './Components/Structural/StylesManager/StylesManager.js';
 
+/**
+ * Main Slice.js runtime.
+ */
 export default class Slice {
+   /**
+    * @param {Object} sliceConfig
+    */
    constructor(sliceConfig) {
       this.controller = new Controller();
       this.stylesManager = new StylesManager();
@@ -16,6 +22,11 @@ export default class Slice {
       // 📦 Bundle system is initialized automatically via import in index.js
    }
 
+   /**
+    * Dynamically import a module and return its default export.
+    * @param {string} module
+    * @returns {Promise<any>}
+    */
    async getClass(module) {
       try {
          const { default: myClass } = await import(module);
@@ -25,14 +36,29 @@ export default class Slice {
       }
    }
 
+   /**
+    * Flag for production behavior (override in builds).
+    * @returns {boolean}
+    */
    isProduction() {
       return true;
    }
 
+   /**
+    * Get a component instance by sliceId.
+    * @param {string} componentSliceId
+    * @returns {HTMLElement|undefined}
+    */
    getComponent(componentSliceId) {
       return this.controller.activeComponents.get(componentSliceId);
    }
 
+   /**
+    * Build a component instance and run init.
+    * @param {string} componentName
+    * @param {Object} [props]
+    * @returns {Promise<HTMLElement|Object|null>}
+    */
    async build(componentName, props = {}) {
       if (!componentName) {
          this.logger.logError('Slice', null, `Component name is required to build a component`);
@@ -159,14 +185,28 @@ export default class Slice {
       }
    }
 
+   /**
+    * Apply a theme by name.
+    * @param {string} themeName
+    * @returns {Promise<void>}
+    */
    async setTheme(themeName) {
       await this.stylesManager.themeManager.applyTheme(themeName);
    }
 
+   /**
+    * Current theme name.
+    * @returns {string|null}
+    */
    get theme() {
       return this.stylesManager.themeManager.currentTheme;
    }
 
+   /**
+    * Attach HTML template to a component instance.
+    * @param {HTMLElement} componentInstance
+    * @returns {void}
+    */
    attachTemplate(componentInstance) {
       this.controller.loadTemplateToComponent(componentInstance);
    }
@@ -210,13 +250,31 @@ async function init() {
    }
 
    if (sliceConfig.debugger.enabled) {
-      const DebuggerModule = await window.slice.getClass(
-         `${slice.paths.structuralComponentFolderPath}/Debugger/Debugger.js`
-      );
-      window.slice.debugger = new DebuggerModule();
-      await window.slice.debugger.enableDebugMode();
-      document.body.appendChild(window.slice.debugger);
+       const DebuggerModule = await window.slice.getClass(
+          `${slice.paths.structuralComponentFolderPath}/Debugger/Debugger.js`
+       );
+       window.slice.debugger = new DebuggerModule();
+       await window.slice.debugger.enableDebugMode();
+       document.body.appendChild(window.slice.debugger);
    }
+
+    if (sliceConfig.events?.ui?.enabled) {
+       const EventsDebuggerModule = await window.slice.getClass(
+          `${slice.paths.structuralComponentFolderPath}/EventManager/EventManagerDebugger.js`
+       );
+       window.slice.eventsDebugger = new EventsDebuggerModule();
+       await window.slice.eventsDebugger.init();
+       document.body.appendChild(window.slice.eventsDebugger);
+    }
+
+    if (sliceConfig.context?.ui?.enabled) {
+       const ContextDebuggerModule = await window.slice.getClass(
+          `${slice.paths.structuralComponentFolderPath}/ContextManager/ContextManagerDebugger.js`
+       );
+       window.slice.contextDebugger = new ContextDebuggerModule();
+       await window.slice.contextDebugger.init();
+       document.body.appendChild(window.slice.contextDebugger);
+    }
 
    if (sliceConfig.events?.enabled) {
       const EventManagerModule = await window.slice.getClass(
@@ -274,6 +332,34 @@ async function init() {
    }
 
    await window.slice.stylesManager.init();
+
+   if (sliceConfig.events?.ui?.shortcut || sliceConfig.context?.ui?.shortcut) {
+      const normalize = (value) => (typeof value === 'string' ? value.toLowerCase() : '');
+      const toKey = (event) => {
+         const parts = [];
+         if (event.ctrlKey) parts.push('ctrl');
+         if (event.shiftKey) parts.push('shift');
+         if (event.altKey) parts.push('alt');
+         if (event.metaKey) parts.push('meta');
+         const key = event.key?.toLowerCase();
+         if (key && !['control', 'shift', 'alt', 'meta'].includes(key)) {
+            parts.push(key);
+         }
+         return parts.join('+');
+      };
+
+      const handlers = {
+         [normalize(sliceConfig.events?.ui?.shortcut)]: () => window.slice.eventsDebugger?.toggle?.(),
+         [normalize(sliceConfig.context?.ui?.shortcut)]: () => window.slice.contextDebugger?.toggle?.(),
+      };
+
+      document.addEventListener('keydown', (event) => {
+         const key = toKey(event);
+         if (!key || !handlers[key]) return;
+         event.preventDefault();
+         handlers[key]();
+      });
+   }
 
    const routesModule = await import(slice.paths.routesFile);
    const routes = routesModule.default;

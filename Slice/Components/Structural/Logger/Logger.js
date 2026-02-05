@@ -61,34 +61,76 @@ export default class Logger {
       this.showLog(log);
    }
 
+   /**
+    * Log an error message.
+    * @param {string} componentSliceId
+    * @param {string} message
+    * @param {any} [error]
+    * @returns {void}
+    */
    logError(componentSliceId, message, error) {
       this.createLog(logTypes.ERROR, componentSliceId, message, error);
    }
 
+   /**
+    * Log a warning message.
+    * @param {string} componentSliceId
+    * @param {string} message
+    * @returns {void}
+    */
    logWarning(componentSliceId, message) {
       this.createLog(logTypes.WARNING, componentSliceId, message);
    }
 
+   /**
+    * Log an info message.
+    * @param {string} componentSliceId
+    * @param {string} message
+    * @returns {void}
+    */
    logInfo(componentSliceId, message) {
       this.createLog(logTypes.INFO, componentSliceId, message);
    }
 
+   /**
+    * Get all logs.
+    * @returns {Array}
+    */
    getLogs() {
       return this.logs;
    }
 
+   /**
+    * Clear all logs.
+    * @returns {void}
+    */
    clearLogs() {
       this.logs = [];
    }
 
+   /**
+    * Filter logs by type.
+    * @param {string} type
+    * @returns {Array}
+    */
    getLogsByLogType(type) {
       return this.logs.filter((log) => log.logType === type);
    }
 
+   /**
+    * Filter logs by component category.
+    * @param {string} componentCategory
+    * @returns {Array}
+    */
    getLogsByComponentCategory(componentCategory) {
       return this.logs.filter((log) => log.componentCategory === componentCategory);
    }
 
+   /**
+    * Filter logs by component sliceId.
+    * @param {string} componentSliceId
+    * @returns {Array}
+    */
    getLogsByComponent(componentSliceId) {
       return this.logs.filter((log) => log.componentSliceId === componentSliceId);
    }

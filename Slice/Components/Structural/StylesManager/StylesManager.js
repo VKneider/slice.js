@@ -7,6 +7,10 @@ export default class StylesManager {
 
    }
 
+   /**
+    * Load global styles and initialize ThemeManager if enabled.
+    * @returns {Promise<void>}
+    */
    async init() {
       for (let i = 0; i < slice.stylesConfig.requestedStyles.length; i++) {
          const styles = await slice.controller.fetchText(slice.stylesConfig.requestedStyles[i], 'styles');
@@ -38,10 +42,21 @@ export default class StylesManager {
    }
 
    //add a method that will add css as text to the componentStyles element
+   /**
+    * Append raw CSS to the global component style tag.
+    * @param {string} cssText
+    * @returns {void}
+    */
    appendComponentStyles(cssText) {
       this.componentStyles.appendChild(document.createTextNode(cssText));
    }
 
+   /**
+    * Register CSS for a component.
+    * @param {string} componentName
+    * @param {string} cssText
+    * @returns {void}
+    */
    registerComponentStyles(componentName, cssText) {
       slice.controller.requestedStyles.add(componentName);
       this.appendComponentStyles(cssText);

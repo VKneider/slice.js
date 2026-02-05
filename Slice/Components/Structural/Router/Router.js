@@ -1,4 +1,46 @@
+/**
+ * @typedef {Object} RouteConfig
+ * @property {string} path
+ * @property {string} component
+ * @property {RouteConfig[]} [children]
+ * @property {Object} [metadata]
+ * @property {string} [fullPath]
+ * @property {string|null} [parentPath]
+ * @property {RouteConfig|null} [parentRoute]
+ */
+
+/**
+ * @typedef {Object} RouteInfo
+ * @property {string} path
+ * @property {string} component
+ * @property {Object} params
+ * @property {Object} query
+ * @property {Object} metadata
+ */
+
+/**
+ * @typedef {Object} GuardRedirect
+ * @property {string} path
+ * @property {boolean} [replace]
+ */
+
+/**
+ * @typedef {Object} RouteMatch
+ * @property {RouteConfig|null} route
+ * @property {Object} params
+ * @property {RouteConfig} [childRoute]
+ */
+
+/**
+ * @callback RouterNext
+ * @param {void|false|string|{ path: string, replace?: boolean }} [arg]
+ * @returns {void}
+ */
+
 export default class Router {
+   /**
+    * @param {RouteConfig[]} routes
+    */
    constructor(routes) {
       this.routes = routes;
       this.activeRoute = null;
@@ -23,7 +65,8 @@ export default class Router {
 
    /**
     * Inicializa el router
-    * Si el usuario no llama start() manualmente, se auto-inicia después de un delay
+    * Si el usuario no llama start() manualmente, se auto-inicia despues de un delay
+    * @returns {void}
     */
    init() {
       window.addEventListener('popstate', this.onRouteChange.bind(this));
@@ -41,7 +84,8 @@ export default class Router {
    /**
     * Inicia el router y carga la ruta inicial
     * OPCIONAL: Solo necesario si usas guards (beforeEach/afterEach)
-    * Si no lo llamas, el router se auto-inicia después de 50ms
+    * Si no lo llamas, el router se auto-inicia despues de 50ms
+    * @returns {Promise<void>}
     */
    async start() {
       // Prevenir múltiples llamadas
@@ -65,9 +109,10 @@ export default class Router {
    // ============================================
 
    /**
-    * Registra un guard que se ejecuta ANTES de cada navegación
-    * Puede bloquear o redirigir la navegación
-    * @param {Function} guard - Función (to, from, next) => {}
+    * Registra un guard que se ejecuta ANTES de cada navegacion.
+    * Puede bloquear o redirigir la navegacion mediante next().
+    * @param {(to: RouteInfo, from: RouteInfo, next: RouterNext) => void|Promise<void>} guard
+    * @returns {void}
     */
    beforeEach(guard) {
       if (typeof guard !== 'function') {
@@ -78,9 +123,10 @@ export default class Router {
    }
 
    /**
-    * Registra un guard que se ejecuta DESPUÉS de cada navegación
-    * No puede bloquear la navegación
-    * @param {Function} guard - Función (to, from) => {}
+    * Registra un guard que se ejecuta DESPUES de cada navegacion.
+    * No puede bloquear la navegacion.
+    * @param {(to: RouteInfo, from: RouteInfo) => void} guard
+    * @returns {void}
     */
    afterEach(guard) {
       if (typeof guard !== 'function') {
@@ -96,6 +142,13 @@ export default class Router {
     * @param {Object} params - Parámetros de la ruta
     * @param {String} requestedPath - Path original solicitado
     * @returns {Object} Objeto con path, component, params, query, metadata
+    */
+   /**
+    * Build route info used by guards and events.
+    * @param {RouteConfig|null} route
+    * @param {Object} [params]
+    * @param {string|null} [requestedPath]
+    * @returns {RouteInfo}
     */
    _createRouteInfo(route, params = {}, requestedPath = null) {
       if (!route) {
@@ -121,6 +174,10 @@ export default class Router {
     * Parsea los query parameters de la URL actual
     * @returns {Object} Objeto con los query params
     */
+   /**
+    * Parse query params from current URL.
+    * @returns {Object}
+    */
    _parseQueryParams() {
       const queryString = window.location.search;
       if (!queryString) return {};
@@ -140,6 +197,12 @@ export default class Router {
     * @param {Object} to - Información de ruta destino
     * @param {Object} from - Información de ruta origen
     * @returns {Object|null} Objeto con redirectPath y options, o null si continúa
+    */
+   /**
+    * Execute beforeEach guard if defined.
+    * @param {RouteInfo} to
+    * @param {RouteInfo} from
+    * @returns {Promise<{ path: string|false, options: { replace?: boolean } }|null>}
     */
    async _executeBeforeEachGuard(to, from) {
       if (!this._beforeEachGuard) {
@@ -212,6 +275,12 @@ export default class Router {
     * @param {Object} to - Información de ruta destino
     * @param {Object} from - Información de ruta origen
     */
+   /**
+    * Execute afterEach guard if defined.
+    * @param {RouteInfo} to
+    * @param {RouteInfo} from
+    * @returns {void}
+    */
    _executeAfterEachGuard(to, from) {
       if (!this._afterEachGuard) {
          return;
@@ -228,6 +297,13 @@ export default class Router {
    // ROUTING CORE (MODIFICADO CON GUARDS)
    // ============================================
 
+   /**
+    * Navigate to a route path with guards support. Add replace to do router.replace() instead of push.
+    * @param {string} path
+    * @param {string[]} [_redirectChain]
+    * @param {{ replace?: boolean }} [_options]
+    * @returns {Promise<void>}
+    */
    async navigate(path, _redirectChain = [], _options = {}) {
       const currentPath = window.location.pathname;
 
@@ -282,6 +358,12 @@ export default class Router {
     * @param {Object} to - Información de ruta destino
     * @param {Object} from - Información de ruta origen
     */
+   /**
+    * Perform navigation after guards.
+    * @param {RouteInfo} to
+    * @param {RouteInfo} from
+    * @returns {Promise<void>}
+    */
    async _performNavigation(to, from) {
       // Renderizar la nueva ruta
       await this.onRouteChange();
@@ -293,6 +375,10 @@ export default class Router {
       this._emitRouteChange(to, from);
    }
 
+   /**
+    * React to URL changes and render routes.
+    * @returns {Promise<void>}
+    */
    async onRouteChange() {
       // Cancelar el timeout anterior si existe
       if (this.routeChangeTimeout) {
@@ -315,6 +401,12 @@ export default class Router {
       }, 10);
    }
 
+   /**
+    * Build or update the active route component.
+    * @param {RouteConfig} route
+    * @param {Object} params
+    * @returns {Promise<void>}
+    */
    async handleRoute(route, params) {
       const targetElement = document.querySelector('#app');
 
@@ -357,6 +449,10 @@ export default class Router {
       slice.router.activeRoute = route;
    }
 
+   /**
+    * Load initial route and run guards.
+    * @returns {Promise<void>}
+    */
    async loadInitialRoute() {
       const path = window.location.pathname;
       const { route, params } = this.matchRoute(path);
@@ -391,6 +487,12 @@ export default class Router {
     * Emitir evento de cambio de ruta
     * @param {Object} to
     * @param {Object} from
+    */
+   /**
+    * Emit route change event.
+    * @param {RouteInfo} to
+    * @param {RouteInfo} from
+    * @returns {void}
     */
    _emitRouteChange(to, from) {
       const payload = { to, from };
@@ -475,6 +577,11 @@ export default class Router {
       return pathToRouteMap;
    }
 
+   /**
+    * Render any Route/MultiRoute components in a container.
+    * @param {Document|HTMLElement} [searchContainer]
+    * @returns {Promise<boolean>}
+    */
    async renderRoutesComponentsInPage(searchContainer = document) {
       let routerContainersFlag = false;
       const routeContainers = this.getCachedRouteContainers(searchContainer);
@@ -534,6 +641,11 @@ export default class Router {
       return routeContainers;
    }
 
+   /**
+    * Render route containers inside a component.
+    * @param {HTMLElement} component
+    * @returns {Promise<boolean>}
+    */
    async renderRoutesInComponent(component) {
       if (!component) {
          slice.logger.logWarning('Router', 'No component provided for route rendering');
@@ -543,6 +655,11 @@ export default class Router {
       return await this.renderRoutesComponentsInPage(component);
    }
 
+   /**
+    * Match a path to a configured route.
+    * @param {string} path
+    * @returns {RouteMatch}
+    */
    matchRoute(path) {
       const exactMatch = this.pathToRouteMap.get(path);
       if (exactMatch) {
@@ -583,6 +700,11 @@ export default class Router {
       return { route: notFoundRoute, params: {} };
    }
 
+   /**
+    * Compile a path pattern with ${param} segments.
+    * @param {string} pattern
+    * @returns {{ regex: RegExp, paramNames: string[] }}
+    */
    compilePathPattern(pattern) {
       const paramNames = [];
       const regexPattern =

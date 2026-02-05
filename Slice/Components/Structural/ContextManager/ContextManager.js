@@ -9,6 +9,12 @@
  * - Auto-limpieza cuando componentes se destruyen
  * - Persistencia opcional en localStorage
  */
+/**
+ * @typedef {Object} ContextOptions
+ * @property {boolean} [persist]
+ * @property {string} [storageKey]
+ */
+
 export default class ContextManager {
    constructor() {
       // Map<contextName, { state, options }>
@@ -25,9 +31,10 @@ export default class ContextManager {
 
    /**
     * Crear un nuevo contexto
-    * @param {string} name - Nombre único del contexto
-    * @param {Object} initialState - Estado inicial
-    * @param {Object} options - Opciones: { persist: boolean }
+    * @param {string} name - Nombre unico del contexto
+    * @param {Object} [initialState] - Estado inicial
+    * @param {ContextOptions} [options] - Opciones: { persist, storageKey }
+    * @returns {boolean}
     *
     * @example
     * slice.context.create('auth', {
@@ -76,7 +83,7 @@ export default class ContextManager {
    /**
     * Obtener el estado actual de un contexto
     * @param {string} name - Nombre del contexto
-    * @returns {*} Estado actual o null si no existe
+    * @returns {any|null} Estado actual o null si no existe
     *
     * @example
     * const auth = slice.context.getState('auth');
@@ -98,7 +105,8 @@ export default class ContextManager {
    /**
     * Actualizar el estado de un contexto
     * @param {string} name - Nombre del contexto
-    * @param {Object|Function} updater - Nuevo estado o función (prevState) => newState
+    * @param {Object|Function} updater - Nuevo estado o funcion (prevState) => newState
+    * @returns {void}
     *
     * @example
     * // Reemplazar con objeto
@@ -107,7 +115,7 @@ export default class ContextManager {
     *    user: { name: 'Juan' }
     * });
     *
-    * // Usar función para acceder al estado anterior
+    * // Usar funcion para acceder al estado anterior
     * slice.context.setState('cart', (prev) => ({
     *    ...prev,
     *    items: [...prev.items, nuevoProducto],
@@ -153,9 +161,9 @@ export default class ContextManager {
     * Observar cambios en un contexto
     * @param {string} name - Nombre del contexto
     * @param {HTMLElement} component - Componente Slice para auto-cleanup
-    * @param {Function} callback - Función a ejecutar cuando cambia
-    * @param {Function} selector - Opcional. Función para seleccionar campos específicos
-    * @returns {string} subscriptionId
+    * @param {(value: any) => void} callback - Funcion a ejecutar cuando cambia
+    * @param {(state: any) => any} [selector] - Opcional. Funcion para seleccionar campos
+    * @returns {string|null} subscriptionId
     *
     * @example
     * // Observar todo el estado
@@ -163,12 +171,12 @@ export default class ContextManager {
     *    this.render(state);
     * });
     *
-    * // Observar un campo específico
+    * // Observar un campo especifico
     * slice.context.watch('auth', this, (name) => {
     *    this.$name.textContent = name;
     * }, state => state.user.name);
     *
-    * // Observar múltiples campos
+    * // Observar multiples campos
     * slice.context.watch('auth', this, (data) => {
     *    this.$name.textContent = data.name;
     *    this.$avatar.src = data.avatar;
@@ -179,7 +187,7 @@ export default class ContextManager {
     *
     * // Valores computados
     * slice.context.watch('cart', this, (total) => {
-    *    this.$total.textContent = `$${total}`;
+    *    this.$total.textContent = `${total}`;
     * }, state => state.items.reduce((sum, i) => sum + i.price, 0));
     */
    watch(name, component, callback, selector = null) {
@@ -265,7 +273,7 @@ export default class ContextManager {
 
    /**
     * Obtener lista de todos los contextos
-    * @returns {Array<string>}
+    * @returns {string[]}
     */
    list() {
       return Array.from(this.contexts.keys());

@@ -1,3 +1,6 @@
+/**
+ * Manages theme CSS loading and persistence.
+ */
 export default class ThemeManager {
    constructor() {
       this.themeStyles = new Map();
@@ -6,6 +9,11 @@ export default class ThemeManager {
       document.head.appendChild(this.themeStyle);
    }
 
+   /**
+    * Apply a theme by name.
+    * @param {string} themeName
+    * @returns {Promise<void>}
+    */
    async applyTheme(themeName) {
       if (!themeName) {
          slice.logger.logError('ThemeManager', 'Invalid theme name');
@@ -20,6 +28,11 @@ export default class ThemeManager {
       }
    }
 
+   /**
+    * Load theme CSS and cache it.
+    * @param {string} themeName
+    * @returns {Promise<void>}
+    */
    async loadThemeCSS(themeName) {
       let themeContent =
          localStorage.getItem(`sliceTheme-${themeName}`) || (await slice.controller.fetchText(themeName, 'theme'));
@@ -34,6 +47,12 @@ export default class ThemeManager {
       this.saveThemeLocally(themeName, themeContent);
    }
 
+   /**
+    * Persist a theme in localStorage when enabled.
+    * @param {string} themeName
+    * @param {string} themeContent
+    * @returns {void}
+    */
    saveThemeLocally(themeName, themeContent) {
       if (slice.themeConfig.saveThemeLocally) {
          localStorage.setItem('sliceTheme', themeName);
@@ -42,12 +61,21 @@ export default class ThemeManager {
       }
    }
 
+   /**
+    * Clear currently applied theme styles.
+    * @returns {void}
+    */
    removeCurrentTheme() {
       if (this.currentTheme) {
          this.themeStyle.textContent = '';
       }
    }
 
+   /**
+    * Set theme style text and mark current theme.
+    * @param {string} themeName
+    * @returns {void}
+    */
    setThemeStyle(themeName) {
       this.themeStyle.textContent = this.themeStyles.get(themeName);
       this.currentTheme = themeName;

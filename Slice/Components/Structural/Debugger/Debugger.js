@@ -1,5 +1,8 @@
 // ✅ VERSIÓN ANTI-INTERFERENCIA - Aislada del Router y con debugging
 
+/**
+ * Runtime UI debugger for Slice components.
+ */
 export default class Debugger extends HTMLElement {
    constructor() {
       super();
@@ -17,6 +20,10 @@ export default class Debugger extends HTMLElement {
       this.isDebuggerInput = false;
    }
 
+   /**
+    * Load debugger UI and enable interactions.
+    * @returns {Promise<boolean>}
+    */
    async enableDebugMode() {
       //const html = await slice.controller.fetchText('Debugger', 'html', 'Structural');
       //const css = await slice.controller.fetchText('Debugger', 'css', 'Structural');
@@ -35,6 +42,10 @@ export default class Debugger extends HTMLElement {
       return true;
    }
 
+   /**
+    * Cache UI elements.
+    * @returns {void}
+    */
    setupElements() {
       this.debuggerContainer = this.querySelector('#debugger-container');
       this.closeDebugger = this.querySelector('#close-debugger');
@@ -50,6 +61,10 @@ export default class Debugger extends HTMLElement {
       this.componentId = this.querySelector('.component-id');
    }
 
+   /**
+    * Bind UI event listeners.
+    * @returns {void}
+    */
    setupEventListeners() {
       // Tab navigation
       this.querySelectorAll('.tab-btn').forEach(btn => {
@@ -155,6 +170,11 @@ export default class Debugger extends HTMLElement {
       // pero la protección con stopPropagation() ya es suficiente
    }
 
+   /**
+    * Switch active tab.
+    * @param {string} tabName
+    * @returns {void}
+    */
    switchTab(tabName) {
       this.activeTab = tabName;
       
@@ -167,13 +187,39 @@ export default class Debugger extends HTMLElement {
       });
    }
 
+   /**
+    * Switch editor type (json | function).
+    * @param {string} type
+    * @returns {void}
+    */
    switchEditorType(type) {
+      const normalized = this.normalizeEditorType(type);
+      if (!normalized) {
+         return;
+      }
       this.querySelectorAll('.type-btn').forEach(btn => {
-         btn.classList.toggle('active', btn.dataset.type === type);
+         btn.classList.toggle('active', btn.dataset.type === normalized);
       });
-      this.currentEditingType = type;
+      this.currentEditingType = normalized;
    }
 
+   /**
+    * Normalize editor type to supported values.
+    * @param {string} type
+    * @returns {string|null}
+    */
+   normalizeEditorType(type) {
+      if (type === 'json' || type === 'function') {
+         return type;
+      }
+      return null;
+   }
+
+   /**
+    * Attach debugger toggle handler to a component.
+    * @param {HTMLElement} component
+    * @returns {void}
+    */
    attachDebugMode(component) {
       if (this.toggleClick === 'right') {
          this.toggle = 'contextmenu';
@@ -183,6 +229,10 @@ export default class Debugger extends HTMLElement {
       component.addEventListener(this.toggle, (event) => this.handleDebugClick(event, component));
    }
 
+   /**
+    * Enable drag interaction for the debugger panel.
+    * @returns {void}
+    */
    makeDraggable() {
       let offset = { x: 0, y: 0 };
       let isDragging = false;
@@ -214,6 +264,12 @@ export default class Debugger extends HTMLElement {
       });
    }
 
+   /**
+    * Handle toggle click and load component info.
+    * @param {Event} event
+    * @param {HTMLElement} component
+    * @returns {void}
+    */
    handleDebugClick(event, component) {
       event.preventDefault();
       event.stopPropagation();
@@ -248,6 +304,10 @@ export default class Debugger extends HTMLElement {
       this.updateInfoTab();
    }
 
+   /**
+    * Render props tab content.
+    * @returns {void}
+    */
    updatePropsTab() {
       const propsContainer = this.querySelector('.props-container');
       if (!propsContainer) {
@@ -266,6 +326,12 @@ export default class Debugger extends HTMLElement {
       });
    }
 
+   /**
+    * Build a prop row element.
+    * @param {string} prop
+    * @param {Object} [config]
+    * @returns {HTMLElement}
+    */
    createPropElement(prop, config = {}) {
       const propWrapper = document.createElement('div');
       propWrapper.className = 'prop-item';
@@ -304,6 +370,14 @@ export default class Debugger extends HTMLElement {
       return propWrapper;
    }
 
+   /**
+    * Build input HTML for a prop type.
+    * @param {string} prop
+    * @param {any} value
+    * @param {string} type
+    * @param {Object} [config]
+    * @returns {string}
+    */
    createInputForType(prop, value, type, config = {}) {
       const serializedValue = this.serializeValue(value);
       
@@ -357,6 +431,11 @@ export default class Debugger extends HTMLElement {
       }
    }
 
+   /**
+    * Apply a single prop change from an input.
+    * @param {HTMLInputElement} inputElement
+    * @returns {void}
+    */
    applyPropertyChange(inputElement) {
       const prop = inputElement.dataset.prop;
       if (!prop) return;
@@ -388,6 +467,11 @@ export default class Debugger extends HTMLElement {
       this.showVisualFeedback(inputElement);
    }
 
+   /**
+    * Show temporary highlight on updated input.
+    * @param {HTMLElement} inputElement
+    * @returns {void}
+    */
    showVisualFeedback(inputElement) {
       const originalBorder = inputElement.style.borderColor;
       const originalBoxShadow = inputElement.style.boxShadow;
@@ -401,6 +485,10 @@ export default class Debugger extends HTMLElement {
       }, 1500);
    }
 
+   /**
+    * Apply all editable prop changes in the panel.
+    * @returns {void}
+    */
    applyAllChanges() {
       const inputs = this.querySelectorAll('.prop-control:not([readonly])');
       let changeCount = 0;
@@ -416,6 +504,11 @@ export default class Debugger extends HTMLElement {
       this.showApplyFeedback(changeCount);
    }
 
+   /**
+    * Show apply feedback in button.
+    * @param {number} changeCount
+    * @returns {void}
+    */
    showApplyFeedback(changeCount) {
       const applyBtn = this.querySelector('#apply-changes');
       if (!applyBtn) return;
@@ -436,35 +529,49 @@ export default class Debugger extends HTMLElement {
       }, 2000);
    }
 
+   /**
+    * Open advanced editor for objects/functions.
+    * @param {string} prop
+    * @param {string} type
+    * @returns {void}
+    */
    openAdvancedEditor(prop, type) {
       this.currentEditingProp = prop;
-      this.currentEditingType = type;
+      this.currentEditingType = this.normalizeEditorType(type) || 'json';
       
       const value = this.currentComponent[prop];
       
-      this.modalTitle.textContent = `Edit ${prop} (${type})`;
+      this.modalTitle.textContent = `Edit ${prop} (${this.currentEditingType})`;
       
       this.querySelectorAll('.type-btn').forEach(btn => {
-         btn.classList.toggle('active', btn.dataset.type === type);
+         btn.classList.toggle('active', btn.dataset.type === this.currentEditingType);
       });
       
-      if (type === 'function') {
+      if (this.currentEditingType === 'function') {
          if (typeof value === 'function') {
             this.propertyEditor.value = value.toString();
          } else {
             this.propertyEditor.value = 'function() {\n   // Your code here\n}';
          }
       } else {
-         this.propertyEditor.value = JSON.stringify(value, null, 2);
+         try {
+            this.propertyEditor.value = JSON.stringify(value, null, 2);
+         } catch (error) {
+            this.propertyEditor.value = 'null';
+         }
       }
       
       this.editorModal.classList.add('active');
       this.propertyEditor.focus();
    }
 
+   /**
+    * Validate editor contents for current type.
+    * @returns {void}
+    */
    validateEditor() {
       const value = this.propertyEditor.value.trim();
-      const type = this.currentEditingType;
+      const type = this.normalizeEditorType(this.currentEditingType) || 'json';
       
       try {
          if (type === 'function') {
@@ -483,9 +590,13 @@ export default class Debugger extends HTMLElement {
       }
    }
 
+   /**
+    * Save editor value to component.
+    * @returns {void}
+    */
    savePropertyValue() {
       const value = this.propertyEditor.value.trim();
-      const type = this.currentEditingType;
+      const type = this.normalizeEditorType(this.currentEditingType) || 'json';
       
       try {
          let newValue;
@@ -513,6 +624,10 @@ export default class Debugger extends HTMLElement {
       }
    }
 
+   /**
+    * Close the advanced editor modal.
+    * @returns {void}
+    */
    closeModal() {
       this.editorModal.classList.remove('active');
       this.currentEditingProp = null;
@@ -520,6 +635,10 @@ export default class Debugger extends HTMLElement {
       this.validationMessage.textContent = '';
    }
 
+   /**
+    * Reset props to defaults (if defined in static props).
+    * @returns {void}
+    */
    resetValues() {
       const ComponentClass = this.currentComponent.constructor;
       const configuredProps = ComponentClass.props || {};
@@ -549,6 +668,11 @@ export default class Debugger extends HTMLElement {
       this.showResetFeedback(resetCount);
    }
 
+   /**
+    * Show reset feedback in button.
+    * @param {number} resetCount
+    * @returns {void}
+    */
    showResetFeedback(resetCount) {
       const resetBtn = this.querySelector('#reset-values');
       if (!resetBtn) return;
@@ -564,6 +688,10 @@ export default class Debugger extends HTMLElement {
       }, 1500);
    }
 
+   /**
+    * Render info tab content.
+    * @returns {void}
+    */
    updateInfoTab() {
       const infoContainer = this.querySelector('.info-list');
       if (!infoContainer) return;
@@ -587,6 +715,11 @@ export default class Debugger extends HTMLElement {
       `).join('');
    }
 
+   /**
+    * Get a simple value type label.
+    * @param {any} value
+    * @returns {string}
+    */
    getValueType(value) {
       if (value === null) return 'null';
       if (value === undefined) return 'undefined';
@@ -594,6 +727,11 @@ export default class Debugger extends HTMLElement {
       return typeof value;
    }
 
+   /**
+    * Serialize a value for input display.
+    * @param {any} value
+    * @returns {string}
+    */
    serializeValue(value) {
       if (value === null || value === undefined) {
          return '';
@@ -610,6 +748,11 @@ export default class Debugger extends HTMLElement {
       return String(value);
    }
 
+   /**
+    * Resolve which props to show in the debugger.
+    * @param {HTMLElement} component
+    * @returns {string[]}
+    */
    getComponentPropsForDebugger(component) {
       const ComponentClass = component.constructor;
       
@@ -624,6 +767,11 @@ export default class Debugger extends HTMLElement {
       return this.detectUsedProps(component);
    }
 
+   /**
+    * Detect props from backing fields on the component.
+    * @param {HTMLElement} component
+    * @returns {string[]}
+    */
    detectUsedProps(component) {
       const usedProps = [];
       
@@ -637,6 +785,10 @@ export default class Debugger extends HTMLElement {
       return usedProps;
    }
 
+   /**
+    * Hide the debugger UI.
+    * @returns {void}
+    */
    hide() {
       this.debuggerContainer.classList.remove('active');
       this.closeModal();
@@ -646,23 +798,24 @@ export default class Debugger extends HTMLElement {
 customElements.define('slice-debugger', Debugger);
 
 function productionOnlyCSS(){
-   return `
-   #debugger-container {
-   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-   display: none;
-   position: fixed;
-   top: 20px;
-   right: 20px;
-   width: 420px;
-   height: 85vh;
-   max-height: 85vh;
-   background: var(--primary-background-color);
-   border: 1px solid var(--medium-color);
-   border-radius: 12px;
-   box-shadow: 0 20px 40px rgba(var(--primary-color-rgb), 0.15), 0 4px 12px rgba(0, 0, 0, 0.1);
-   z-index: 10000;
-   overflow: hidden;
-   backdrop-filter: blur(10px);
+return `
+#debugger-container {
+font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+display: none;
+position: fixed;
+top: 20px;
+right: 20px;
+width: min(420px, calc(100vw - 40px));
+height: 85vh;
+max-height: 85vh;
+background: var(--primary-background-color);
+border: 1px solid var(--medium-color);
+border-radius: 12px;
+box-shadow: 0 20px 40px rgba(var(--primary-color-rgb), 0.15), 0 4px 12px rgba(0, 0, 0, 0.1);
+z-index: 10000;
+overflow: hidden;
+backdrop-filter: blur(10px);
+   box-sizing: border-box;
 }
 
 #debugger-container.active {
@@ -780,7 +933,7 @@ function productionOnlyCSS(){
 .tab-content {
    flex: 1;
    overflow: hidden;
-   height: calc(85vh - 100px);
+   min-height: 0;
 }
 
 .tab-pane {
@@ -789,6 +942,7 @@ function productionOnlyCSS(){
    overflow-y: auto;
    overflow-x: hidden;
    padding: 16px;
+   box-sizing: border-box;
 }
 
 .tab-pane.active {
@@ -818,6 +972,14 @@ function productionOnlyCSS(){
    flex-direction: column;
    gap: 12px;
    margin-bottom: 16px;
+   min-width: 0;
+   overflow-x: hidden;
+}
+
+#debugger-container *,
+#debugger-container *::before,
+#debugger-container *::after {
+   box-sizing: border-box;
 }
 
 .props-actions {
@@ -869,6 +1031,8 @@ function productionOnlyCSS(){
    border-radius: 6px;
    margin-bottom: 8px;
    transition: border-color 0.2s ease;
+   min-width: 0;
+   overflow: hidden;
 }
 
 .prop-item:hover {
@@ -879,6 +1043,23 @@ function productionOnlyCSS(){
    display: flex;
    justify-content: space-between;
    align-items: center;
+   gap: 8px;
+   min-width: 0;
+}
+
+.prop-title {
+   display: flex;
+   align-items: center;
+   gap: 6px;
+   min-width: 0;
+   flex: 1;
+}
+
+.prop-title strong {
+   min-width: 0;
+   overflow: hidden;
+   text-overflow: ellipsis;
+   white-space: nowrap;
 }
 
 .prop-name {
@@ -906,11 +1087,13 @@ function productionOnlyCSS(){
    border-radius: 4px;
    font-family: monospace;
    font-weight: 500;
+   flex-shrink: 0;
 }
 
 .prop-status {
    font-size: 12px;
    font-weight: 500;
+   flex-shrink: 0;
 }
 
 .status-used {
@@ -927,14 +1110,21 @@ function productionOnlyCSS(){
 
 .prop-input {
    margin-top: 8px;
+   min-width: 0;
+   overflow: hidden;
 }
 
 .input-group {
    position: relative;
+   max-width: 100%;
+   min-width: 0;
+   overflow: hidden;
 }
 
 .prop-control {
    width: 100%;
+   max-width: 100%;
+   min-width: 0;
    padding: 8px 32px 8px 10px;
    border: 1px solid var(--medium-color);
    border-radius: 6px;
@@ -943,6 +1133,8 @@ function productionOnlyCSS(){
    font-size: 13px;
    transition: border-color 0.2s ease, box-shadow 0.2s ease;
    font-family: monospace;
+   box-sizing: border-box;
+   display: block;
 }
 
 .prop-control:focus {
@@ -960,6 +1152,10 @@ function productionOnlyCSS(){
 .prop-control[readonly] {
    background: var(--tertiary-background-color);
    cursor: pointer;
+   text-overflow: ellipsis;
+   overflow: hidden;
+   white-space: nowrap;
+   max-width: 100%;
 }
 
 .prop-control[readonly]:focus {
@@ -1106,15 +1302,16 @@ function productionOnlyCSS(){
 }
 
 .modal-content {
-   background: var(--primary-background-color);
-   border-radius: 12px;
-   width: 90%;
-   max-width: 600px;
-   max-height: 80%;
-   display: flex;
-   flex-direction: column;
-   box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
-   border: 1px solid var(--medium-color);
+background: var(--primary-background-color);
+border-radius: 12px;
+width: min(600px, 92vw);
+max-width: 600px;
+max-height: 80%;
+display: flex;
+flex-direction: column;
+box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+border: 1px solid var(--medium-color);
+   box-sizing: border-box;
 }
 
 .modal-header {
@@ -1154,12 +1351,13 @@ function productionOnlyCSS(){
 }
 
 .modal-body {
-   flex: 1;
-   padding: 20px;
-   display: flex;
-   flex-direction: column;
-   gap: 16px;
-   overflow: hidden;
+flex: 1;
+padding: 20px;
+display: flex;
+flex-direction: column;
+gap: 16px;
+overflow: hidden;
+   min-height: 0;
 }
 
 .editor-type-selector {
@@ -1189,25 +1387,27 @@ function productionOnlyCSS(){
 }
 
 .editor-container {
-   flex: 1;
-   position: relative;
-   min-height: 200px;
+flex: 1;
+position: relative;
+min-height: 200px;
+   min-width: 0;
 }
 
 #property-editor {
-   width: 100%;
-   height: 100%;
-   border: 1px solid var(--medium-color);
-   border-radius: 6px;
-   padding: 12px;
-   background: var(--primary-background-color);
-   color: var(--font-primary-color);
-   font-family: 'Monaco', 'Consolas', monospace;
-   font-size: 13px;
-   line-height: 1.5;
-   resize: none;
-   outline: none;
-   min-height: 200px;
+width: 100%;
+height: 100%;
+border: 1px solid var(--medium-color);
+border-radius: 6px;
+padding: 12px;
+background: var(--primary-background-color);
+color: var(--font-primary-color);
+font-family: 'Monaco', 'Consolas', monospace;
+font-size: 13px;
+line-height: 1.5;
+resize: none;
+outline: none;
+min-height: 200px;
+   box-sizing: border-box;
 }
 
 #property-editor:focus {

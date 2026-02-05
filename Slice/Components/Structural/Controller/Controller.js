@@ -544,6 +544,11 @@ export default class Controller {
       });
    }
 
+   /**
+    * Get a registered component by sliceId.
+    * @param {string} sliceId
+    * @returns {HTMLElement|undefined}
+    */
    getComponent(sliceId) {
       return this.activeComponents.get(sliceId);
    }
@@ -565,6 +570,14 @@ export default class Controller {
       return this.componentCategories.get(componentSliceId);
    }
 
+   /**
+    * Fetch component resources (html, css, styles, theme).
+    * @param {string} componentName
+    * @param {'html'|'css'|'theme'|'styles'} resourceType
+    * @param {string} [componentCategory]
+    * @param {string} [customPath]
+    * @returns {Promise<string>}
+    */
    async fetchText(componentName, resourceType, componentCategory, customPath) {
       try {
          const baseUrl = window.location.origin;
@@ -619,6 +632,12 @@ export default class Controller {
       }
    }
 
+   /**
+    * Apply props to a component using static defaults and setters.
+    * @param {HTMLElement} component
+    * @param {Object} props
+    * @returns {void}
+    */
    setComponentProps(component, props) {
       const ComponentClass = component.constructor;
       const componentName = ComponentClass.name;

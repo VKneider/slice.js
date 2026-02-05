@@ -7,6 +7,14 @@
  * - Auto-limpieza cuando componentes se destruyen
  * - API simple: subscribe, subscribeOnce, unsubscribe, emit
  */
+/**
+ * @typedef {Object} EventManagerBind
+ * @property {(eventName: string, callback: Function) => string|null} subscribe
+ * @property {(eventName: string, callback: Function) => string|null} subscribeOnce
+ * @property {(eventName: string, data?: any) => void} emit
+ */
+
+
 export default class EventManager {
    constructor() {
       // Map<eventName, Map<subscriptionId, { callback, componentSliceId, once }>>
@@ -30,17 +38,17 @@ export default class EventManager {
    /**
     * Suscribirse a un evento
     * @param {string} eventName - Nombre del evento
-    * @param {Function} callback - Función a ejecutar cuando se emita el evento
-    * @param {Object} options - Opciones: { component: SliceComponent }
-    * @returns {string} subscriptionId - ID para desuscribirse
+    * @param {(data?: any) => void} callback - Funcion a ejecutar cuando se emita el evento
+    * @param {{ component?: HTMLElement }} [options]
+    * @returns {string|null} subscriptionId - ID para desuscribirse
     *
     * @example
-    * // Suscripción global
+    * // Suscripcion global
     * const id = slice.events.subscribe('user:login', (user) => {
     *    console.log('Usuario:', user);
     * });
     *
-    * // Suscripción con auto-cleanup
+    * // Suscripcion con auto-cleanup
     * slice.events.subscribe('user:login', (user) => {
     *    this.actualizar(user);
     * }, { component: this });
@@ -78,9 +86,9 @@ export default class EventManager {
    /**
     * Suscribirse a un evento una sola vez
     * @param {string} eventName - Nombre del evento
-    * @param {Function} callback - Función a ejecutar
-    * @param {Object} options - Opciones: { component: SliceComponent }
-    * @returns {string} subscriptionId
+    * @param {(data?: any) => void} callback - Funcion a ejecutar
+    * @param {{ component?: HTMLElement }} [options]
+    * @returns {string|null} subscriptionId
     *
     * @example
     * slice.events.subscribeOnce('app:ready', () => {
@@ -117,12 +125,12 @@ export default class EventManager {
    /**
     * Desuscribirse de un evento
     * @param {string} eventName - Nombre del evento
-    * @param {string} subscriptionId - ID de la suscripción
-    * @returns {boolean} true si se eliminó correctamente
+    * @param {string} subscriptionId - ID de la suscripcion
+    * @returns {boolean} true si se elimino correctamente
     *
     * @example
     * const id = slice.events.subscribe('evento', callback);
-    * // Después...
+    * // Despues...
     * slice.events.unsubscribe('evento', id);
     */
    unsubscribe(eventName, subscriptionId) {
@@ -147,7 +155,8 @@ export default class EventManager {
    /**
     * Emitir un evento
     * @param {string} eventName - Nombre del evento
-    * @param {*} data - Datos a pasar a los callbacks
+    * @param {any} [data] - Datos a pasar a los callbacks
+    * @returns {void}
     *
     * @example
     * slice.events.emit('user:login', { id: 123, name: 'Juan' });
@@ -204,7 +213,7 @@ export default class EventManager {
    /**
     * Vincular el EventManager a un componente para auto-cleanup
     * @param {HTMLElement} component - Componente Slice con sliceId
-    * @returns {Object} API vinculada al componente
+    * @returns {EventManagerBind|null} API vinculada al componente
     *
     * @example
     * class MiComponente extends HTMLElement {
