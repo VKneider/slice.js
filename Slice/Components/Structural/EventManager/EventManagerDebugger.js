@@ -18,6 +18,7 @@ export default class EventManagerDebugger extends HTMLElement {
       slice.stylesManager.registerComponentStyles('EventManagerDebugger', this.renderStyles());
       this.cacheElements();
       this.bindEvents();
+      this.makeDraggable();
       this.renderList();
    }
 
@@ -54,6 +55,7 @@ export default class EventManagerDebugger extends HTMLElement {
 
    cacheElements() {
       this.container = this.querySelector('#events-debugger');
+      this.header = this.querySelector('.events-header');
       this.list = this.querySelector('#events-list');
       this.filterInput = this.querySelector('#events-filter');
       this.countLabel = this.querySelector('#events-count');
@@ -70,6 +72,42 @@ export default class EventManagerDebugger extends HTMLElement {
       });
    }
 
+   makeDraggable() {
+      if (!this.header || !this.container) return;
+
+      let offset = { x: 0, y: 0 };
+      let isDragging = false;
+
+      this.header.style.cursor = 'grab';
+
+      this.header.addEventListener('mousedown', (event) => {
+         if (event.target.closest('.btn')) return;
+         isDragging = true;
+         offset.x = event.clientX - this.container.getBoundingClientRect().left;
+         offset.y = event.clientY - this.container.getBoundingClientRect().top;
+         this.header.style.cursor = 'grabbing';
+      });
+
+      document.addEventListener('mousemove', (event) => {
+         if (!isDragging) return;
+         const rect = this.container.getBoundingClientRect();
+         const maxX = window.innerWidth - rect.width;
+         const maxY = window.innerHeight - rect.height;
+         const x = Math.min(Math.max(event.clientX - offset.x, 0), maxX);
+         const y = Math.min(Math.max(event.clientY - offset.y, 0), maxY);
+         this.container.style.left = `${x}px`;
+         this.container.style.top = `${y}px`;
+         this.container.style.right = 'auto';
+         this.container.style.bottom = 'auto';
+      });
+
+      document.addEventListener('mouseup', () => {
+         if (!isDragging) return;
+         isDragging = false;
+         this.header.style.cursor = 'grab';
+      });
+   }
+
    renderList() {
       if (!slice?.events?.subscriptions) {
          this.list.textContent = 'EventManager not available.';
@@ -79,11 +117,23 @@ export default class EventManagerDebugger extends HTMLElement {
 
       const items = [];
       slice.events.subscriptions.forEach((subs, eventName) => {
-         const count = subs.size;
+         const entries = Array.from(subs.entries()).map(([id, sub]) => {
+            const componentSliceId = sub.componentSliceId || null;
+            const component = componentSliceId ? slice.controller.getComponent(componentSliceId) : null;
+            const componentName = component?.constructor?.name || null;
+            return {
+               id,
+               once: sub.once,
+               componentSliceId,
+               componentName
+            };
+         });
+
          if (this.filterText && !eventName.toLowerCase().includes(this.filterText)) {
             return;
          }
-         items.push({ eventName, count });
+
+         items.push({ eventName, count: subs.size, entries });
       });
 
       items.sort((a, b) => a.eventName.localeCompare(b.eventName));
@@ -91,11 +141,29 @@ export default class EventManagerDebugger extends HTMLElement {
       this.countLabel.textContent = String(items.length);
       this.list.innerHTML = items.length
          ? items.map((item) => {
+              const details = item.entries.map((entry) => {
+                 const label = entry.componentName
+                    ? `${entry.componentName} (${entry.componentSliceId})`
+                    : entry.componentSliceId || 'Global';
+                 const onceBadge = entry.once ? '<span class="badge">once</span>' : '';
+                 return `
+                  <div class="subscriber-row">
+                     <div class="subscriber-name">${label}</div>
+                     <div class="subscriber-meta">${entry.id}${onceBadge}</div>
+                  </div>
+               `;
+              }).join('');
+
               return `
-               <div class="event-row">
-                  <div class="event-name">${item.eventName}</div>
-                  <div class="event-count">${item.count}</div>
-               </div>
+               <details class="event-row">
+                  <summary>
+                     <div class="event-name">${item.eventName}</div>
+                     <div class="event-count">${item.count}</div>
+                  </summary>
+                  <div class="subscriber-list">
+                     ${details || '<div class="empty">No subscribers</div>'}
+                  </div>
+               </details>
             `;
            }).join('')
          : '<div class="empty">No events</div>';
@@ -153,6 +221,7 @@ export default class EventManagerDebugger extends HTMLElement {
          padding: 12px 14px;
          background: var(--tertiary-background-color);
          border-bottom: 1px solid var(--medium-color);
+         user-select: none;
       }
 
       .events-header .title {
@@ -202,13 +271,24 @@ export default class EventManagerDebugger extends HTMLElement {
       }
 
       .event-row {
-         display: flex;
-         justify-content: space-between;
+         display: block;
          padding: 8px 10px;
          background: var(--tertiary-background-color);
          border-radius: 6px;
          border: 1px solid var(--medium-color);
+      }
+
+      .event-row summary {
+         display: flex;
+         align-items: center;
+         justify-content: space-between;
          gap: 8px;
+         cursor: pointer;
+         list-style: none;
+      }
+
+      .event-row summary::-webkit-details-marker {
+         display: none;
       }
 
       .event-name {
@@ -223,6 +303,49 @@ export default class EventManagerDebugger extends HTMLElement {
       .event-count {
          font-weight: 600;
          color: var(--primary-color);
+      }
+
+      .subscriber-list {
+         margin-top: 10px;
+         display: flex;
+         flex-direction: column;
+         gap: 8px;
+      }
+
+      .subscriber-row {
+         display: flex;
+         justify-content: space-between;
+         gap: 8px;
+         padding: 6px 8px;
+         border-radius: 6px;
+         background: var(--primary-background-color);
+         border: 1px solid var(--medium-color);
+      }
+
+      .subscriber-name {
+         font-size: 12px;
+         color: var(--font-primary-color);
+         overflow: hidden;
+         text-overflow: ellipsis;
+         white-space: nowrap;
+      }
+
+      .subscriber-meta {
+         font-size: 11px;
+         color: var(--font-secondary-color);
+         display: flex;
+         align-items: center;
+         gap: 6px;
+         white-space: nowrap;
+      }
+
+      .badge {
+         padding: 2px 6px;
+         border-radius: 999px;
+         background: var(--secondary-color);
+         color: var(--secondary-color-contrast);
+         font-size: 10px;
+         text-transform: uppercase;
       }
 
       .empty {

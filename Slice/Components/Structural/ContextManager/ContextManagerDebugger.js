@@ -17,6 +17,7 @@ export default class ContextManagerDebugger extends HTMLElement {
       slice.stylesManager.registerComponentStyles('ContextManagerDebugger', this.renderStyles());
       this.cacheElements();
       this.bindEvents();
+      this.makeDraggable();
       this.renderList();
    }
 
@@ -53,6 +54,7 @@ export default class ContextManagerDebugger extends HTMLElement {
 
    cacheElements() {
       this.container = this.querySelector('#context-debugger');
+      this.header = this.querySelector('.context-header');
       this.list = this.querySelector('#context-list');
       this.filterInput = this.querySelector('#context-filter');
       this.countLabel = this.querySelector('#context-count');
@@ -66,6 +68,42 @@ export default class ContextManagerDebugger extends HTMLElement {
       this.filterInput.addEventListener('input', (event) => {
          this.filterText = event.target.value.trim().toLowerCase();
          this.renderList();
+      });
+   }
+
+   makeDraggable() {
+      if (!this.header || !this.container) return;
+
+      let offset = { x: 0, y: 0 };
+      let isDragging = false;
+
+      this.header.style.cursor = 'grab';
+
+      this.header.addEventListener('mousedown', (event) => {
+         if (event.target.closest('.btn')) return;
+         isDragging = true;
+         offset.x = event.clientX - this.container.getBoundingClientRect().left;
+         offset.y = event.clientY - this.container.getBoundingClientRect().top;
+         this.header.style.cursor = 'grabbing';
+      });
+
+      document.addEventListener('mousemove', (event) => {
+         if (!isDragging) return;
+         const rect = this.container.getBoundingClientRect();
+         const maxX = window.innerWidth - rect.width;
+         const maxY = window.innerHeight - rect.height;
+         const x = Math.min(Math.max(event.clientX - offset.x, 0), maxX);
+         const y = Math.min(Math.max(event.clientY - offset.y, 0), maxY);
+         this.container.style.left = `${x}px`;
+         this.container.style.top = `${y}px`;
+         this.container.style.right = 'auto';
+         this.container.style.bottom = 'auto';
+      });
+
+      document.addEventListener('mouseup', () => {
+         if (!isDragging) return;
+         isDragging = false;
+         this.header.style.cursor = 'grab';
       });
    }
 
@@ -165,6 +203,7 @@ export default class ContextManagerDebugger extends HTMLElement {
          padding: 12px 14px;
          background: var(--tertiary-background-color);
          border-bottom: 1px solid var(--medium-color);
+         user-select: none;
       }
 
       .context-header .title {
