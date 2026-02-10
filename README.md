@@ -99,10 +99,20 @@ _Below is an example of how you can instruct your audience on installing and set
    ```sh
    npm run slice:init
    ```
-3. Start web server
-   ```sh
-   npm run slice:start
-   ```
+ 3. Start web server
+    ```sh
+    npm run slice:start
+    ```
+
+### Documentation Access
+
+Slice.js provides an MCP (Model Context Protocol) server for programmatic access to documentation:
+
+```bash
+npx slicejs-mcp
+```
+
+This allows AI assistants and tools to query, search, and retrieve Slice.js documentation seamlessly.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
