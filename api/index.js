@@ -97,12 +97,6 @@ function bundlesDirectoryExists() {
   return fs.existsSync(bundleDir) && fs.statSync(bundleDir).isDirectory();
 }
 
-// Capturar todas las peticiones a bundles para debugging
-app.use('/bundles/', (req, res, next) => {
-  console.log(`🔍 Bundle request: ${req.method} ${req.originalUrl}`);
-  next();
-});
-
 // Middleware personalizado para archivos de bundles con MIME types correctos
 // ⚠️ DEBE IR ANTES del middleware general para tener prioridad
 app.use('/bundles/', (req, res, next) => {

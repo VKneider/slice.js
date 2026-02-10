@@ -8,10 +8,18 @@
       "click": "right"
    },
    "events": {
-      "enabled": true
+      "enabled": true,
+      "ui": {
+         "enabled": true,
+         "shortcut": "alt+shift+e"
+      }
    },
    "context": {
-      "enabled": true
+      "enabled": true,
+      "ui": {
+         "enabled": true,
+         "shortcut": "alt+shift+c"
+      }
    },
    "stylesManager": {
       "requestedStyles": ["sliceStyles"]

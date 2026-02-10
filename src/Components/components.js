@@ -16,12 +16,12 @@ const components = {
   "Navbar": "Visual",
   "NotFound": "Visual",
   "Route": "Visual",
+  "Link": "Visual",
   "Select": "Visual",
   "Switch": "Visual",
   "TreeItem": "Visual",
   "TreeView": "Visual",
   "FetchManager": "Service",
   "IndexedDbManager": "Service",
-  "Link": "Service",
   "LocalStorageManager": "Service"
 }; export default components;

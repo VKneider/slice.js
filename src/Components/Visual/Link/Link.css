@@ -1,0 +1,8 @@
+slice-link {
+  display: inline-flex;
+}
+
+slice-link .slice-link {
+  color: inherit;
+  text-decoration: none;
+}
