@@ -237,11 +237,18 @@ async function init() {
    }
 
     let frameworkClasses = null;
+    let bundleConfigJson = null;
     try {
-      const bundleConfig = await import('/bundles/bundle.config.js');
-      const isProduction = bundleConfig?.SLICE_BUNDLE_CONFIG?.production;
+      const response = await fetch('/bundles/bundle.config.json', { cache: 'no-store' });
+      if (response.ok) {
+        bundleConfigJson = await response.json();
+      }
+    } catch (error) {
+      // ignore
+    }
 
-      if (isProduction) {
+    try {
+      if (bundleConfigJson?.production) {
         await import('/bundles/slice-bundle.framework.js');
         frameworkClasses = window.SLICE_FRAMEWORK_CLASSES || null;
       }
