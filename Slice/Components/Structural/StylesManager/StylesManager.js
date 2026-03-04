@@ -18,10 +18,13 @@ export default class StylesManager {
          slice.logger.logInfo('StylesManager', `${slice.stylesConfig.requestedStyles[i]} styles loaded`);
       }
 
-      if (slice.themeConfig.enabled) {
-         const module = await import(`${slice.paths.structuralComponentFolderPath}/StylesManager/ThemeManager/ThemeManager.js`);
+       if (slice.themeConfig.enabled) {
+          const ThemeManagerClass = slice.frameworkClasses?.ThemeManager;
+          if (!ThemeManagerClass) {
+             throw new Error('ThemeManager not available');
+          }
 
-         this.themeManager = new module.default();
+          this.themeManager = new ThemeManagerClass();
          let theme;
 
          if (slice.themeConfig.saveThemeLocally) {

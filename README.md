@@ -99,10 +99,20 @@ _Below is an example of how you can instruct your audience on installing and set
    ```sh
    npm run slice:init
    ```
- 3. Start web server
-    ```sh
-    npm run slice:start
-    ```
+  3. Build production output
+     ```sh
+     npm run slice:build
+     ```
+  4. Start production server
+     ```sh
+     npm run slice:start
+     ```
+
+Production uses `publicFolders` from `sliceConfig.json` to expose public asset folders like
+`/Themes`, `/Styles`, and `/assets`.
+
+Structural framework components are bundled into a dedicated framework bundle during `slice build`
+and served from `/dist/bundles/slice-bundle.framework.js`.
 
 ### Documentation Access
 
@@ -162,4 +172,3 @@ Distributed under the MIT License. See `LICENSE` for more information.
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: https://linkedin.com/in/VKneider
 [product-screenshot]: readme_images/screenshot.JPG
-

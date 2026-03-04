@@ -1,5 +1,3 @@
-import Controller from './Components/Structural/Controller/Controller.js';
-import StylesManager from './Components/Structural/StylesManager/StylesManager.js';
 
 /**
  * Main Slice.js runtime.
@@ -8,9 +6,13 @@ export default class Slice {
    /**
     * @param {Object} sliceConfig
     */
-   constructor(sliceConfig) {
-      this.controller = new Controller();
-      this.stylesManager = new StylesManager();
+    constructor(sliceConfig, frameworkClasses = null) {
+      this.frameworkClasses = frameworkClasses;
+      const ControllerClass = frameworkClasses?.Controller;
+      const StylesManagerClass = frameworkClasses?.StylesManager;
+
+      this.controller = ControllerClass ? new ControllerClass() : null;
+      this.stylesManager = StylesManagerClass ? new StylesManagerClass() : null;
       this.paths = sliceConfig.paths;
       this.themeConfig = sliceConfig.themeManager;
       this.stylesConfig = sliceConfig.stylesManager;
@@ -234,13 +236,86 @@ async function init() {
       return;
    }
 
-   window.slice = new Slice(sliceConfig);
+    let frameworkClasses = null;
+    try {
+      const bundleConfig = await import('/bundles/bundle.config.js');
+      const isProduction = bundleConfig?.SLICE_BUNDLE_CONFIG?.production;
+
+      if (isProduction) {
+        await import('/bundles/slice-bundle.framework.js');
+        frameworkClasses = window.SLICE_FRAMEWORK_CLASSES || null;
+      }
+    } catch (error) {
+      console.warn('Framework bundle not available, falling back to dynamic imports');
+    }
+
+    if (!frameworkClasses) {
+      const imports = await Promise.all([
+        import('./Components/Structural/Controller/Controller.js'),
+        import('./Components/Structural/StylesManager/StylesManager.js')
+      ]);
+      frameworkClasses = {
+        Controller: imports[0].default,
+        StylesManager: imports[1].default
+      };
+    }
+
+    window.slice = new Slice(sliceConfig, frameworkClasses);
+
+    // Initialize bundles before building components
+    try {
+       const configResponse = await fetch('/bundles/bundle.config.json', { cache: 'no-store' });
+       if (configResponse.ok) {
+          const config = await configResponse.json();
+          window.slice.controller.bundleConfig = config;
+       }
+
+       if (window.slice.controller.bundleConfig) {
+          const config = window.slice.controller.bundleConfig;
+
+          const criticalFile = config?.bundles?.critical?.file;
+          if (criticalFile) {
+             const criticalModule = await import(`/bundles/${criticalFile}`);
+             if (criticalModule.SLICE_BUNDLE) {
+                window.slice.controller.registerBundle(criticalModule.SLICE_BUNDLE);
+                window.slice.controller.loadedBundles.add('critical');
+                window.slice.controller.criticalBundleLoaded = true;
+             }
+          }
+
+          const routeBundles = config?.routeBundles || {};
+          const initialPath = window.location.pathname || '/';
+          const bundlesForRoute = routeBundles[initialPath] || [];
+
+          const loadRouteBundles = async () => {
+             for (const bundleName of bundlesForRoute) {
+                if (bundleName === 'critical') continue;
+                const bundleInfo = config?.bundles?.routes?.[bundleName];
+                if (!bundleInfo?.file) continue;
+                const routeModule = await import(`/bundles/${bundleInfo.file}`);
+                if (routeModule.SLICE_BUNDLE) {
+                   window.slice.controller.registerBundle(routeModule.SLICE_BUNDLE);
+                   window.slice.controller.loadedBundles.add(bundleName);
+                }
+             }
+          };
+
+          if (typeof requestIdleCallback === 'function') {
+             requestIdleCallback(() => loadRouteBundles());
+          } else {
+             setTimeout(() => loadRouteBundles(), 0);
+          }
+       }
+    } catch (error) {
+       console.log('📄 Using individual component loading (no bundles found)');
+    }
 
    slice.paths.structuralComponentFolderPath = '/Slice/Components/Structural';
 
-   if (sliceConfig.logger.enabled) {
-      const LoggerModule = await window.slice.getClass(`${slice.paths.structuralComponentFolderPath}/Logger/Logger.js`);
-      window.slice.logger = new LoggerModule();
+    if (sliceConfig.logger.enabled) {
+       const LoggerModule = window.slice.frameworkClasses?.Logger
+         || await window.slice.getClass(`${slice.paths.structuralComponentFolderPath}/Logger/Logger.js`);
+       window.slice.logger = new LoggerModule();
    } else {
       window.slice.logger = {
          logError: () => {},
@@ -249,42 +324,37 @@ async function init() {
       };
    }
 
-   if (sliceConfig.debugger.enabled) {
-       const DebuggerModule = await window.slice.getClass(
-          `${slice.paths.structuralComponentFolderPath}/Debugger/Debugger.js`
-       );
-       window.slice.debugger = new DebuggerModule();
+    if (sliceConfig.debugger.enabled) {
+        const DebuggerModule = window.slice.frameworkClasses?.Debugger
+           || await window.slice.getClass(`${slice.paths.structuralComponentFolderPath}/Debugger/Debugger.js`);
+        window.slice.debugger = new DebuggerModule();
        await window.slice.debugger.enableDebugMode();
        document.body.appendChild(window.slice.debugger);
    }
 
-    if (sliceConfig.events?.ui?.enabled) {
-       const EventsDebuggerModule = await window.slice.getClass(
-          `${slice.paths.structuralComponentFolderPath}/EventManager/EventManagerDebugger.js`
-       );
-       window.slice.eventsDebugger = new EventsDebuggerModule();
+     if (sliceConfig.events?.ui?.enabled) {
+        const EventsDebuggerModule = window.slice.frameworkClasses?.EventManagerDebugger
+           || await window.slice.getClass(`${slice.paths.structuralComponentFolderPath}/EventManager/EventManagerDebugger.js`);
+        window.slice.eventsDebugger = new EventsDebuggerModule();
        await window.slice.eventsDebugger.init();
        document.body.appendChild(window.slice.eventsDebugger);
     }
 
-    if (sliceConfig.context?.ui?.enabled) {
-       const ContextDebuggerModule = await window.slice.getClass(
-          `${slice.paths.structuralComponentFolderPath}/ContextManager/ContextManagerDebugger.js`
-       );
-       window.slice.contextDebugger = new ContextDebuggerModule();
+     if (sliceConfig.context?.ui?.enabled) {
+        const ContextDebuggerModule = window.slice.frameworkClasses?.ContextManagerDebugger
+           || await window.slice.getClass(`${slice.paths.structuralComponentFolderPath}/ContextManager/ContextManagerDebugger.js`);
+        window.slice.contextDebugger = new ContextDebuggerModule();
        await window.slice.contextDebugger.init();
        document.body.appendChild(window.slice.contextDebugger);
     }
 
-   if (sliceConfig.events?.enabled) {
-      const EventManagerModule = await window.slice.getClass(
-         `${slice.paths.structuralComponentFolderPath}/EventManager/EventManager.js`
-      );
+    if (sliceConfig.events?.enabled) {
+       const EventManagerModule = window.slice.frameworkClasses?.EventManager
+          || await window.slice.getClass(`${slice.paths.structuralComponentFolderPath}/EventManager/EventManager.js`);
       window.slice.events = new EventManagerModule();
       if (typeof window.slice.events.init === 'function') {
          await window.slice.events.init();
       }
-      window.slice.logger.logError('Slice', 'EventManager enabled');
    } else {
       window.slice.events = {
          subscribe: () => null,
@@ -304,15 +374,13 @@ async function init() {
       window.slice.logger.logError('Slice', 'EventManager disabled');
    }
 
-   if (sliceConfig.context?.enabled) {
-      const ContextManagerModule = await window.slice.getClass(
-         `${slice.paths.structuralComponentFolderPath}/ContextManager/ContextManager.js`
-      );
+    if (sliceConfig.context?.enabled) {
+       const ContextManagerModule = window.slice.frameworkClasses?.ContextManager
+          || await window.slice.getClass(`${slice.paths.structuralComponentFolderPath}/ContextManager/ContextManager.js`);
       window.slice.context = new ContextManagerModule();
       if (typeof window.slice.context.init === 'function') {
          await window.slice.context.init();
       }
-      window.slice.logger.logError('Slice', 'ContextManager enabled');
    } else {
       window.slice.context = {
          create: () => false,
@@ -326,10 +394,13 @@ async function init() {
       window.slice.logger.logError('Slice', 'ContextManager disabled');
    }
 
-   if (sliceConfig.loading.enabled) {
+    if (sliceConfig.loading.enabled) {
       const loading = await window.slice.build('Loading', {});
       window.slice.loading = loading;
-   }
+      if (typeof loading?.start === 'function') {
+         loading.start();
+      }
+    }
 
    await window.slice.stylesManager.init();
 
@@ -363,21 +434,10 @@ async function init() {
 
    const routesModule = await import(slice.paths.routesFile);
    const routes = routesModule.default;
-   const RouterModule = await window.slice.getClass(`${slice.paths.structuralComponentFolderPath}/Router/Router.js`);
-   window.slice.router = new RouterModule(routes);
+    const RouterModule = window.slice.frameworkClasses?.Router
+       || await window.slice.getClass(`${slice.paths.structuralComponentFolderPath}/Router/Router.js`);
+    window.slice.router = new RouterModule(routes);
    await window.slice.router.init();
 }
 
-await init();
-
-// Initialize bundles if available
-try {
-   const { initializeBundles } = await import('/bundles/bundle.config.js');
-   if (initializeBundles) {
-      await initializeBundles(window.slice);
-      console.log('📦 Bundles initialized automatically');
-   }
-} catch (error) {
-   // Bundles not available, continue with individual component loading
-   console.log('📄 Using individual component loading (no bundles found)');
-}
+ await init();

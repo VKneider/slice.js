@@ -20,12 +20,11 @@ const app = express();
 // Parsear argumentos de línea de comandos
 const args = process.argv.slice(2);
 
-// Siempre usar development mode (ignorar argumentos de production)
-const runMode = 'development';
-const folderDeployed = 'src';
+const runMode = process.env.NODE_ENV === 'production' ? 'production' : 'development';
+const folderDeployed = runMode === 'production' ? 'dist' : 'src';
 
-// Obtener puerto desde sliceConfig.json, con fallback a process.env.PORT
-const PORT = sliceConfig.server?.port || process.env.PORT || 3001;
+// Obtener puerto desde process.env.PORT con fallback a sliceConfig.json
+const PORT = process.env.PORT || sliceConfig.server?.port || 3001;
 
 // ==============================================
 // MIDDLEWARES DE SEGURIDAD (APLICAR PRIMERO)
@@ -91,21 +90,23 @@ app.use((req, res, next) => {
 // ARCHIVOS ESTÁTICOS (DESPUÉS DE SEGURIDAD)
 // ==============================================
 
-// Función de utilidad para verificar si existe el directorio bundles
-function bundlesDirectoryExists() {
-  const bundleDir = path.join(__dirname, `../${folderDeployed}`, 'bundles');
-  return fs.existsSync(bundleDir) && fs.statSync(bundleDir).isDirectory();
+if (runMode === 'production') {
+  app.get('/Slice/Slice.js', (req, res) => {
+    const slicePath = path.join(__dirname, '..', 'node_modules', 'slicejs-web-framework', 'Slice', 'Slice.js');
+    if (fs.existsSync(slicePath)) {
+      res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+      return res.send(fs.readFileSync(slicePath, 'utf8'));
+    }
+    return res.status(404).send('Slice.js not found');
+  });
+
+  app.use('/Slice', (req, res) => res.status(404).send('Not found'));
+  app.use('/Components', (req, res) => res.status(404).send('Not found'));
 }
 
 // Middleware personalizado para archivos de bundles con MIME types correctos
 // ⚠️ DEBE IR ANTES del middleware general para tener prioridad
 app.use('/bundles/', (req, res, next) => {
-  // Verificar si existe el directorio bundles
-  if (!bundlesDirectoryExists()) {
-    console.log(`ℹ️ Bundles directory does not exist, skipping bundle processing`);
-    return next(); // Continuar con el siguiente middleware
-  }
-
   // Solo procesar archivos .js
   if (req.path.endsWith('.js')) {
     const filePath = path.join(__dirname, `../${folderDeployed}`, 'bundles', req.path);
@@ -128,16 +129,6 @@ app.use('/bundles/', (req, res, next) => {
       }
     } else {
       console.log(`❌ Bundle file not found: ${filePath}`);
-      // Listar archivos disponibles para debugging
-      try {
-        const bundleDir = path.join(__dirname, `../${folderDeployed}`, 'bundles');
-        if (fs.existsSync(bundleDir)) {
-          const files = fs.readdirSync(bundleDir);
-          console.log(`📁 Available files in bundles: ${files.join(', ')}`);
-        }
-      } catch (e) {
-        console.log(`❌ Could not list bundle directory: ${e.message}`);
-      }
       return res.status(404).send('Bundle file not found');
     }
   }
@@ -146,20 +137,57 @@ app.use('/bundles/', (req, res, next) => {
   next();
 });
 
-// Servir otros archivos de bundles (CSS, etc.) con el middleware estático normal
-// Solo si existe el directorio bundles
-if (bundlesDirectoryExists()) {
-  app.use('/bundles/', express.static(path.join(__dirname, `../${folderDeployed}`, 'bundles')));
-  console.log(`📦 Bundles directory found, serving static files`);
-} else {
-  console.log(`ℹ️ Bundles directory not found, skipping static bundle serving`);
+// Servir otros archivos de bundles (JSON, CSS, etc.) con el middleware estático normal
+app.use('/bundles/', express.static(path.join(__dirname, `../${folderDeployed}`, 'bundles')));
+console.log(`📦 Serving bundles from /${folderDeployed}/bundles`);
+
+// Servir framework Slice.js (solo development)
+if (runMode === 'development') {
+  app.use('/Slice/', express.static(path.join(__dirname, '..', 'node_modules', 'slicejs-web-framework', 'Slice')));
 }
 
-// Servir framework Slice.js
-app.use('/Slice/', express.static(path.join(__dirname, '..', 'node_modules', 'slicejs-web-framework', 'Slice')));
+// Servir archivos estáticos del proyecto con allowlist
+const publicFolders = Array.isArray(sliceConfig.publicFolders) ? sliceConfig.publicFolders : [];
+const normalizedPublicFolders = publicFolders
+  .filter((entry) => typeof entry === 'string')
+  .map((entry) => entry.trim())
+  .filter((entry) => entry.length > 0)
+  .map((entry) => (entry.startsWith('/') ? entry : `/${entry}`));
 
-// Servir archivos estáticos del proyecto
-app.use(express.static(path.join(__dirname, `../${folderDeployed}`)));
+if (runMode === 'development') {
+  app.use(express.static(path.join(__dirname, `../${folderDeployed}`)));
+} else {
+  app.use('/App', express.static(path.join(__dirname, `../${folderDeployed}`, 'App')));
+  app.get('/manifest.json', (req, res) => {
+    const manifestPath = path.join(__dirname, `../${folderDeployed}`, 'manifest.json');
+    if (fs.existsSync(manifestPath)) {
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      return res.send(fs.readFileSync(manifestPath, 'utf8'));
+    }
+    return res.status(404).send('manifest.json not found');
+  });
+  app.get('/service-worker.js', (req, res) => {
+    const workerPath = path.join(__dirname, `../${folderDeployed}`, 'service-worker.js');
+    if (fs.existsSync(workerPath)) {
+      res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+      return res.send(fs.readFileSync(workerPath, 'utf8'));
+    }
+    return res.status(404).send('service-worker.js not found');
+  });
+  app.get('/routes.js', (req, res) => {
+    const routesPath = path.join(__dirname, `../${folderDeployed}`, 'routes.js');
+    if (fs.existsSync(routesPath)) {
+      res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+      return res.send(fs.readFileSync(routesPath, 'utf8'));
+    }
+    return res.status(404).send('routes.js not found');
+  });
+  for (const folder of normalizedPublicFolders) {
+    app.use(folder, express.static(path.join(__dirname, `../${folderDeployed}`, folder)));
+  }
+  app.use('/bundles/', express.static(path.join(__dirname, `../${folderDeployed}`, 'bundles')));
+  app.use('/dist/', express.static(path.join(__dirname, '..', 'dist')));
+}
 
 // ==============================================
 // RUTAS DE API

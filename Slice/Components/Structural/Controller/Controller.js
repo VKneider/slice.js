@@ -23,23 +23,21 @@ export default class Controller {
    /**
     * 📦 Initializes bundle system (called automatically when config is loaded)
     */
-   initializeBundles(config = null) {
-      if (config) {
-         this.bundleConfig = config;
+    initializeBundles(config = null) {
+       if (config) {
+          this.bundleConfig = config;
 
-         // Register critical bundle components if available
-         if (config.bundles?.critical) {
-            // The critical bundle should already be loaded, register its components
-            this.loadedBundles.add('critical');
-            // Note: Critical bundle registration is handled by the auto-import
-         }
-         this.criticalBundleLoaded = true;
-      } else {
-         // No bundles available, will use individual component loading
-         this.bundleConfig = null;
-         this.criticalBundleLoaded = false;
-      }
-   }
+          // Register critical bundle components if available
+          if (config.bundles?.critical) {
+            // Critical bundle will be loaded explicitly
+          }
+          this.criticalBundleLoaded = false;
+       } else {
+          // No bundles available, will use individual component loading
+          this.bundleConfig = null;
+          this.criticalBundleLoaded = false;
+       }
+     }
 
    /**
     * 📦 Loads a bundle by name or category
@@ -49,17 +47,23 @@ export default class Controller {
          return; // Already loaded
       }
 
-      try {
-         let bundleInfo = this.bundleConfig?.bundles?.routes?.[bundleName];
+       try {
+         let bundleInfo = null;
 
-         if (!bundleInfo && this.bundleConfig?.bundles?.routes) {
-            const normalizedName = bundleName?.toLowerCase();
-            const matchedKey = Object.keys(this.bundleConfig.bundles.routes).find(
-               (key) => key.toLowerCase() === normalizedName
-            );
-            if (matchedKey) {
-               bundleInfo = this.bundleConfig.bundles.routes[matchedKey];
-            }
+         if (bundleName === 'critical') {
+           bundleInfo = this.bundleConfig?.bundles?.critical;
+         } else {
+           bundleInfo = this.bundleConfig?.bundles?.routes?.[bundleName];
+         }
+
+         if (!bundleInfo && this.bundleConfig?.bundles?.routes && bundleName !== 'critical') {
+           const normalizedName = bundleName?.toLowerCase();
+           const matchedKey = Object.keys(this.bundleConfig.bundles.routes).find(
+              (key) => key.toLowerCase() === normalizedName
+           );
+           if (matchedKey) {
+              bundleInfo = this.bundleConfig.bundles.routes[matchedKey];
+           }
          }
 
          if (!bundleInfo) {
@@ -68,6 +72,12 @@ export default class Controller {
          }
 
          const bundlePath = `/bundles/${bundleInfo.file}`;
+
+         const integrityOk = await this.verifyBundleIntegrity(bundlePath, bundleInfo.integrity);
+         if (!integrityOk) {
+            console.warn(`❌ Integrity check failed for bundle ${bundleName}`);
+            return;
+         }
 
          // Dynamic import of the bundle
          const bundleModule = await import(bundlePath);
@@ -81,7 +91,48 @@ export default class Controller {
       } catch (error) {
          console.warn(`Failed to load bundle ${bundleName}:`, error);
       }
-   }
+    }
+
+    /**
+     * Verifies bundle integrity by comparing sha256 hash.
+     * @param {string} bundlePath
+     * @param {string|null} expectedIntegrity
+     * @returns {Promise<boolean>}
+     */
+    async verifyBundleIntegrity(bundlePath, expectedIntegrity) {
+       if (!expectedIntegrity) {
+          return true;
+       }
+
+       try {
+          const response = await fetch(bundlePath, { cache: 'no-store' });
+          if (!response.ok) {
+             console.warn(`Failed to fetch bundle for integrity check: ${response.status}`);
+             return false;
+          }
+
+          const content = await response.text();
+          const actualIntegrity = await this.hashSha256(content);
+          return actualIntegrity === expectedIntegrity;
+       } catch (error) {
+          console.warn(`Integrity check error for ${bundlePath}:`, error);
+          return false;
+       }
+    }
+
+    /**
+     * Calculates sha256 digest for a string.
+     * @param {string} content
+     * @returns {Promise<string>}
+     */
+    async hashSha256(content) {
+       const encoder = new TextEncoder();
+       const data = encoder.encode(content);
+       const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+       const hashArray = Array.from(new Uint8Array(hashBuffer));
+       const hashHex = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+       return `sha256:${hashHex}`;
+    }
 
    /**
     * 📦 Registers a bundle's components (called automatically by bundle files)
@@ -237,147 +288,98 @@ export default class Controller {
    /**
     * 📦 New bundle registration method (simplified and robust)
     */
-   registerBundle(bundle) {
-      const { components, metadata } = bundle;
+    registerBundle(bundle) {
+       const validation = this.validateBundle(bundle);
+       if (!validation.isValid) {
+          console.warn(`❌ Bundle validation failed: ${validation.error}`);
+          return;
+       }
+
+       const { components, metadata } = bundle;
 
       console.log(`📦 Registering bundle: ${metadata.type} (${metadata.componentCount} components)`);
 
-      // Phase 1: Register all templates and CSS first
-      for (const [componentName, componentData] of Object.entries(components)) {
-         try {
-            if (componentData.html !== undefined && !this.templates.has(componentName)) {
-               const template = document.createElement('template');
-               template.innerHTML = componentData.html || '';
-               this.templates.set(componentName, template);
-            }
+      const entries = Object.entries(components);
+      const chunkSize = 50;
+      let index = 0;
 
-            if (componentData.css !== undefined && !this.requestedStyles.has(componentName)) {
-               if (window.slice && window.slice.stylesManager) {
-                  window.slice.stylesManager.registerComponentStyles(componentName, componentData.css || '');
-                  this.requestedStyles.add(componentName);
-                  console.log(`🎨 CSS registered for: ${componentName}`);
+      const processChunk = () => {
+         const sliceEntries = entries.slice(index, index + chunkSize);
+
+         for (const [componentName, componentData] of sliceEntries) {
+            try {
+               if (componentData.html !== undefined && !this.templates.has(componentName)) {
+                  const template = document.createElement('template');
+                  template.innerHTML = componentData.html || '';
+                  this.templates.set(componentName, template);
                }
-            }
-         } catch (error) {
-            console.warn(`❌ Failed to register assets for ${componentName}:`, error);
-         }
-      }
 
-      // Phase 2: Evaluate all external file dependencies first
-      const processedDeps = new Set();
-      for (const [componentName, componentData] of Object.entries(components)) {
-         if (componentData.externalDependencies) {
-            for (const [depName, depEntry] of Object.entries(componentData.externalDependencies)) {
-               const depKey = depName || '';
-               if (!processedDeps.has(depKey)) {
-                  try {
-                     const depContent = typeof depEntry === 'string' ? depEntry : depEntry.content;
-                     const bindings = typeof depEntry === 'string' ? [] : depEntry.bindings || [];
-
-                     const fileBaseName = depKey
-                        ? depKey
-                             .split('/')
-                             .pop()
-                             .replace(/\.[^.]+$/, '')
-                        : '';
-                     const dataName = fileBaseName ? `${fileBaseName}Data` : '';
-                     const exportPrefix = dataName ? `window.${dataName} = ` : '';
-
-                     // Process ES6 exports to make the code evaluable
-                     let processedContent = depContent
-                        // Convert named exports: export const varName = ... → window.varName = ...
-                        .replace(/export\s+const\s+(\w+)\s*=\s*/g, 'window.$1 = ')
-                        .replace(/export\s+let\s+(\w+)\s*=\s*/g, 'window.$1 = ')
-                        .replace(/export\s+function\s+(\w+)/g, 'window.$1 = function')
-                        .replace(/export\s+default\s+/g, 'window.defaultExport = ')
-                        // Promote default export to <file>Data for data modules
-                        .replace(/window\.defaultExport\s*=\s*/g, exportPrefix || 'window.defaultExport = ')
-                        // Handle export { var1, var2 } statements
-                        .replace(/export\s*{\s*([^}]+)\s*}/g, (match, exportsStr) => {
-                           const exports = exportsStr.split(',').map((exp) => exp.trim().split(' as ')[0].trim());
-                           return exports.map((varName) => `window.${varName} = ${varName};`).join('\n');
-                        })
-                        // Remove any remaining export keywords
-                        .replace(/^\s*export\s+/gm, '');
-
-                     // Evaluate the processed content
-                     new Function('slice', 'customElements', 'window', 'document', processedContent)(
-                        window.slice,
-                        window.customElements,
-                        window,
-                        window.document
-                     );
-
-                     // Apply import bindings to map local identifiers to globals
-                     for (const binding of bindings) {
-                        if (!binding?.localName) continue;
-
-                        if (binding.type === 'default') {
-                           if (!window[binding.localName]) {
-                              const fallbackValue =
-                                 dataName && window[dataName] !== undefined ? window[dataName] : window.defaultExport;
-                              if (fallbackValue !== undefined) {
-                                 window[binding.localName] = fallbackValue;
-                              }
-                           }
-                        }
-
-                        if (binding.type === 'named') {
-                           if (!window[binding.localName] && window[binding.importedName] !== undefined) {
-                              window[binding.localName] = window[binding.importedName];
-                           }
-                        }
-
-                        if (binding.type === 'namespace' && !window[binding.localName]) {
-                           const namespace = {};
-                           Object.keys(window).forEach((key) => {
-                              namespace[key] = window[key];
-                           });
-                           window[binding.localName] = namespace;
-                        }
-                     }
-
-                     processedDeps.add(depKey);
-                     console.log(`📄 External dependency loaded: ${depName}`);
-                  } catch (depError) {
-                     console.warn(`⚠️ Failed to load external dependency ${depName}:`, depError);
-                     const preview = typeof depEntry === 'string' ? depEntry : depEntry.content;
-                     console.warn('Original content preview:', preview.substring(0, 200));
+               if (componentData.css !== undefined && !this.requestedStyles.has(componentName)) {
+                  if (window.slice && window.slice.stylesManager) {
+                     window.slice.stylesManager.registerComponentStyles(componentName, componentData.css || '');
+                     this.requestedStyles.add(componentName);
                   }
                }
-            }
-         }
-      }
 
-      // Phase 3: Evaluate all component classes (external dependencies are now available)
-      for (const [componentName, componentData] of Object.entries(components)) {
-         if (componentData.js && !this.classes.has(componentName)) {
-            try {
-               // Simple evaluation
-               const componentClass = new Function(
-                  'slice',
-                  'customElements',
-                  'window',
-                  'document',
-                  `
-                  ${componentData.js}
-                  return ${componentName};
-               `
-               )(window.slice, window.customElements, window, window.document);
-
-               if (componentClass) {
-                  this.classes.set(componentName, componentClass);
-                  console.log(`📝 Class registered for: ${componentName}`);
+               if (componentData.class && !this.classes.has(componentName)) {
+                  const registeredName = componentData.isFramework
+                     ? `Framework/Structural/${componentName}`
+                     : componentName;
+                  this.classes.set(registeredName, componentData.class);
                }
             } catch (error) {
-               console.warn(`❌ Failed to evaluate class for ${componentName}:`, error);
-               // Continue with other components instead of failing completely
+               console.warn(`❌ Failed to register component ${componentName}:`, error);
             }
          }
-      }
 
-      console.log(`✅ Bundle registration completed: ${metadata.componentCount} components processed`);
-   }
+         index += chunkSize;
+         if (index < entries.length) {
+            if (typeof requestIdleCallback === 'function') {
+               requestIdleCallback(processChunk);
+            } else {
+               setTimeout(processChunk, 0);
+            }
+         }
+      };
+
+      processChunk();
+
+       console.log(`✅ Bundle registration completed: ${metadata.componentCount} components processed`);
+    }
+
+    /**
+     * Validates bundle structure before registering.
+     * @param {object} bundle
+     * @returns {{isValid: boolean, error?: string}}
+     */
+    validateBundle(bundle) {
+       if (!bundle || typeof bundle !== 'object') {
+          return { isValid: false, error: 'Bundle payload is invalid' };
+       }
+
+       if (!bundle.metadata || typeof bundle.metadata !== 'object') {
+          return { isValid: false, error: 'Bundle metadata missing' };
+       }
+
+       if (!bundle.components || typeof bundle.components !== 'object') {
+          return { isValid: false, error: 'Bundle components missing' };
+       }
+
+       if (typeof bundle.metadata.componentCount !== 'number') {
+          return { isValid: false, error: 'Bundle metadata missing componentCount' };
+       }
+
+       if (bundle.metadata.componentCount !== Object.keys(bundle.components).length) {
+          return { isValid: false, error: 'Bundle component count mismatch' };
+       }
+
+       const maxComponents = 5000;
+       if (bundle.metadata.componentCount > maxComponents) {
+          return { isValid: false, error: 'Bundle component count exceeds limit' };
+       }
+
+       return { isValid: true };
+    }
 
    /**
     * 📦 Determines which bundle to load for a component

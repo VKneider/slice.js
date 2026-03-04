@@ -62,7 +62,12 @@
    "router": {
       "defaultRoute": "/"
    },
-   "loading": {
-      "enabled": true
-   }
+  "loading": {
+     "enabled": true
+  },
+  "publicFolders": [
+     "/Themes",
+     "/Styles",
+     "/assets"
+  ]
 }
