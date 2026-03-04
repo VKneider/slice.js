@@ -157,6 +157,13 @@ export default class Slice {
          delete props.sliceId;
 
        const ComponentClass = this.controller.classes.get(componentName);
+       if (componentName === 'Loading') {
+          console.log('🔎 Build component: Loading', {
+             classType: typeof ComponentClass,
+             isFunction: typeof ComponentClass === 'function',
+             classValue: ComponentClass
+          });
+       }
        if (componentName === 'InputSearchDocs' || componentName === 'MainMenu') {
           console.log(`🔎 Build component: ${componentName}`, {
              classType: typeof ComponentClass,
@@ -259,9 +266,9 @@ async function init() {
         await import('/bundles/slice-bundle.framework.js');
         frameworkClasses = window.SLICE_FRAMEWORK_CLASSES || null;
       }
-    } catch (error) {
-      console.warn('Framework bundle not available, falling back to dynamic imports');
-    }
+     } catch (error) {
+       console.warn('Framework bundle not available, falling back to dynamic imports', error);
+     }
 
     if (!frameworkClasses) {
       const imports = await Promise.all([
@@ -290,11 +297,11 @@ async function init() {
           const criticalFile = config?.bundles?.critical?.file;
           if (criticalFile) {
              const criticalModule = await import(`/bundles/${criticalFile}`);
-             if (criticalModule.SLICE_BUNDLE) {
-                window.slice.controller.registerBundle(criticalModule.SLICE_BUNDLE);
-                window.slice.controller.loadedBundles.add('critical');
-                window.slice.controller.criticalBundleLoaded = true;
-             }
+              if (criticalModule.SLICE_BUNDLE) {
+                 await window.slice.controller.registerBundle(criticalModule.SLICE_BUNDLE);
+                 window.slice.controller.loadedBundles.add('critical');
+                 window.slice.controller.criticalBundleLoaded = true;
+              }
           }
 
           const routeBundles = config?.routeBundles || {};
@@ -307,12 +314,12 @@ async function init() {
                 const bundleInfo = config?.bundles?.routes?.[bundleName];
                 if (!bundleInfo?.file) continue;
                 const routeModule = await import(`/bundles/${bundleInfo.file}`);
-                if (routeModule.SLICE_BUNDLE) {
-                   window.slice.controller.registerBundle(routeModule.SLICE_BUNDLE);
-                   window.slice.controller.loadedBundles.add(bundleName);
-                }
-             }
-          };
+                 if (routeModule.SLICE_BUNDLE) {
+                    await window.slice.controller.registerBundle(routeModule.SLICE_BUNDLE);
+                    window.slice.controller.loadedBundles.add(bundleName);
+                 }
+              }
+            };
 
           if (typeof requestIdleCallback === 'function') {
              requestIdleCallback(() => loadRouteBundles());

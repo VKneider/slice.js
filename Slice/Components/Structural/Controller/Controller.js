@@ -327,6 +327,13 @@ export default class Controller {
                       ? `Framework/Structural/${componentName}`
                       : componentName;
                    this.classes.set(registeredName, componentData.class);
+                   if (componentName === 'Loading') {
+                      console.log('🔎 Bundle class registered: Loading', {
+                         registeredName,
+                         type: typeof componentData.class,
+                         isFunction: typeof componentData.class === 'function'
+                      });
+                   }
                    if (componentName === 'InputSearchDocs' || componentName === 'MainMenu') {
                       console.log(`🔎 Bundle class registered: ${componentName}`, {
                          registeredName,
