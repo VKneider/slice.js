@@ -83,9 +83,9 @@ export default class Controller {
          const bundleModule = await import(bundlePath);
 
          // Manually register components from the imported bundle
-         if (bundleModule.SLICE_BUNDLE) {
-            this.registerBundle(bundleModule.SLICE_BUNDLE);
-         }
+          if (bundleModule.SLICE_BUNDLE) {
+             await this.registerBundle(bundleModule.SLICE_BUNDLE);
+          }
 
          this.loadedBundles.add(bundleName);
       } catch (error) {
@@ -288,11 +288,11 @@ export default class Controller {
    /**
     * 📦 New bundle registration method (simplified and robust)
     */
-    registerBundle(bundle) {
+     registerBundle(bundle) {
        const validation = this.validateBundle(bundle);
        if (!validation.isValid) {
           console.warn(`❌ Bundle validation failed: ${validation.error}`);
-          return;
+          return Promise.resolve(false);
        }
 
        const { components, metadata } = bundle;
@@ -303,8 +303,9 @@ export default class Controller {
       const chunkSize = 50;
       let index = 0;
 
-      const processChunk = () => {
-         const sliceEntries = entries.slice(index, index + chunkSize);
+       return new Promise((resolve) => {
+         const processChunk = () => {
+          const sliceEntries = entries.slice(index, index + chunkSize);
 
          for (const [componentName, componentData] of sliceEntries) {
             try {
@@ -321,31 +322,41 @@ export default class Controller {
                   }
                }
 
-               if (componentData.class && !this.classes.has(componentName)) {
-                  const registeredName = componentData.isFramework
-                     ? `Framework/Structural/${componentName}`
-                     : componentName;
-                  this.classes.set(registeredName, componentData.class);
-               }
+                if (componentData.class && !this.classes.has(componentName)) {
+                   const registeredName = componentData.isFramework
+                      ? `Framework/Structural/${componentName}`
+                      : componentName;
+                   this.classes.set(registeredName, componentData.class);
+                   if (componentName === 'InputSearchDocs' || componentName === 'MainMenu') {
+                      console.log(`🔎 Bundle class registered: ${componentName}`, {
+                         registeredName,
+                         type: typeof componentData.class,
+                         isFunction: typeof componentData.class === 'function'
+                      });
+                   }
+                }
             } catch (error) {
                console.warn(`❌ Failed to register component ${componentName}:`, error);
             }
          }
 
          index += chunkSize;
-         if (index < entries.length) {
-            if (typeof requestIdleCallback === 'function') {
-               requestIdleCallback(processChunk);
-            } else {
-               setTimeout(processChunk, 0);
-            }
-         }
-      };
+          if (index < entries.length) {
+             if (typeof requestIdleCallback === 'function') {
+                requestIdleCallback(processChunk);
+             } else {
+                setTimeout(processChunk, 0);
+             }
+             return;
+          }
 
-      processChunk();
+          console.log(`✅ Bundle registration completed: ${metadata.componentCount} components processed`);
+          resolve(true);
+        };
 
-       console.log(`✅ Bundle registration completed: ${metadata.componentCount} components processed`);
-    }
+        processChunk();
+       });
+     }
 
     /**
      * Validates bundle structure before registering.

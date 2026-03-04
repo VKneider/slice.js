@@ -156,8 +156,15 @@ export default class Slice {
          delete props.id;
          delete props.sliceId;
 
-         const ComponentClass = this.controller.classes.get(componentName);
-         const componentInstance = new ComponentClass(props);
+       const ComponentClass = this.controller.classes.get(componentName);
+       if (componentName === 'InputSearchDocs' || componentName === 'MainMenu') {
+          console.log(`🔎 Build component: ${componentName}`, {
+             classType: typeof ComponentClass,
+             isFunction: typeof ComponentClass === 'function',
+             classValue: ComponentClass
+          });
+       }
+       const componentInstance = new ComponentClass(props);
 
          if (componentIds.id && isVisual) componentInstance.id = componentIds.id;
          if (componentIds.sliceId) componentInstance.sliceId = componentIds.sliceId;
