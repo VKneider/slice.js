@@ -325,12 +325,13 @@ async function init() {
     window.slice = new Slice(sliceConfig, frameworkClasses);
     window.slice._mode = resolvedMode;
 
-    // Initialize bundles before building components
-    // bundleConfigJson was already fetched above (step 2); reuse it.
-    try {
-       if (bundleConfigJson) {
-          window.slice.controller.bundleConfig = bundleConfigJson;
-       }
+     // Initialize bundles before building components.
+     // Only in production — dev mode loads each component individually from source.
+     // bundleConfigJson was already fetched above (step 2); reuse it.
+     try {
+        if (resolvedMode === 'production' && bundleConfigJson) {
+           window.slice.controller.bundleConfig = bundleConfigJson;
+        }
 
        if (window.slice.controller.bundleConfig) {
           const config = window.slice.controller.bundleConfig;

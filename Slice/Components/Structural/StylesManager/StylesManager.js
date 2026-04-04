@@ -19,7 +19,8 @@ export default class StylesManager {
       }
 
        if (slice.themeConfig.enabled) {
-          const ThemeManagerClass = slice.frameworkClasses?.ThemeManager;
+          const ThemeManagerClass = slice.frameworkClasses?.ThemeManager
+             || await slice.getClass(`${slice.paths.structuralComponentFolderPath}/StylesManager/ThemeManager/ThemeManager.js`);
           if (!ThemeManagerClass) {
              throw new Error('ThemeManager not available');
           }
