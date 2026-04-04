@@ -283,8 +283,11 @@ async function init() {
      // bundle is downloading and executing. fetch() downloads bytes without evaluating
      // the module, so the auto-registration block runs safely later when window.slice
      // already exists. Errors are silently ignored — import() will retry if needed.
-     if (resolvedMode === 'production' && bundleConfigJson?.bundles?.critical?.file) {
-       fetch(`/bundles/${bundleConfigJson.bundles.critical.file}`).catch(() => {});
+     const criticalBundleUrl = (resolvedMode === 'production' && bundleConfigJson?.bundles?.critical?.file)
+       ? `/bundles/${bundleConfigJson.bundles.critical.file}`
+       : null;
+     if (criticalBundleUrl) {
+       fetch(criticalBundleUrl).catch(() => {});
      }
 
      // 4. Load framework classes.
@@ -334,12 +337,13 @@ async function init() {
        if (window.slice.controller.bundleConfig) {
           const config = window.slice.controller.bundleConfig;
 
-          const criticalFile = config?.bundles?.critical?.file;
-           if (criticalFile) {
-              // Bundle auto-registers itself on import via its own registration block.
-              // The block pushes its registerBundle() Promise to window.__slicePendingRegistrations
-              // so we can await full chunk processing before continuing to build('Loading').
-              await import(`/bundles/${criticalFile}`);
+           const criticalFile = config?.bundles?.critical?.file;
+            if (criticalFile) {
+               // Bundle auto-registers itself on import via its own registration block.
+               // The block pushes its registerBundle() Promise to window.__slicePendingRegistrations
+               // so we can await full chunk processing before continuing to build('Loading').
+               // criticalBundleUrl was pre-fetched above — import() reuses the cached bytes.
+               await import(criticalBundleUrl || `/bundles/${criticalFile}`);
               if (window.__slicePendingRegistrations?.length) {
                  await Promise.all(window.__slicePendingRegistrations);
                  window.__slicePendingRegistrations = [];
