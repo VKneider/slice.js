@@ -254,30 +254,20 @@ async function init() {
       return;
    }
 
-    // 1. Resolve runtime mode via dev server endpoint.
-    // In production the endpoint returns 404 (not registered), so catch/non-ok is expected.
-    let envMode = null;
-    try {
-      const envRes = await fetch('/slice-env.json', { cache: 'no-store' });
-      if (envRes.ok) {
-        const env = await envRes.json();
-        envMode = env.mode; // 'development' | 'production'
-      }
-    } catch (error) {
-      // Endpoint not available — normal in production
-    }
-
-    // 2. Fetch bundle config (existing logic, unchanged)
+    // 1+2. Fetch mode endpoint and bundle config in parallel — both are independent.
+    // In production, /slice-env.json returns 404 (catch is expected and normal).
+    // bundleConfigJson.production serves as a mode fallback when env endpoint is absent.
     let frameworkClasses = null;
-    let bundleConfigJson = null;
-    try {
-      const response = await fetch('/bundles/bundle.config.json', { cache: 'no-store' });
-      if (response.ok) {
-        bundleConfigJson = await response.json();
-      }
-    } catch (error) {
-      // ignore
-    }
+    const [envResult, configResult] = await Promise.all([
+      fetch('/slice-env.json', { cache: 'no-store' })
+        .then(r => r.ok ? r.json() : null)
+        .catch(() => null),
+      fetch('/bundles/bundle.config.json', { cache: 'no-store' })
+        .then(r => r.ok ? r.json() : null)
+        .catch(() => null)
+    ]);
+    const envMode = envResult?.mode ?? null;
+    const bundleConfigJson = configResult;
 
     // 3. Determine canonical mode: env endpoint takes precedence, then bundle config
     let resolvedMode;
