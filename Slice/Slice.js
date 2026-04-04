@@ -343,7 +343,7 @@ async function init() {
                // The block pushes its registerBundle() Promise to window.__slicePendingRegistrations
                // so we can await full chunk processing before continuing to build('Loading').
                // criticalBundleUrl was pre-fetched above — import() reuses the cached bytes.
-               await import(criticalBundleUrl || `/bundles/${criticalFile}`);
+               await import(criticalBundleUrl);
               if (window.__slicePendingRegistrations?.length) {
                  await Promise.all(window.__slicePendingRegistrations);
                  window.__slicePendingRegistrations = [];
