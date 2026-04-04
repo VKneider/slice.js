@@ -326,11 +326,10 @@ async function init() {
     window.slice._mode = resolvedMode;
 
     // Initialize bundles before building components
+    // bundleConfigJson was already fetched above (step 2); reuse it.
     try {
-       const configResponse = await fetch('/bundles/bundle.config.json', { cache: 'no-store' });
-       if (configResponse.ok) {
-          const config = await configResponse.json();
-          window.slice.controller.bundleConfig = config;
+       if (bundleConfigJson) {
+          window.slice.controller.bundleConfig = bundleConfigJson;
        }
 
        if (window.slice.controller.bundleConfig) {
