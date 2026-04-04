@@ -21,6 +21,10 @@ export default class Slice {
       this.loadingConfig = sliceConfig.loading;
       this.eventsConfig = sliceConfig.events;
 
+      // Default to production until init() resolves the actual mode.
+      // Safe to call isProduction() before init() completes.
+      this._mode = 'production';
+
       // 📦 Bundle system is initialized automatically via import in index.js
    }
 
@@ -39,11 +43,12 @@ export default class Slice {
    }
 
    /**
-    * Flag for production behavior (override in builds).
+    * Returns true when running in production mode.
+    * Reliable after init() has completed.
     * @returns {boolean}
     */
    isProduction() {
-      return true;
+      return this._mode === 'production';
    }
 
    /**
@@ -233,7 +238,6 @@ async function loadConfig() {
       const response = await fetch('/sliceConfig.json'); // 🔹 Express lo sirve desde `src/`
       if (!response.ok) throw new Error('Error loading sliceConfig.json');
       const json = await response.json();
-      console.log(json);
       return json;
    } catch (error) {
       console.error(`Error loading config file: ${error.message}`);
@@ -250,6 +254,20 @@ async function init() {
       return;
    }
 
+    // 1. Resolve runtime mode via dev server endpoint.
+    // In production the endpoint returns 404 (not registered), so catch/non-ok is expected.
+    let envMode = null;
+    try {
+      const envRes = await fetch('/slice-env.json', { cache: 'no-store' });
+      if (envRes.ok) {
+        const env = await envRes.json();
+        envMode = env.mode; // 'development' | 'production'
+      }
+    } catch (error) {
+      // Endpoint not available — normal in production
+    }
+
+    // 2. Fetch bundle config (existing logic, unchanged)
     let frameworkClasses = null;
     let bundleConfigJson = null;
     try {
@@ -261,27 +279,51 @@ async function init() {
       // ignore
     }
 
-    try {
-      if (bundleConfigJson?.production) {
-        await import('/bundles/slice-bundle.framework.js');
-        frameworkClasses = window.SLICE_FRAMEWORK_CLASSES || null;
-      }
-     } catch (error) {
-       console.warn('Framework bundle not available, falling back to dynamic imports', error);
-     }
-
-    if (!frameworkClasses) {
-      const imports = await Promise.all([
-        import('./Components/Structural/Controller/Controller.js'),
-        import('./Components/Structural/StylesManager/StylesManager.js')
-      ]);
-      frameworkClasses = {
-        Controller: imports[0].default,
-        StylesManager: imports[1].default
-      };
+    // 3. Determine canonical mode: env endpoint takes precedence, then bundle config
+    let resolvedMode;
+    if (envMode) {
+      resolvedMode = envMode;
+    } else if (bundleConfigJson?.production) {
+      resolvedMode = 'production';
+    } else {
+      resolvedMode = 'development';
     }
 
+     // 4. Load framework classes.
+     // In production the bundler generates slice-bundle.framework.js which
+     // sets window.SLICE_FRAMEWORK_CLASSES. Try that first; fall back to
+     // individual imports for dev mode (where /Slice/ is served directly).
+     if (bundleConfigJson?.bundles?.framework?.file) {
+       try {
+         await import(`/bundles/${bundleConfigJson.bundles.framework.file}`);
+         if (window.SLICE_FRAMEWORK_CLASSES) {
+           frameworkClasses = window.SLICE_FRAMEWORK_CLASSES;
+         }
+        } catch (e) {
+          // framework bundle failed — fall through to individual imports
+          console.error('[Slice.js] framework bundle import failed:', e?.message || e);
+        }
+     }
+
+     if (!frameworkClasses) {
+       try {
+         const imports = await Promise.all([
+           import('./Components/Structural/Controller/Controller.js'),
+           import('./Components/Structural/StylesManager/StylesManager.js')
+         ]);
+         frameworkClasses = {
+           Controller: imports[0].default,
+           StylesManager: imports[1].default
+         };
+       } catch (e) {
+         console.error('[Slice.js] individual imports fallback failed:', e?.message || e);
+         throw e;
+       }
+     }
+
+    // 5. Create Slice instance and set resolved mode
     window.slice = new Slice(sliceConfig, frameworkClasses);
+    window.slice._mode = resolvedMode;
 
     // Initialize bundles before building components
     try {

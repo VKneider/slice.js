@@ -87,6 +87,23 @@ app.use((req, res, next) => {
 });
 
 // ==============================================
+// RUNTIME MODE ENDPOINT
+// ==============================================
+
+// Expone el modo actual al framework Slice.js en runtime.
+// Solo se registra en development — 404 en production indica modo producción.
+if (runMode === 'development') {
+  app.get('/slice-env.json', (req, res) => {
+    res.json({ mode: 'development' });
+  });
+} else {
+  // Explicit 404 so the SPA fallback doesn't return 200 for this dev-only endpoint.
+  app.get('/slice-env.json', (req, res) => {
+    res.status(404).json({ error: 'Not found' });
+  });
+}
+
+// ==============================================
 // ARCHIVOS ESTÁTICOS (DESPUÉS DE SEGURIDAD)
 // ==============================================
 
