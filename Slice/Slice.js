@@ -291,9 +291,9 @@ async function init() {
 
      // 4. Load framework classes.
      // In production the bundler generates slice-bundle.framework.js which
-     // sets window.SLICE_FRAMEWORK_CLASSES. Try that first; fall back to
-     // individual imports for dev mode (where /Slice/ is served directly).
-     if (bundleConfigJson?.bundles?.framework?.file) {
+     // sets window.SLICE_FRAMEWORK_CLASSES. In dev mode always use individual
+     // imports so the live /Slice/ source is served directly without bundles.
+     if (resolvedMode === 'production' && bundleConfigJson?.bundles?.framework?.file) {
        try {
          await import(`/bundles/${bundleConfigJson.bundles.framework.file}`);
          if (window.SLICE_FRAMEWORK_CLASSES) {
