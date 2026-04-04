@@ -2,15 +2,20 @@ export default class HomePage extends HTMLElement {
    constructor(props) {
       super();
       slice.attachTemplate(this);
-      
-      this.$examplesContainer = this.querySelector('.examples-container');
-      
       slice.controller.setComponentProps(this, props);
       this.debuggerProps = [];
    }
 
    async init() {
-      // Crear la barra de navegación
+      await Promise.all([
+         this._buildNavbar(),
+         this._buildHeroCta(),
+         this._buildFeatures(),
+         this._buildShowcase(),
+      ]);
+   }
+
+   async _buildNavbar() {
       const navbar = await slice.build('Navbar', {
          position: 'fixed',
          logo: {
@@ -20,176 +25,185 @@ export default class HomePage extends HTMLElement {
          items: [
             { text: 'Home', path: '/' },
             { text: 'Playground', path: '/Playground' },
-
          ],
          buttons: [
             {
                value: 'Change Theme',
                onClickCallback: async () => {
-                  const currentTheme = slice.stylesManager.themeManager.currentTheme;
-                  if (currentTheme === 'Slice') {
-                     await slice.setTheme('Light');
-                  } else if (currentTheme === 'Light') {
-                     await slice.setTheme('Dark');
-                  } else {
-                     await slice.setTheme('Slice');
-                  }
+                  const current = slice.stylesManager.themeManager.currentTheme;
+                  const next = current === 'Slice' ? 'Light'
+                             : current === 'Light' ? 'Dark'
+                             : 'Slice';
+                  await slice.setTheme(next);
                },
             },
          ],
       });
-      
-      // Crear botones para la sección de llamada a la acción
-      const docsButton = await slice.build('Button', {
-         value: 'Documentation',
-         onClickCallback: () => //redirect to https://slice-js-docs.vercel.app/Documentation
-         window.open('https://slice-js-docs.vercel.app/Documentation', '_blank'),
-         customColor: {
-            button: 'var(--primary-color)',
-            label: 'var(--primary-color-contrast)'
-         }
-      });
-      
-      const componentsButton = await slice.build('Button', {
-         value: 'Components Library',
-         onClickCallback: () => window.open('https://slice-js-docs.vercel.app/Documentation/Visual', '_blank'),
-         customColor: {
-            button: 'var(--secondary-color)',
-            label: 'var(--secondary-color-contrast)'
-         }
-      });
-      
-      // Añadir botones a la sección CTA
-      this.querySelector('.cta-buttons').appendChild(docsButton);
-      this.querySelector('.cta-buttons').appendChild(componentsButton);
-      
-      // Crear features section con un enfoque diferente (sin usar Cards)
-      await this.createFeatures();
-      
-      // Crear ejemplos de componentes
-      await this.createComponentExamples();
-      
-      // Configurar la sección de código de inicio
-      await this.setupGettingStartedSection();
-      
-      // Añadir la barra de navegación al inicio del componente
       this.insertBefore(navbar, this.firstChild);
    }
-   
-   async createFeatures() {
-      // Definir características
+
+   async _buildHeroCta() {
+      const docsBtn = await slice.build('Button', {
+         value: 'Documentation',
+         onClickCallback: () =>
+            window.open('https://slice-js-docs.vercel.app/Documentation', '_blank'),
+         customColor: {
+            button: 'var(--primary-color)',
+            label: 'var(--primary-color-contrast)',
+         },
+      });
+
+      const componentsBtn = await slice.build('Button', {
+         value: 'Components Library',
+         onClickCallback: () =>
+            window.open('https://slice-js-docs.vercel.app/Documentation/Visual', '_blank'),
+         customColor: {
+            button: 'var(--secondary-background-color)',
+            label: 'var(--primary-color)',
+         },
+      });
+
+      const cta = this.querySelector('.hero-cta');
+      cta.appendChild(docsBtn);
+      cta.appendChild(componentsBtn);
+   }
+
+   async _buildFeatures() {
       const features = [
          {
             title: 'Component-Based',
-            description: 'Build your app using modular, reusable components following web standards.'
+            description: 'Build your app using modular, reusable components following web standards.',
          },
          {
-            title: 'Zero Dependencies',
-            description: 'Built with vanilla JavaScript. No external libraries required.'
+            title: 'Themeable',
+            description: 'Swap themes at runtime. Ships with Slice, Light, Dark and more.',
          },
          {
-            title: 'Easy Routing',
-            description: 'Simple and powerful routing system for single page applications.'
+            title: 'Lightweight',
+            description: 'No heavy runtime. Just vanilla JavaScript and web standards.',
          },
          {
-            title: 'Theme System',
-            description: 'Built-in theme support with easy customization through CSS variables.'
+            title: 'Built-in Router',
+            description: 'Client-side routing with MultiRoute — no extra libraries needed.',
          },
          {
-            title: 'Developer Tools',
-            description: 'Integrated debugging and logging for faster development.'
+            title: 'CLI Tools',
+            description: 'Scaffold projects, create components and build bundles from the command line.',
          },
          {
-            title: 'Performance Focused',
-            description: 'Lightweight and optimized for fast loading and execution.'
-         }
+            title: 'Services',
+            description: 'Built-in FetchManager, LocalStorage and IndexedDB integrations.',
+         },
       ];
-      
-      const featureGrid = this.querySelector('.feature-grid');
-      
-      // Crear y añadir cada feature como un elemento HTML simple
-      for (const feature of features) {
-         const featureElement = document.createElement('div');
-         featureElement.classList.add('feature-item');
-         
-         const featureTitle = document.createElement('h3');
-         featureTitle.textContent = feature.title;
-         featureTitle.classList.add('feature-title');
-         
-         const featureDescription = document.createElement('p');
-         featureDescription.textContent = feature.description;
-         featureDescription.classList.add('feature-description');
-         
-         featureElement.appendChild(featureTitle);
-         featureElement.appendChild(featureDescription);
-         
-         featureGrid.appendChild(featureElement);
+
+      const grid = this.querySelector('.feature-grid');
+      for (const { title, description } of features) {
+         const item = document.createElement('div');
+         item.classList.add('feature-item');
+
+         const h3 = document.createElement('h3');
+         h3.classList.add('feature-title');
+         h3.textContent = title;
+
+         const p = document.createElement('p');
+         p.classList.add('feature-description');
+         p.textContent = description;
+
+         item.appendChild(h3);
+         item.appendChild(p);
+         grid.appendChild(item);
       }
    }
-   
-   async createComponentExamples() {
-      // Crear ejemplos para demostrar componentes
-      const inputExample = await slice.build('Input', {
-         placeholder: 'Try typing here...',
-         type: 'text'
+
+   async _buildShowcase() {
+      const grid = this.querySelector('.showcase-grid');
+
+      // Helper: wrap built components in a labeled card and append to grid
+      const addCard = (label, ...components) => {
+         const card = document.createElement('div');
+         card.classList.add('comp-card');
+
+         const labelEl = document.createElement('p');
+         labelEl.classList.add('comp-label');
+         labelEl.textContent = label;
+
+         const demo = document.createElement('div');
+         demo.classList.add('comp-demo');
+         components.forEach(c => demo.appendChild(c));
+
+         card.appendChild(labelEl);
+         card.appendChild(demo);
+         grid.appendChild(card);
+      };
+
+      // Button — primary + secondary variants
+      const [btnPrimary, btnSecondary] = await Promise.all([
+         slice.build('Button', {
+            value: 'Primary',
+            onClickCallback: () => {},
+            customColor: {
+               button: 'var(--primary-color)',
+               label: 'var(--primary-color-contrast)',
+            },
+         }),
+         slice.build('Button', {
+            value: 'Secondary',
+            onClickCallback: () => {},
+            customColor: {
+               button: 'var(--secondary-background-color)',
+               label: 'var(--primary-color)',
+            },
+         }),
+      ]);
+      addCard('Button', btnPrimary, btnSecondary);
+
+      // Input
+      const input = await slice.build('Input', {
+         placeholder: 'Type something...',
+         type: 'text',
       });
-      
-      const switchExample = await slice.build('Switch', {
+      addCard('Input', input);
+
+      // Switch
+      const sw = await slice.build('Switch', {
          label: 'Toggle me',
-         checked: true
+         checked: true,
       });
-      
-      const checkboxExample = await slice.build('Checkbox', {
-         label: 'Check me',
-         labelPlacement: 'right'
-      });
-      
-      const detailsExample = await slice.build('Details', {
-         title: 'Click to expand',
-         text: 'This is a collapsible details component that can contain any content.'
-      });
-      
-      // Crear sección para cada ejemplo
-      const exampleSections = [
-         { title: 'Input Component', component: inputExample },
-         { title: 'Switch Component', component: switchExample },
-         { title: 'Checkbox Component', component: checkboxExample },
-         { title: 'Details Component', component: detailsExample }
+      addCard('Switch', sw);
+
+      // Select — theme chooser
+      const themeOptions = [
+         { name: 'Slice Theme' },
+         { name: 'Light Theme' },
+         { name: 'Dark Theme' },
+         { name: 'Purple Theme' },
       ];
-      
-      // Añadir cada ejemplo a la sección de ejemplos
-      for (const section of exampleSections) {
-         const container = document.createElement('div');
-         container.classList.add('example-item');
-         
-         const title = document.createElement('h3');
-         title.textContent = section.title;
-         
-         container.appendChild(title);
-         container.appendChild(section.component);
-         
-         this.$examplesContainer.appendChild(container);
-      }
-   }
-   
-   async setupGettingStartedSection() {
-      // Opcionalmente podríamos mejorar esta sección usando el CodeVisualizer component
-      // en lugar del código HTML estático en el template
-      const codeVisualizer = await slice.build('CodeVisualizer', {
-         value: `// Initialize a new Slice.js project
-npm run slice:init
-
-// Create a new component
-npm run slice:create
-
-// Start your application
-npm run slice:start`,
-         language: 'bash'
+      const select = await slice.build('Select', {
+         label: 'Pick a theme',
+         options: themeOptions,
+         visibleProp: 'name',
+         onOptionSelect: async (option) => {
+            if (!option) return;
+            const themeName = option.name.replace(' Theme', '');
+            await slice.setTheme(themeName);
+         },
       });
-      
-      const codeSample = this.querySelector('.code-sample');
-      codeSample.innerHTML = ''; // Clear the static code sample
-      codeSample.appendChild(codeVisualizer);
+      addCard('Select', select);
+
+      // Loading — triggered by a demo button (Loading appends to document.body)
+      const loading = await slice.build('Loading', {});
+      const demoBtn = await slice.build('Button', {
+         value: 'Demo Loading',
+         onClickCallback: () => {
+            loading.start();
+            setTimeout(() => loading.stop(), 1500);
+         },
+         customColor: {
+            button: 'var(--primary-color)',
+            label: 'var(--primary-color-contrast)',
+         },
+      });
+      addCard('Loading', demoBtn);
    }
 }
 
