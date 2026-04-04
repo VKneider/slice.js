@@ -295,9 +295,18 @@ export default class Controller {
           return Promise.resolve(false);
        }
 
-       const { components, metadata } = bundle;
+     // Set tracking flags synchronously before any async work, so callers that
+     // await import() see the flags set immediately when the Promise resolves.
+     const { components, metadata } = bundle;
+     const bundleKey = metadata?.bundleKey;
+     if (bundleKey) {
+        this.loadedBundles.add(bundleKey);
+        if (metadata?.type === 'critical') {
+           this.criticalBundleLoaded = true;
+        }
+     }
 
-      console.log(`📦 Registering bundle: ${metadata.type} (${metadata.componentCount} components)`);
+    console.log(`📦 Registering bundle: ${metadata.type} (${metadata.componentCount} components)`);
 
       const entries = Object.entries(components);
       const chunkSize = 50;
