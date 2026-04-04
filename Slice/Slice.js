@@ -337,11 +337,16 @@ async function init() {
           const config = window.slice.controller.bundleConfig;
 
           const criticalFile = config?.bundles?.critical?.file;
-          if (criticalFile) {
-             // Bundle auto-registers itself on import via its own registration block.
-             // No explicit registerBundle() call needed — flags are set inside registerBundle().
-             await import(`/bundles/${criticalFile}`);
-          }
+           if (criticalFile) {
+              // Bundle auto-registers itself on import via its own registration block.
+              // The block pushes its registerBundle() Promise to window.__slicePendingRegistrations
+              // so we can await full chunk processing before continuing to build('Loading').
+              await import(`/bundles/${criticalFile}`);
+              if (window.__slicePendingRegistrations?.length) {
+                 await Promise.all(window.__slicePendingRegistrations);
+                 window.__slicePendingRegistrations = [];
+              }
+           }
 
           const routeBundles = config?.routeBundles || {};
           const initialPath = window.location.pathname || '/';
