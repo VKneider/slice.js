@@ -337,12 +337,9 @@ async function init() {
 
           const criticalFile = config?.bundles?.critical?.file;
           if (criticalFile) {
-             const criticalModule = await import(`/bundles/${criticalFile}`);
-              if (criticalModule.SLICE_BUNDLE) {
-                 await window.slice.controller.registerBundle(criticalModule.SLICE_BUNDLE);
-                 window.slice.controller.loadedBundles.add('critical');
-                 window.slice.controller.criticalBundleLoaded = true;
-              }
+             // Bundle auto-registers itself on import via its own registration block.
+             // No explicit registerBundle() call needed — flags are set inside registerBundle().
+             await import(`/bundles/${criticalFile}`);
           }
 
           const routeBundles = config?.routeBundles || {};
@@ -354,13 +351,10 @@ async function init() {
                 if (bundleName === 'critical') continue;
                 const bundleInfo = config?.bundles?.routes?.[bundleName];
                 if (!bundleInfo?.file) continue;
-                const routeModule = await import(`/bundles/${bundleInfo.file}`);
-                 if (routeModule.SLICE_BUNDLE) {
-                    await window.slice.controller.registerBundle(routeModule.SLICE_BUNDLE);
-                    window.slice.controller.loadedBundles.add(bundleName);
-                 }
-              }
-            };
+                // Bundle auto-registers itself on import.
+                await import(`/bundles/${bundleInfo.file}`);
+             }
+          };
 
           if (typeof requestIdleCallback === 'function') {
              requestIdleCallback(() => loadRouteBundles());
