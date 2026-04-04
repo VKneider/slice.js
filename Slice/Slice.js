@@ -279,6 +279,14 @@ async function init() {
       resolvedMode = 'development';
     }
 
+     // Pre-fetch critical bundle to warm the browser HTTP cache while the framework
+     // bundle is downloading and executing. fetch() downloads bytes without evaluating
+     // the module, so the auto-registration block runs safely later when window.slice
+     // already exists. Errors are silently ignored — import() will retry if needed.
+     if (resolvedMode === 'production' && bundleConfigJson?.bundles?.critical?.file) {
+       fetch(`/bundles/${bundleConfigJson.bundles.critical.file}`).catch(() => {});
+     }
+
      // 4. Load framework classes.
      // In production the bundler generates slice-bundle.framework.js which
      // sets window.SLICE_FRAMEWORK_CLASSES. In dev mode always use individual
