@@ -199,6 +199,14 @@ if (runMode === 'development') {
     }
     return res.status(404).send('routes.js not found');
   });
+  app.get('/sliceConfig.json', (req, res) => {
+    const configPath = path.join(__dirname, `../${folderDeployed}`, 'sliceConfig.json');
+    if (fs.existsSync(configPath)) {
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      return res.send(fs.readFileSync(configPath, 'utf8'));
+    }
+    return res.status(404).send('sliceConfig.json not found');
+  });
   for (const folder of normalizedPublicFolders) {
     app.use(folder, express.static(path.join(__dirname, `../${folderDeployed}`, folder)));
   }
