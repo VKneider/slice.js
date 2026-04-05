@@ -419,34 +419,35 @@ export default class Router {
          slice.loading.start();
       }
 
-      if (existingComponent) {
-         targetElement.innerHTML = '';
-         if (existingComponent.update) {
-            existingComponent.props = { ...existingComponent.props, ...params };
-            await existingComponent.update();
+      try {
+         if (existingComponent) {
+            targetElement.innerHTML = '';
+            if (existingComponent.update) {
+               existingComponent.props = { ...existingComponent.props, ...params };
+               await existingComponent.update();
+            }
+            targetElement.appendChild(existingComponent);
+            await this.renderRoutesInComponent(existingComponent);
+         } else {
+            const component = await slice.build(componentName, {
+               params,
+               sliceId: sliceId,
+            });
+
+            targetElement.innerHTML = '';
+            targetElement.appendChild(component);
+
+            await this.renderRoutesInComponent(component);
          }
-         targetElement.appendChild(existingComponent);
-         await this.renderRoutesInComponent(existingComponent);
-      } else {
-         const component = await slice.build(componentName, {
-            params,
-            sliceId: sliceId,
-         });
 
-         targetElement.innerHTML = '';
-         targetElement.appendChild(component);
-
-         await this.renderRoutesInComponent(component);
+         // Invalidar caché después de cambios importantes en el DOM
+         this.invalidateCache();
+         slice.router.activeRoute = route;
+      } finally {
+         if (slice.loading) {
+            slice.loading.stop();
+         }
       }
-
-      // Invalidar caché después de cambios importantes en el DOM
-      this.invalidateCache();
-
-      if (slice.loading) {
-         slice.loading.stop();
-      }
-
-      slice.router.activeRoute = route;
    }
 
    /**
