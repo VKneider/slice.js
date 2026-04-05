@@ -279,11 +279,7 @@ async function init() {
        resolvedMode = 'development';
      }
 
-      const criticalBundleUrl = (resolvedMode === 'production' && bundleConfigJson?.bundles?.critical?.file)
-        ? `/bundles/${bundleConfigJson.bundles.critical.file}`
-        : null;
-
-     // 4. Load framework classes.
+      // 4. Load framework classes.
      // In production the bundler generates slice-bundle.framework.js which
      // sets window.SLICE_FRAMEWORK_CLASSES. In dev mode always use individual
      // imports so the live /Slice/ source is served directly without bundles.
@@ -330,17 +326,10 @@ async function init() {
        if (window.slice.controller.bundleConfig) {
           const config = window.slice.controller.bundleConfig;
 
-            const criticalFile = config?.bundles?.critical?.file;
-             if (criticalFile && criticalBundleUrl) {
-               // Bundle auto-registers itself on import via its own registration block.
-               // The block pushes its registerBundle() Promise to window.__slicePendingRegistrations
-               // so we can await full chunk processing before continuing to build('Loading').
-               await window.slice.controller.importBundleOnce(criticalBundleUrl);
-               if (window.__slicePendingRegistrations?.length) {
-                  await Promise.all(window.__slicePendingRegistrations);
-                  window.__slicePendingRegistrations = [];
-               }
-            }
+             const criticalFile = config?.bundles?.critical?.file;
+              if (criticalFile) {
+                await window.slice.controller.loadBundle('critical');
+             }
 
           const routeBundles = config?.routeBundles || {};
           const initialPath = window.location.pathname || '/';
@@ -351,10 +340,9 @@ async function init() {
                 if (bundleName === 'critical') continue;
                 const bundleInfo = config?.bundles?.routes?.[bundleName];
                 if (!bundleInfo?.file) continue;
-                // Bundle auto-registers itself on import.
-                await window.slice.controller.importBundleOnce(`/bundles/${bundleInfo.file}`);
-             }
-           };
+                await window.slice.controller.loadBundle(bundleName);
+              }
+            };
 
           if (typeof requestIdleCallback === 'function') {
              requestIdleCallback(() => loadRouteBundles());

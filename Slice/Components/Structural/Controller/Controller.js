@@ -65,6 +65,26 @@ export default class Controller {
    }
 
    /**
+    * Validate Bundling V2 module contract.
+    * Requires named exports: SLICE_BUNDLE_META and registerAll.
+    * @param {any} bundleModule
+    * @param {string} [bundleName]
+    * @returns {{metadata: object, registerAll: Function}}
+    */
+   async validateBundleModule(bundleModule, bundleName = 'unknown') {
+      const metadata = bundleModule?.SLICE_BUNDLE_META;
+      const registerAll = bundleModule?.registerAll;
+
+      if (!metadata || typeof metadata !== 'object' || typeof registerAll !== 'function') {
+         throw new Error(
+            `Bundle "${bundleName}" missing Bundling V2 exports contract: requires SLICE_BUNDLE_META and registerAll`
+         );
+      }
+
+      return { metadata, registerAll };
+   }
+
+   /**
     * 📦 Loads a bundle by name or category
     */
    async loadBundle(bundleName) {
@@ -94,22 +114,25 @@ export default class Controller {
          if (!bundleInfo) {
             console.warn(`Bundle ${bundleName} not found in configuration`);
             return;
-         }
+          }
 
-         const bundlePath = `/bundles/${bundleInfo.file}`;
+          const bundlePath = `/bundles/${bundleInfo.file}`;
 
-         await this.importBundleOnce(bundlePath);
+          const bundleModule = await this.importBundleOnce(bundlePath);
+          const { metadata, registerAll } = await this.validateBundleModule(bundleModule, bundleName);
 
-         if (window.__slicePendingRegistrations?.length) {
-            await Promise.all(window.__slicePendingRegistrations);
-            window.__slicePendingRegistrations = [];
-         }
+          await registerAll(this, slice.stylesManager);
 
-         this.loadedBundles.add(bundleName);
-      } catch (error) {
-         console.warn(`Failed to load bundle ${bundleName}:`, error);
-      }
-    }
+          const loadedBundleKey = metadata.bundleKey || bundleName;
+          this.loadedBundles.add(loadedBundleKey);
+
+          if (metadata.type === 'critical' || bundleName === 'critical') {
+             this.criticalBundleLoaded = true;
+          }
+       } catch (error) {
+          console.warn(`Failed to load bundle ${bundleName}:`, error);
+       }
+     }
 
    /**
     * 📦 Registers a bundle's components (called automatically by bundle files)
