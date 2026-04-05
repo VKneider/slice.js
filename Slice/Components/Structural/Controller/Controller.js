@@ -73,12 +73,6 @@ export default class Controller {
 
          const bundlePath = `/bundles/${bundleInfo.file}`;
 
-         const integrityOk = await this.verifyBundleIntegrity(bundlePath, bundleInfo.integrity);
-         if (!integrityOk) {
-            console.warn(`❌ Integrity check failed for bundle ${bundleName}`);
-            return;
-         }
-
          // Dynamic import of the bundle
          const bundleModule = await import(bundlePath);
 
@@ -91,47 +85,6 @@ export default class Controller {
       } catch (error) {
          console.warn(`Failed to load bundle ${bundleName}:`, error);
       }
-    }
-
-    /**
-     * Verifies bundle integrity by comparing sha256 hash.
-     * @param {string} bundlePath
-     * @param {string|null} expectedIntegrity
-     * @returns {Promise<boolean>}
-     */
-    async verifyBundleIntegrity(bundlePath, expectedIntegrity) {
-       if (!expectedIntegrity) {
-          return true;
-       }
-
-       try {
-          const response = await fetch(bundlePath, { cache: 'no-store' });
-          if (!response.ok) {
-             console.warn(`Failed to fetch bundle for integrity check: ${response.status}`);
-             return false;
-          }
-
-          const content = await response.text();
-          const actualIntegrity = await this.hashSha256(content);
-          return actualIntegrity === expectedIntegrity;
-       } catch (error) {
-          console.warn(`Integrity check error for ${bundlePath}:`, error);
-          return false;
-       }
-    }
-
-    /**
-     * Calculates sha256 digest for a string.
-     * @param {string} content
-     * @returns {Promise<string>}
-     */
-    async hashSha256(content) {
-       const encoder = new TextEncoder();
-       const data = encoder.encode(content);
-       const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-       const hashArray = Array.from(new Uint8Array(hashBuffer));
-       const hashHex = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
-       return `sha256:${hashHex}`;
     }
 
    /**
