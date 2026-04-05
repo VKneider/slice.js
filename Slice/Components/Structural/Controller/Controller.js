@@ -92,47 +92,43 @@ export default class Controller {
          return; // Already loaded
       }
 
-       try {
-         let bundleInfo = null;
+       let bundleInfo = null;
 
-         if (bundleName === 'critical') {
-           bundleInfo = this.bundleConfig?.bundles?.critical;
-         } else {
-           bundleInfo = this.bundleConfig?.bundles?.routes?.[bundleName];
-         }
-
-         if (!bundleInfo && this.bundleConfig?.bundles?.routes && bundleName !== 'critical') {
-           const normalizedName = bundleName?.toLowerCase();
-           const matchedKey = Object.keys(this.bundleConfig.bundles.routes).find(
-              (key) => key.toLowerCase() === normalizedName
-           );
-           if (matchedKey) {
-              bundleInfo = this.bundleConfig.bundles.routes[matchedKey];
-           }
-         }
-
-         if (!bundleInfo) {
-            console.warn(`Bundle ${bundleName} not found in configuration`);
-            return;
-          }
-
-          const bundlePath = `/bundles/${bundleInfo.file}`;
-
-          const bundleModule = await this.importBundleOnce(bundlePath);
-          const { metadata, registerAll } = await this.validateBundleModule(bundleModule, bundleName);
-
-          await registerAll(this, slice.stylesManager);
-
-          const loadedBundleKey = metadata.bundleKey || bundleName;
-          this.loadedBundles.add(loadedBundleKey);
-
-          if (metadata.type === 'critical' || bundleName === 'critical') {
-             this.criticalBundleLoaded = true;
-          }
-       } catch (error) {
-          console.warn(`Failed to load bundle ${bundleName}:`, error);
+       if (bundleName === 'critical') {
+         bundleInfo = this.bundleConfig?.bundles?.critical;
+       } else {
+         bundleInfo = this.bundleConfig?.bundles?.routes?.[bundleName];
        }
-     }
+
+       if (!bundleInfo && this.bundleConfig?.bundles?.routes && bundleName !== 'critical') {
+         const normalizedName = bundleName?.toLowerCase();
+         const matchedKey = Object.keys(this.bundleConfig.bundles.routes).find(
+            (key) => key.toLowerCase() === normalizedName
+         );
+         if (matchedKey) {
+            bundleInfo = this.bundleConfig.bundles.routes[matchedKey];
+         }
+       }
+
+       if (!bundleInfo) {
+          console.warn(`Bundle ${bundleName} not found in configuration`);
+          return;
+        }
+
+        const bundlePath = `/bundles/${bundleInfo.file}`;
+
+        const bundleModule = await this.importBundleOnce(bundlePath);
+        const { metadata, registerAll } = await this.validateBundleModule(bundleModule, bundleName);
+
+        await registerAll(this, slice.stylesManager);
+
+        const loadedBundleKey = metadata.bundleKey || bundleName;
+        this.loadedBundles.add(loadedBundleKey);
+
+        if (metadata.type === 'critical' || bundleName === 'critical') {
+           this.criticalBundleLoaded = true;
+        }
+      }
 
    /**
     * 📦 Registers a bundle's components (called automatically by bundle files)
