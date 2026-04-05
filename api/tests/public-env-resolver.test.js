@@ -135,6 +135,20 @@ test('resolvePublicEnv strips inline comments for unquoted values', async () => 
    });
 });
 
+test('resolvePublicEnv strips trailing comments after quoted values', async () => {
+   const { resolvePublicEnv } = await import(resolverModulePath.href);
+
+   await withTempEnvFile('SLICE_PUBLIC_X="value" # comment', async (envFilePath) => {
+      const payload = resolvePublicEnv({
+         mode: 'development',
+         envFilePath,
+         processEnv: {},
+      });
+
+      assert.equal(payload.env.SLICE_PUBLIC_X, 'value');
+   });
+});
+
 test('createPublicEnvProvider caches in production and recomputes in development', async () => {
    const { createPublicEnvProvider } = await import(resolverModulePath.href);
 

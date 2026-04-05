@@ -35,12 +35,10 @@ function parseEnvFile(envFilePath) {
 
       let value = line.slice(equalsIndex + 1).trim();
 
-      const isQuotedValue =
-         (value.startsWith('"') && value.endsWith('"')) ||
-         (value.startsWith("'") && value.endsWith("'"));
+      const quotedWithOptionalCommentMatch = value.match(/^(["'])(.*?)\1(?:\s+#.*)?$/);
 
-      if (isQuotedValue) {
-         value = value.slice(1, -1);
+      if (quotedWithOptionalCommentMatch) {
+         value = quotedWithOptionalCommentMatch[2];
       } else {
          value = value.replace(/\s+#.*$/, '').trimEnd();
       }
