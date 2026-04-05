@@ -315,55 +315,60 @@ async function init() {
     window.slice = new Slice(sliceConfig, frameworkClasses);
     window.slice._mode = resolvedMode;
 
+     const createBundlingInitError = (step, error) => {
+        const detail = error instanceof Error ? error.message : String(error);
+        return new Error(`Bundling V2 initialization failed (${step}): ${detail}`, { cause: error });
+     };
+
      // Initialize bundles before building components.
      // Only in production — dev mode loads each component individually from source.
      // bundleConfigJson was already fetched above (step 2); reuse it.
-     try {
-        if (resolvedMode === 'production' && bundleConfigJson) {
-           window.slice.controller.bundleConfig = bundleConfigJson;
-        }
+     if (resolvedMode === 'production' && bundleConfigJson) {
+        window.slice.controller.bundleConfig = bundleConfigJson;
+     }
 
-       if (window.slice.controller.bundleConfig) {
-          const config = window.slice.controller.bundleConfig;
-
-             const criticalFile = config?.bundles?.critical?.file;
-              if (criticalFile) {
-                await window.slice.controller.loadBundle('critical');
-             }
-
-          const routeBundles = config?.routeBundles || {};
-          const initialPath = window.location.pathname || '/';
-          const bundlesForRoute = routeBundles[initialPath] || [];
-
-          const loadRouteBundles = async () => {
-             for (const bundleName of bundlesForRoute) {
-                if (bundleName === 'critical') continue;
-                const bundleInfo = config?.bundles?.routes?.[bundleName];
-                if (!bundleInfo?.file) continue;
-                await window.slice.controller.loadBundle(bundleName);
-              }
-             };
-
-          const preloadRouteBundles = () => {
-             loadRouteBundles().catch((error) => {
-                window.slice.logger?.logWarning?.(
-                   'Slice',
-                   `Idle route preload failed for ${initialPath}`,
-                   error
-                );
-                console.warn('[Slice.js] Idle route preload failed:', error);
-             });
-          };
-
-           if (typeof requestIdleCallback === 'function') {
-             requestIdleCallback(() => preloadRouteBundles());
-           } else {
-             setTimeout(() => preloadRouteBundles(), 0);
+     if (resolvedMode === 'production' && window.slice.controller.bundleConfig) {
+        const config = window.slice.controller.bundleConfig;
+        const criticalFile = config?.bundles?.critical?.file;
+        if (criticalFile) {
+           try {
+              await window.slice.controller.loadBundle('critical');
+           } catch (error) {
+              throw createBundlingInitError(`critical bundle "${criticalFile}"`, error);
            }
         }
-    } catch (error) {
-       console.log('📄 Using individual component loading (no bundles found)');
-    }
+
+        const routeBundles = config?.routeBundles || {};
+        const initialPath = window.location.pathname || '/';
+        const bundlesForRoute = routeBundles[initialPath] || [];
+
+        const loadRouteBundles = async () => {
+           for (const bundleName of bundlesForRoute) {
+              if (bundleName === 'critical') continue;
+              const bundleInfo = config?.bundles?.routes?.[bundleName];
+              if (!bundleInfo?.file) continue;
+              await window.slice.controller.loadBundle(bundleName);
+           }
+        };
+
+        const preloadRouteBundles = () => {
+           loadRouteBundles().catch((error) => {
+              const bundlingError = createBundlingInitError(
+                 `idle route preload "${initialPath}"`,
+                 error
+              );
+              queueMicrotask(() => {
+                 throw bundlingError;
+              });
+           });
+        };
+
+        if (typeof requestIdleCallback === 'function') {
+           requestIdleCallback(() => preloadRouteBundles());
+        } else {
+           setTimeout(() => preloadRouteBundles(), 0);
+        }
+     }
 
    slice.paths.structuralComponentFolderPath = '/Slice/Components/Structural';
 
