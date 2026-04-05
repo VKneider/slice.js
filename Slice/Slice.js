@@ -24,6 +24,7 @@ export default class Slice {
       // Default to production until init() resolves the actual mode.
       // Safe to call isProduction() before init() completes.
       this._mode = 'production';
+      this._publicEnv = {};
 
       // 📦 Bundle system is initialized automatically via import in index.js
    }
@@ -49,6 +50,33 @@ export default class Slice {
     */
    isProduction() {
       return this._mode === 'production';
+   }
+
+   setPublicEnv(envPayload = {}) {
+      const normalized = {};
+
+      for (const [key, value] of Object.entries(envPayload || {})) {
+         if (!key.startsWith('SLICE_PUBLIC_')) continue;
+         normalized[key] = String(value ?? '');
+      }
+
+      this._publicEnv = normalized;
+   }
+
+   getEnv(name, fallbackValue = undefined) {
+      if (!name || typeof name !== 'string') {
+         return fallbackValue;
+      }
+
+      if (Object.prototype.hasOwnProperty.call(this._publicEnv, name)) {
+         return this._publicEnv[name];
+      }
+
+      return fallbackValue;
+   }
+
+   getPublicEnv() {
+      return { ...this._publicEnv };
    }
 
    /**
@@ -314,6 +342,7 @@ async function init() {
     // 5. Create Slice instance and set resolved mode
     window.slice = new Slice(sliceConfig, frameworkClasses);
     window.slice._mode = resolvedMode;
+    window.slice.setPublicEnv(envResult?.env || {});
 
      const createBundlingInitError = (step, error) => {
         const detail = error instanceof Error ? error.message : String(error);
