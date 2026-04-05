@@ -9,6 +9,7 @@ import {
   sliceFrameworkProtection, 
   suspiciousRequestLogger
 } from './middleware/securityMiddleware.js';
+import { createPublicEnvProvider } from './utils/publicEnvResolver.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -22,6 +23,10 @@ const args = process.argv.slice(2);
 
 const runMode = process.env.NODE_ENV === 'production' ? 'production' : 'development';
 const folderDeployed = runMode === 'production' ? 'dist' : 'src';
+const publicEnvProvider = createPublicEnvProvider({
+  mode: runMode,
+  envFilePath: path.join(__dirname, '..', '.env')
+});
 
 // Obtener puerto desde process.env.PORT con fallback a sliceConfig.json
 const PORT = process.env.PORT || sliceConfig.server?.port || 3001;
@@ -90,18 +95,13 @@ app.use((req, res, next) => {
 // RUNTIME MODE ENDPOINT
 // ==============================================
 
-// Expone el modo actual al framework Slice.js en runtime.
-// Solo se registra en development — 404 en production indica modo producción.
-if (runMode === 'development') {
-  app.get('/slice-env.json', (req, res) => {
-    res.json({ mode: 'development' });
-  });
-} else {
-  // Explicit 404 so the SPA fallback doesn't return 200 for this dev-only endpoint.
-  app.get('/slice-env.json', (req, res) => {
-    res.status(404).json({ error: 'Not found' });
-  });
-}
+app.get('/slice-env.json', (req, res) => {
+  const payload = publicEnvProvider.getPayload();
+  res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.json(payload);
+});
 
 // ==============================================
 // ARCHIVOS ESTÁTICOS (DESPUÉS DE SEGURIDAD)
