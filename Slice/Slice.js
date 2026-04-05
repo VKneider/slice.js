@@ -342,14 +342,25 @@ async function init() {
                 if (!bundleInfo?.file) continue;
                 await window.slice.controller.loadBundle(bundleName);
               }
-            };
+             };
 
-          if (typeof requestIdleCallback === 'function') {
-             requestIdleCallback(() => loadRouteBundles());
-          } else {
-             setTimeout(() => loadRouteBundles(), 0);
-          }
-       }
+          const preloadRouteBundles = () => {
+             loadRouteBundles().catch((error) => {
+                window.slice.logger?.logWarning?.(
+                   'Slice',
+                   `Idle route preload failed for ${initialPath}`,
+                   error
+                );
+                console.warn('[Slice.js] Idle route preload failed:', error);
+             });
+          };
+
+           if (typeof requestIdleCallback === 'function') {
+             requestIdleCallback(() => preloadRouteBundles());
+           } else {
+             setTimeout(() => preloadRouteBundles(), 0);
+           }
+        }
     } catch (error) {
        console.log('📄 Using individual component loading (no bundles found)');
     }

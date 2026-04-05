@@ -122,8 +122,11 @@ export default class Controller {
 
         await registerAll(this, slice.stylesManager);
 
-        const loadedBundleKey = metadata.bundleKey || bundleName;
-        this.loadedBundles.add(loadedBundleKey);
+        this.loadedBundles.add(bundleName);
+        const loadedBundleKey = metadata.bundleKey;
+        if (loadedBundleKey && loadedBundleKey !== bundleName) {
+           this.loadedBundles.add(loadedBundleKey);
+        }
 
         if (metadata.type === 'critical' || bundleName === 'critical') {
            this.criticalBundleLoaded = true;
