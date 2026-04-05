@@ -39,7 +39,7 @@ test('handleRoute stops loading when build throws on error path', async () => {
             },
          },
          build: async () => {
-            throw new Error('build failed');
+            throw new Error('boom');
          },
          router: {
             activeRoute: null,
@@ -48,14 +48,16 @@ test('handleRoute stops loading when build throws on error path', async () => {
 
       const router = new Router([]);
 
-      await assert.rejects(() =>
-         router.handleRoute(
-            {
-               component: 'Dashboard',
-               parentRoute: null,
-            },
-            {}
-         )
+      await assert.rejects(
+         () =>
+            router.handleRoute(
+               {
+                  component: 'Dashboard',
+                  parentRoute: null,
+               },
+               {}
+            ),
+         /boom/
       );
 
       assert.deepEqual(loadingCalls, ['start', 'stop']);
