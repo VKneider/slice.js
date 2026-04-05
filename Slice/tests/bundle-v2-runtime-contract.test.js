@@ -25,9 +25,7 @@ test('validateBundleModule rejects module missing Bundling V2 exports contract',
    );
    register(pathToFileURL(loaderPath).href);
 
-   const controllerModuleUrl = pathToFileURL(
-      '/home/vkneider/projects/SLICE-LATEST/slice.js/.worktrees/bundling-v2-precompiled-registrars/Slice/Components/Structural/Controller/Controller.js'
-   ).href;
+   const controllerModuleUrl = new URL('../Components/Structural/Controller/Controller.js', import.meta.url).href;
    const { default: Controller } = await import(controllerModuleUrl);
    const controller = new Controller();
    const originalWindow = globalThis.window;
@@ -37,22 +35,18 @@ test('validateBundleModule rejects module missing Bundling V2 exports contract',
          __slicePendingRegistrations: [],
       };
 
-      controller.initializeBundles({
-         bundles: {
-            critical: {
-               file: 'critical.js',
-            },
-         },
-      });
-
-      controller.importBundleOnce = async () => ({
-         default: {},
-      });
-
-      await assert.rejects(
-         () => controller.loadBundle('critical'),
-         /missing bundling v2 exports contract/i
+      assert.equal(
+         typeof controller.validateBundleModule,
+         'function',
+         'Controller must expose validateBundleModule for Bundling V2 runtime contract checks'
       );
+
+      if (typeof controller.validateBundleModule === 'function') {
+         await assert.rejects(
+            () => Promise.resolve(controller.validateBundleModule({ default: {} }, 'critical.js')),
+            /missing bundling v2 exports contract/i
+         );
+      }
    } finally {
       globalThis.window = originalWindow;
       await rm(tempDir, { recursive: true, force: true });
