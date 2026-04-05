@@ -83,6 +83,58 @@ test('resolvePublicEnv warns about suspicious public key names without exposing 
    });
 });
 
+test('resolvePublicEnv warns once when suspicious key appears in .env and processEnv', async () => {
+   const { resolvePublicEnv } = await import(resolverModulePath.href);
+   const warnings = [];
+   const logger = {
+      warn: (...args) => warnings.push(args.map(String).join(' ')),
+   };
+
+   await withTempEnvFile('SLICE_PUBLIC_API_KEY=from-file-secret', async (envFilePath) => {
+      const payload = resolvePublicEnv({
+         mode: 'development',
+         envFilePath,
+         processEnv: {
+            SLICE_PUBLIC_API_KEY: 'from-process-secret',
+         },
+         logger,
+      });
+
+      assert.equal(payload.env.SLICE_PUBLIC_API_KEY, 'from-process-secret');
+      assert.equal(warnings.length, 1);
+      assert.match(warnings[0], /SLICE_PUBLIC_API_KEY/);
+      assert.doesNotMatch(warnings[0], /from-file-secret|from-process-secret/);
+   });
+});
+
+test('resolvePublicEnv parses first key when .env starts with BOM', async () => {
+   const { resolvePublicEnv } = await import(resolverModulePath.href);
+
+   await withTempEnvFile('\uFEFFSLICE_PUBLIC_TITLE=Slice App', async (envFilePath) => {
+      const payload = resolvePublicEnv({
+         mode: 'development',
+         envFilePath,
+         processEnv: {},
+      });
+
+      assert.equal(payload.env.SLICE_PUBLIC_TITLE, 'Slice App');
+   });
+});
+
+test('resolvePublicEnv strips inline comments for unquoted values', async () => {
+   const { resolvePublicEnv } = await import(resolverModulePath.href);
+
+   await withTempEnvFile('SLICE_PUBLIC_ORIGIN=https://slice.dev # dev origin', async (envFilePath) => {
+      const payload = resolvePublicEnv({
+         mode: 'development',
+         envFilePath,
+         processEnv: {},
+      });
+
+      assert.equal(payload.env.SLICE_PUBLIC_ORIGIN, 'https://slice.dev');
+   });
+});
+
 test('createPublicEnvProvider caches in production and recomputes in development', async () => {
    const { createPublicEnvProvider } = await import(resolverModulePath.href);
 

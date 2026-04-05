@@ -8,7 +8,7 @@ function parseEnvFile(envFilePath) {
       return {};
    }
 
-   const fileContent = readFileSync(envFilePath, 'utf8');
+   const fileContent = readFileSync(envFilePath, 'utf8').replace(/^\uFEFF/, '');
    const parsed = {};
    const lines = fileContent.split(/\r?\n/);
 
@@ -35,8 +35,14 @@ function parseEnvFile(envFilePath) {
 
       let value = line.slice(equalsIndex + 1).trim();
 
-      if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+      const isQuotedValue =
+         (value.startsWith('"') && value.endsWith('"')) ||
+         (value.startsWith("'") && value.endsWith("'"));
+
+      if (isQuotedValue) {
          value = value.slice(1, -1);
+      } else {
+         value = value.replace(/\s+#.*$/, '').trimEnd();
       }
 
       parsed[key] = value;
@@ -45,29 +51,31 @@ function parseEnvFile(envFilePath) {
    return parsed;
 }
 
-function warnSuspiciousKey(key, logger) {
+function warnSuspiciousKey(key, logger, warnedKeys) {
    const upperKey = key.toUpperCase();
    const isSuspicious = SUSPICIOUS_TERMS.some((term) => upperKey.includes(term));
 
-   if (isSuspicious && logger && typeof logger.warn === 'function') {
+   if (isSuspicious && !warnedKeys.has(key) && logger && typeof logger.warn === 'function') {
       logger.warn(`[slice-env] Suspicious public environment key detected: ${key}`);
+      warnedKeys.add(key);
    }
 }
 
 function buildPublicPayload({ envFromFile, processEnv, logger }) {
    const env = {};
+   const warnedKeys = new Set();
 
    for (const [key, value] of Object.entries(envFromFile)) {
       if (key.startsWith(PUBLIC_PREFIX)) {
          env[key] = String(value ?? '');
-         warnSuspiciousKey(key, logger);
+         warnSuspiciousKey(key, logger, warnedKeys);
       }
    }
 
    for (const [key, value] of Object.entries(processEnv || {})) {
       if (key.startsWith(PUBLIC_PREFIX)) {
          env[key] = String(value ?? '');
-         warnSuspiciousKey(key, logger);
+         warnSuspiciousKey(key, logger, warnedKeys);
       }
    }
 
