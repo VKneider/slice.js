@@ -10,12 +10,22 @@ export default class StylesManager {
    /**
     * Load global styles and initialize ThemeManager if enabled.
     * @returns {Promise<void>}
-    */
+   */
    async init() {
-      for (let i = 0; i < slice.stylesConfig.requestedStyles.length; i++) {
-         const styles = await slice.controller.fetchText(slice.stylesConfig.requestedStyles[i], 'styles');
-         this.componentStyles.innerText += styles;
-         slice.logger.logInfo('StylesManager', `${slice.stylesConfig.requestedStyles[i]} styles loaded`);
+      const requestedStyles = Array.isArray(slice.stylesConfig.requestedStyles)
+         ? slice.stylesConfig.requestedStyles
+         : [];
+
+      const styleResults = await Promise.all(
+         requestedStyles.map(async (styleName) => {
+            const styles = await slice.controller.fetchText(styleName, 'styles');
+            return { styleName, styles };
+         })
+      );
+
+      for (const { styleName, styles } of styleResults) {
+         this.appendComponentStyles(styles);
+         slice.logger.logInfo('StylesManager', `${styleName} styles loaded`);
       }
 
        if (slice.themeConfig.enabled) {

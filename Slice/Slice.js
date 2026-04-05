@@ -269,26 +269,19 @@ async function init() {
     const envMode = envResult?.mode ?? null;
     const bundleConfigJson = configResult;
 
-    // 3. Determine canonical mode: env endpoint takes precedence, then bundle config
-    let resolvedMode;
-    if (envMode) {
-      resolvedMode = envMode;
-    } else if (bundleConfigJson?.production) {
-      resolvedMode = 'production';
-    } else {
-      resolvedMode = 'development';
-    }
-
-     // Pre-fetch critical bundle to warm the browser HTTP cache while the framework
-     // bundle is downloading and executing. fetch() downloads bytes without evaluating
-     // the module, so the auto-registration block runs safely later when window.slice
-     // already exists. Errors are silently ignored — import() will retry if needed.
-     const criticalBundleUrl = (resolvedMode === 'production' && bundleConfigJson?.bundles?.critical?.file)
-       ? `/bundles/${bundleConfigJson.bundles.critical.file}`
-       : null;
-     if (criticalBundleUrl) {
-       fetch(criticalBundleUrl).catch(() => {});
+     // 3. Determine canonical mode: env endpoint takes precedence, then bundle config
+     let resolvedMode;
+     if (envMode) {
+       resolvedMode = envMode;
+     } else if (bundleConfigJson?.production) {
+       resolvedMode = 'production';
+     } else {
+       resolvedMode = 'development';
      }
+
+      const criticalBundleUrl = (resolvedMode === 'production' && bundleConfigJson?.bundles?.critical?.file)
+        ? `/bundles/${bundleConfigJson.bundles.critical.file}`
+        : null;
 
      // 4. Load framework classes.
      // In production the bundler generates slice-bundle.framework.js which
@@ -337,18 +330,17 @@ async function init() {
        if (window.slice.controller.bundleConfig) {
           const config = window.slice.controller.bundleConfig;
 
-           const criticalFile = config?.bundles?.critical?.file;
-            if (criticalFile) {
+            const criticalFile = config?.bundles?.critical?.file;
+             if (criticalFile && criticalBundleUrl) {
                // Bundle auto-registers itself on import via its own registration block.
                // The block pushes its registerBundle() Promise to window.__slicePendingRegistrations
                // so we can await full chunk processing before continuing to build('Loading').
-               // criticalBundleUrl was pre-fetched above — import() reuses the cached bytes.
-               await import(criticalBundleUrl);
-              if (window.__slicePendingRegistrations?.length) {
-                 await Promise.all(window.__slicePendingRegistrations);
-                 window.__slicePendingRegistrations = [];
-              }
-           }
+               await window.slice.controller.importBundleOnce(criticalBundleUrl);
+               if (window.__slicePendingRegistrations?.length) {
+                  await Promise.all(window.__slicePendingRegistrations);
+                  window.__slicePendingRegistrations = [];
+               }
+            }
 
           const routeBundles = config?.routeBundles || {};
           const initialPath = window.location.pathname || '/';
@@ -360,9 +352,9 @@ async function init() {
                 const bundleInfo = config?.bundles?.routes?.[bundleName];
                 if (!bundleInfo?.file) continue;
                 // Bundle auto-registers itself on import.
-                await import(`/bundles/${bundleInfo.file}`);
+                await window.slice.controller.importBundleOnce(`/bundles/${bundleInfo.file}`);
              }
-          };
+           };
 
           if (typeof requestIdleCallback === 'function') {
              requestIdleCallback(() => loadRouteBundles());
@@ -466,7 +458,8 @@ async function init() {
       }
     }
 
-   await window.slice.stylesManager.init();
+   const stylesInitPromise = window.slice.stylesManager.init();
+   const routesModulePromise = import(slice.paths.routesFile);
 
    if (sliceConfig.events?.ui?.shortcut || sliceConfig.context?.ui?.shortcut) {
       const normalize = (value) => (typeof value === 'string' ? value.toLowerCase() : '');
@@ -496,7 +489,7 @@ async function init() {
       });
    }
 
-   const routesModule = await import(slice.paths.routesFile);
+   const [, routesModule] = await Promise.all([stylesInitPromise, routesModulePromise]);
    const routes = routesModule.default;
     const RouterModule = window.slice.frameworkClasses?.Router
        || await window.slice.getClass(`${slice.paths.structuralComponentFolderPath}/Router/Router.js`);

@@ -16,6 +16,7 @@ export default class Controller {
       this.loadedBundles = new Set();
       this.bundleConfig = null;
       this.criticalBundleLoaded = false;
+      this.bundleImportPromises = new Map();
 
       this.idCounter = 0;
    }
@@ -36,8 +37,32 @@ export default class Controller {
           // No bundles available, will use individual component loading
           this.bundleConfig = null;
           this.criticalBundleLoaded = false;
-       }
+      }
      }
+
+   /**
+    * Import a bundle URL once per page session.
+    * Reuses the same Promise for concurrent callers.
+    * @param {string} bundlePath
+    * @returns {Promise<any>}
+    */
+   importBundleOnce(bundlePath) {
+      if (!bundlePath) {
+         return Promise.reject(new Error('Bundle path is required'));
+      }
+
+      if (this.bundleImportPromises.has(bundlePath)) {
+         return this.bundleImportPromises.get(bundlePath);
+      }
+
+      const importPromise = import(bundlePath).catch((error) => {
+         this.bundleImportPromises.delete(bundlePath);
+         throw error;
+      });
+
+      this.bundleImportPromises.set(bundlePath, importPromise);
+      return importPromise;
+   }
 
    /**
     * 📦 Loads a bundle by name or category
@@ -73,13 +98,12 @@ export default class Controller {
 
          const bundlePath = `/bundles/${bundleInfo.file}`;
 
-         // Dynamic import of the bundle
-         const bundleModule = await import(bundlePath);
+         await this.importBundleOnce(bundlePath);
 
-         // Manually register components from the imported bundle
-          if (bundleModule.SLICE_BUNDLE) {
-             await this.registerBundle(bundleModule.SLICE_BUNDLE);
-          }
+         if (window.__slicePendingRegistrations?.length) {
+            await Promise.all(window.__slicePendingRegistrations);
+            window.__slicePendingRegistrations = [];
+         }
 
          this.loadedBundles.add(bundleName);
       } catch (error) {
