@@ -34,7 +34,8 @@ test('resolvePublicEnv filters only SLICE_PUBLIC_ keys', async () => {
             },
          });
 
-         assert.deepEqual(payload, {
+         assert.equal(payload.mode, 'development');
+         assert.deepEqual(payload.env, {
             SLICE_PUBLIC_FROM_FILE: 'file-visible',
             SLICE_PUBLIC_FROM_PROCESS: 'process-visible',
          });
@@ -54,7 +55,8 @@ test('resolvePublicEnv uses process.env values over .env values', async () => {
          },
       });
 
-      assert.equal(payload.SLICE_PUBLIC_API_URL, 'https://from-process.example');
+      assert.equal(payload.mode, 'development');
+      assert.equal(payload.env.SLICE_PUBLIC_API_URL, 'https://from-process.example');
    });
 });
 
@@ -73,7 +75,8 @@ test('resolvePublicEnv warns about suspicious public key names without exposing 
          logger,
       });
 
-      assert.equal(payload.SLICE_PUBLIC_API_KEY, 'super-secret-value');
+      assert.equal(payload.mode, 'development');
+      assert.equal(payload.env.SLICE_PUBLIC_API_KEY, 'super-secret-value');
       assert.equal(warnings.length, 1);
       assert.match(warnings[0], /SLICE_PUBLIC_API_KEY/);
       assert.doesNotMatch(warnings[0], /super-secret-value/);
@@ -96,25 +99,29 @@ test('createPublicEnvProvider caches in production and recomputes in development
          envFilePath,
          processEnv,
       });
+      assert.equal(typeof productionProvider.getPayload, 'function');
 
-      const firstProduction = productionProvider();
+      const firstProduction = productionProvider.getPayload();
       processValue = 'second-value';
-      const secondProduction = productionProvider();
+      const secondProduction = productionProvider.getPayload();
 
-      assert.equal(firstProduction.SLICE_PUBLIC_COUNTER, 'first-value');
-      assert.equal(secondProduction.SLICE_PUBLIC_COUNTER, 'first-value');
+      assert.equal(firstProduction.mode, 'production');
+      assert.equal(firstProduction.env.SLICE_PUBLIC_COUNTER, 'first-value');
+      assert.equal(secondProduction.env.SLICE_PUBLIC_COUNTER, 'first-value');
 
       const developmentProvider = createPublicEnvProvider({
          mode: 'development',
          envFilePath,
          processEnv,
       });
+      assert.equal(typeof developmentProvider.getPayload, 'function');
 
-      const firstDevelopment = developmentProvider();
+      const firstDevelopment = developmentProvider.getPayload();
       processValue = 'third-value';
-      const secondDevelopment = developmentProvider();
+      const secondDevelopment = developmentProvider.getPayload();
 
-      assert.equal(firstDevelopment.SLICE_PUBLIC_COUNTER, 'second-value');
-      assert.equal(secondDevelopment.SLICE_PUBLIC_COUNTER, 'third-value');
+      assert.equal(firstDevelopment.mode, 'development');
+      assert.equal(firstDevelopment.env.SLICE_PUBLIC_COUNTER, 'second-value');
+      assert.equal(secondDevelopment.env.SLICE_PUBLIC_COUNTER, 'third-value');
    });
 });

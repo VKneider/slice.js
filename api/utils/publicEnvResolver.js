@@ -55,50 +55,57 @@ function warnSuspiciousKey(key, logger) {
 }
 
 function buildPublicPayload({ envFromFile, processEnv, logger }) {
-   const payload = {};
+   const env = {};
 
    for (const [key, value] of Object.entries(envFromFile)) {
       if (key.startsWith(PUBLIC_PREFIX)) {
-         payload[key] = String(value ?? '');
+         env[key] = String(value ?? '');
          warnSuspiciousKey(key, logger);
       }
    }
 
    for (const [key, value] of Object.entries(processEnv || {})) {
       if (key.startsWith(PUBLIC_PREFIX)) {
-         payload[key] = String(value ?? '');
+         env[key] = String(value ?? '');
          warnSuspiciousKey(key, logger);
       }
    }
 
-   return payload;
+   return env;
 }
 
 export function resolvePublicEnv({ mode, envFilePath, processEnv = process.env, logger = console }) {
    const envFromFile = parseEnvFile(envFilePath);
-
-   return buildPublicPayload({
-      mode,
+   const env = buildPublicPayload({
       envFromFile,
       processEnv,
       logger,
    });
+
+   return {
+      mode,
+      env,
+   };
 }
 
 export function createPublicEnvProvider({ mode, envFilePath, processEnv = process.env, logger = console }) {
    if (mode === 'production') {
       let cachedPayload;
 
-      return function providePublicEnv() {
-         if (!cachedPayload) {
-            cachedPayload = resolvePublicEnv({ mode, envFilePath, processEnv, logger });
-         }
+      return {
+         getPayload() {
+            if (!cachedPayload) {
+               cachedPayload = resolvePublicEnv({ mode, envFilePath, processEnv, logger });
+            }
 
-         return cachedPayload;
+            return cachedPayload;
+         },
       };
    }
 
-   return function providePublicEnv() {
-      return resolvePublicEnv({ mode, envFilePath, processEnv, logger });
+   return {
+      getPayload() {
+         return resolvePublicEnv({ mode, envFilePath, processEnv, logger });
+      },
    };
 }
