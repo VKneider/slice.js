@@ -1,5 +1,6 @@
 # Ignorar la carpeta de configuración y editor
 .vscode/
+.worktrees/
 
 # Ignorar la carpeta de dependencias
 node_modules/
