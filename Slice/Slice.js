@@ -105,18 +105,23 @@ export default class Slice {
          return null;
       }
 
-      if (!this.controller.componentCategories.has(componentName)) {
-         this.logger.logError('Slice', null, `Component ${componentName} not found in components.js file`);
-         return null;
-      }
-
       // 📦 Try to load from bundles first
       const bundleName = this.controller.getBundleForComponent(componentName);
       if (bundleName && !this.controller.loadedBundles.has(bundleName)) {
          await this.controller.loadBundle(bundleName);
       }
 
+      // After bundle loading attempt, allow build when class is already available
+      // even if components map has no category entry (stale/components.js mismatch).
+      if (!this.controller.componentCategories.has(componentName) && !this.controller.classes.has(componentName)) {
+         this.logger.logError('Slice', null, `Component ${componentName} not found in components.js file`);
+         return null;
+      }
+
       let componentCategory = this.controller.componentCategories.get(componentName);
+      if (!componentCategory && this.controller.classes.has(componentName)) {
+         componentCategory = 'AppComponents';
+      }
 
       // 📦 Check if component is already available from loaded bundles
       const isFromBundle = this.controller.isComponentFromBundle(componentName);
@@ -130,7 +135,7 @@ export default class Slice {
          return null;
       }
 
-      let isVisual = slice.paths.components[componentCategory].type === 'Visual';
+      let isVisual = slice.paths.components[componentCategory]?.type === 'Visual';
       let modulePath = `${slice.paths.components[componentCategory].path}/${componentName}/${componentName}.js`;
       const isJsOnlyVisualComponent = isVisual && (componentName === 'MultiRoute' || componentName === 'Route');
 
