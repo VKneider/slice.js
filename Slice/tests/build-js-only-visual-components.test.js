@@ -80,7 +80,7 @@ function createSlice() {
   return instance;
 }
 
-test('build does not fetch html/css for MultiRoute, Route, and Link', async () => {
+test('build does not fetch html/css for MultiRoute and Route', async () => {
   const originalSlice = globalThis.slice;
 
   try {
@@ -103,6 +103,27 @@ test('build does not fetch html/css for MultiRoute, Route, and Link', async () =
       async init() {}
     }
 
+    sliceInstance.controller.classes.set('MultiRoute', MultiRouteComponent);
+    sliceInstance.controller.classes.set('Route', RouteComponent);
+
+    const builtMultiRoute = await sliceInstance.build('MultiRoute', {});
+    const builtRoute = await sliceInstance.build('Route', {});
+
+    assert.ok(builtMultiRoute, 'Expected MultiRoute instance to be created');
+    assert.ok(builtRoute, 'Expected Route instance to be created');
+    assert.equal(sliceInstance.controller.fetchCalls, 0);
+  } finally {
+    globalThis.slice = originalSlice;
+  }
+});
+
+test('build still fetches html/css for Link', async () => {
+  const originalSlice = globalThis.slice;
+
+  try {
+    const sliceInstance = createSlice();
+    globalThis.slice = sliceInstance;
+
     class LinkComponent {
       constructor(props) {
         this.props = props;
@@ -111,18 +132,12 @@ test('build does not fetch html/css for MultiRoute, Route, and Link', async () =
       async init() {}
     }
 
-    sliceInstance.controller.classes.set('MultiRoute', MultiRouteComponent);
-    sliceInstance.controller.classes.set('Route', RouteComponent);
     sliceInstance.controller.classes.set('Link', LinkComponent);
 
-    const builtMultiRoute = await sliceInstance.build('MultiRoute', {});
-    const builtRoute = await sliceInstance.build('Route', {});
     const builtLink = await sliceInstance.build('Link', {});
 
-    assert.ok(builtMultiRoute, 'Expected MultiRoute instance to be created');
-    assert.ok(builtRoute, 'Expected Route instance to be created');
-    assert.ok(builtLink, 'Expected Link instance to be created');
-    assert.equal(sliceInstance.controller.fetchCalls, 0);
+    assert.equal(builtLink, null);
+    assert.ok(sliceInstance.controller.fetchCalls > 0, 'Expected Link to trigger resource fetches');
   } finally {
     globalThis.slice = originalSlice;
   }

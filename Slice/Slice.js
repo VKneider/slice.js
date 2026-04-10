@@ -132,7 +132,7 @@ export default class Slice {
 
       let isVisual = slice.paths.components[componentCategory].type === 'Visual';
       let modulePath = `${slice.paths.components[componentCategory].path}/${componentName}/${componentName}.js`;
-      const isJsOnlyVisualComponent = isVisual && (componentName === 'MultiRoute' || componentName === 'Route' || componentName === 'Link');
+      const isJsOnlyVisualComponent = isVisual && (componentName === 'MultiRoute' || componentName === 'Route');
 
       // Load template, class, and CSS concurrently if needed
       try {
