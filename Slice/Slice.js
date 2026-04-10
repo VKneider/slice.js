@@ -132,24 +132,25 @@ export default class Slice {
 
       let isVisual = slice.paths.components[componentCategory].type === 'Visual';
       let modulePath = `${slice.paths.components[componentCategory].path}/${componentName}/${componentName}.js`;
+      const isJsOnlyVisualComponent = isVisual && (componentName === 'MultiRoute' || componentName === 'Route' || componentName === 'Link');
 
       // Load template, class, and CSS concurrently if needed
       try {
          // 📦 Skip individual loading if component is available from bundles
-         const loadTemplate =
-            isFromBundle || !isVisual || this.controller.templates.has(componentName)
-               ? Promise.resolve(null)
-               : this.controller.fetchText(componentName, 'html', componentCategory);
+          const loadTemplate =
+             isFromBundle || !isVisual || isJsOnlyVisualComponent || this.controller.templates.has(componentName)
+                ? Promise.resolve(null)
+                : this.controller.fetchText(componentName, 'html', componentCategory);
 
          const loadClass =
             isFromBundle || this.controller.classes.has(componentName)
                ? Promise.resolve(null)
                : this.getClass(modulePath);
 
-         const loadCSS =
-            isFromBundle || !isVisual || this.controller.requestedStyles.has(componentName)
-               ? Promise.resolve(null)
-               : this.controller.fetchText(componentName, 'css', componentCategory);
+          const loadCSS =
+             isFromBundle || !isVisual || isJsOnlyVisualComponent || this.controller.requestedStyles.has(componentName)
+                ? Promise.resolve(null)
+                : this.controller.fetchText(componentName, 'css', componentCategory);
 
          const [html, ComponentClass, css] = await Promise.all([loadTemplate, loadClass, loadCSS]);
 
