@@ -207,6 +207,139 @@ test('loadBundle resolves dependencies first and registers vendor-shared exports
    }
 });
 
+test('loadBundle dedupes concurrent and repeated alias/case requests using canonical bundle key', async () => {
+   const tempDir = await mkdtemp(path.join(tmpdir(), 'slice-controller-loader-'));
+   const loaderPath = path.join(tempDir, 'components-alias-loader.mjs');
+   await writeFile(
+      loaderPath,
+      `export async function resolve(specifier, context, nextResolve) {
+   if (specifier === '/Components/components.js') {
+      return {
+         shortCircuit: true,
+         url: 'data:text/javascript,export default {};',
+      };
+   }
+   return nextResolve(specifier, context);
+}
+`,
+      'utf8'
+   );
+   register(pathToFileURL(loaderPath).href);
+
+   const controllerModuleUrl = new URL('../Components/Structural/Controller/Controller.js', import.meta.url).href;
+   const { default: Controller } = await import(controllerModuleUrl);
+   const controller = new Controller();
+   const originalSlice = globalThis.slice;
+
+   controller.bundleConfig = {
+      bundles: {
+         routes: {
+            dashboard: {
+               file: 'slice-bundle.dashboard.js',
+            },
+         },
+      },
+   };
+
+   let registerCallCount = 0;
+   controller.importBundleOnce = async () => ({
+      SLICE_BUNDLE_META: {
+         bundleKey: 'routes.dashboard.v2',
+         type: 'route',
+      },
+      registerAll: async () => {
+         registerCallCount += 1;
+         await new Promise((resolve) => setTimeout(resolve, 10));
+      },
+   });
+
+   try {
+      globalThis.slice = {
+         stylesManager: {},
+      };
+
+      await Promise.all([
+         controller.loadBundle('dashboard'),
+         controller.loadBundle('DASHBOARD'),
+      ]);
+
+      await controller.loadBundle('Dashboard');
+
+      assert.equal(registerCallCount, 1);
+      assert.equal(controller.loadedBundles.has('dashboard'), true);
+      assert.equal(controller.loadedBundles.has('routes.dashboard.v2'), true);
+      assert.equal(controller.bundleLoadPromises.size, 0);
+   } finally {
+      globalThis.slice = originalSlice;
+      await rm(tempDir, { recursive: true, force: true });
+   }
+});
+
+test('registerVendorSharedDependencies only runs for vendor-shared canonical bundle or explicit metadata flag', async () => {
+   const tempDir = await mkdtemp(path.join(tmpdir(), 'slice-controller-loader-'));
+   const loaderPath = path.join(tempDir, 'components-alias-loader.mjs');
+   await writeFile(
+      loaderPath,
+      `export async function resolve(specifier, context, nextResolve) {
+   if (specifier === '/Components/components.js') {
+      return {
+         shortCircuit: true,
+         url: 'data:text/javascript,export default {};',
+      };
+   }
+   return nextResolve(specifier, context);
+}
+`,
+      'utf8'
+   );
+   register(pathToFileURL(loaderPath).href);
+
+   const controllerModuleUrl = new URL('../Components/Structural/Controller/Controller.js', import.meta.url).href;
+   const { default: Controller } = await import(controllerModuleUrl);
+   const controller = new Controller();
+   const originalWindow = globalThis.window;
+
+   try {
+      globalThis.window = {
+         __SLICE_SHARED_DEPS__: {},
+      };
+
+      controller.registerVendorSharedDependencies(
+         {
+            SLICE_SHARED_DEPS: {
+               shouldNotLoad: true,
+            },
+         },
+         {
+            type: 'shared',
+            bundleKey: 'app-shared',
+         },
+         'app-shared'
+      );
+
+      assert.equal(globalThis.window.__SLICE_SHARED_DEPS__.shouldNotLoad, undefined);
+
+      controller.registerVendorSharedDependencies(
+         {
+            SLICE_SHARED_DEPS: {
+               explicitFlagDependency: true,
+            },
+         },
+         {
+            type: 'shared',
+            bundleKey: 'app-shared',
+            registerVendorSharedDependencies: true,
+         },
+         'app-shared'
+      );
+
+      assert.equal(globalThis.window.__SLICE_SHARED_DEPS__.explicitFlagDependency, true);
+   } finally {
+      globalThis.window = originalWindow;
+      await rm(tempDir, { recursive: true, force: true });
+   }
+});
+
 test('Slice init fails fast with contextual error on invalid Bundling V2 contract path', async () => {
    const tempDir = await mkdtemp(path.join(tmpdir(), 'slice-init-loader-'));
    const loaderPath = path.join(tempDir, 'components-alias-loader.mjs');

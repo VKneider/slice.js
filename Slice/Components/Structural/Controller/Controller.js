@@ -89,34 +89,37 @@ export default class Controller {
     * 📦 Loads a bundle by name or category
     */
    async loadBundle(bundleName) {
-      if (this.loadedBundles.has(bundleName)) {
+      const resolvedBundleName = this.resolveBundleName(bundleName);
+      if (this.loadedBundles.has(resolvedBundleName)) {
          return; // Already loaded
        }
 
-       return this.loadBundleWithDependencies(bundleName, new Set());
+       return this.loadBundleWithDependencies(resolvedBundleName, new Set());
       }
 
    async loadBundleWithDependencies(bundleName, loadingStack = new Set()) {
-      if (this.loadedBundles.has(bundleName)) {
+      const resolvedBundleName = this.resolveBundleName(bundleName);
+
+      if (this.loadedBundles.has(resolvedBundleName)) {
          return;
-      }
+       }
 
-      if (loadingStack.has(bundleName)) {
-         throw new Error(`Circular bundle dependency detected: ${Array.from(loadingStack).join(' -> ')} -> ${bundleName}`);
-      }
+      if (loadingStack.has(resolvedBundleName)) {
+         throw new Error(`Circular bundle dependency detected: ${Array.from(loadingStack).join(' -> ')} -> ${resolvedBundleName}`);
+       }
 
-      if (this.bundleLoadPromises.has(bundleName)) {
-         return this.bundleLoadPromises.get(bundleName);
-      }
+      if (this.bundleLoadPromises.has(resolvedBundleName)) {
+         return this.bundleLoadPromises.get(resolvedBundleName);
+       }
 
       const loadPromise = (async () => {
-         loadingStack.add(bundleName);
+         loadingStack.add(resolvedBundleName);
          try {
-            const bundleInfo = this.getBundleInfo(bundleName);
+            const bundleInfo = this.getBundleInfo(resolvedBundleName);
             if (!bundleInfo) {
-               console.warn(`Bundle ${bundleName} not found in configuration`);
+               console.warn(`Bundle ${resolvedBundleName} not found in configuration`);
                return;
-            }
+             }
 
             const dependencies = this.getBundleDependencies(bundleInfo);
             for (const dependencyName of dependencies) {
@@ -125,31 +128,70 @@ export default class Controller {
 
             const bundlePath = `/bundles/${bundleInfo.file}`;
             const bundleModule = await this.importBundleOnce(bundlePath);
-            const { metadata, registerAll } = await this.validateBundleModule(bundleModule, bundleName);
+            const { metadata, registerAll } = await this.validateBundleModule(bundleModule, resolvedBundleName);
 
-            this.registerVendorSharedDependencies(bundleModule, metadata, bundleName);
+            this.registerVendorSharedDependencies(bundleModule, metadata, resolvedBundleName);
             await registerAll(this, slice.stylesManager);
 
-            this.loadedBundles.add(bundleName);
+            this.loadedBundles.add(resolvedBundleName);
             const loadedBundleKey = metadata.bundleKey;
-            if (loadedBundleKey && loadedBundleKey !== bundleName) {
+            if (loadedBundleKey && loadedBundleKey !== resolvedBundleName) {
                this.loadedBundles.add(loadedBundleKey);
-            }
+             }
 
-            if (metadata.type === 'critical' || bundleName === 'critical') {
+            if (metadata.type === 'critical' || resolvedBundleName === 'critical') {
                this.criticalBundleLoaded = true;
-            }
+             }
          } finally {
-            loadingStack.delete(bundleName);
+            loadingStack.delete(resolvedBundleName);
          }
       })();
 
-      this.bundleLoadPromises.set(bundleName, loadPromise);
+      this.bundleLoadPromises.set(resolvedBundleName, loadPromise);
       try {
          return await loadPromise;
       } finally {
-         this.bundleLoadPromises.delete(bundleName);
+         this.bundleLoadPromises.delete(resolvedBundleName);
       }
+   }
+
+   resolveBundleName(bundleName) {
+      if (typeof bundleName !== 'string' || bundleName.length === 0) {
+         return bundleName;
+      }
+
+      if (bundleName.toLowerCase() === 'critical') {
+         return 'critical';
+      }
+
+      const routeBundleName = this.findBundleNameByAlias(this.bundleConfig?.bundles?.routes, bundleName);
+      if (routeBundleName) {
+         return routeBundleName;
+      }
+
+      const sharedBundleName = this.findBundleNameByAlias(this.bundleConfig?.bundles?.shared, bundleName);
+      if (sharedBundleName) {
+         return sharedBundleName;
+      }
+
+      return bundleName;
+   }
+
+   findBundleNameByAlias(bundleRegistry, bundleName) {
+      if (!bundleRegistry || typeof bundleRegistry !== 'object') {
+         return null;
+      }
+
+      if (bundleRegistry[bundleName]) {
+         return bundleName;
+      }
+
+      const normalizedName = bundleName?.toLowerCase();
+      if (!normalizedName) {
+         return null;
+      }
+
+      return Object.keys(bundleRegistry).find((key) => key.toLowerCase() === normalizedName) || null;
    }
 
    getBundleDependencies(bundleInfo) {
@@ -190,9 +232,9 @@ export default class Controller {
    }
 
    registerVendorSharedDependencies(bundleModule, metadata, bundleName) {
-      const isVendorShared = metadata?.type === 'shared'
-         || metadata?.bundleKey === 'vendor-shared'
-         || bundleName === 'vendor-shared';
+      const isVendorShared = this.isVendorSharedBundleName(metadata?.bundleKey)
+         || this.isVendorSharedBundleName(bundleName)
+         || metadata?.registerVendorSharedDependencies === true;
 
       if (!isVendorShared) {
          return;
@@ -208,6 +250,10 @@ export default class Controller {
       }
 
       Object.assign(window.__SLICE_SHARED_DEPS__, sharedDeps);
+   }
+
+   isVendorSharedBundleName(bundleName) {
+      return typeof bundleName === 'string' && bundleName.toLowerCase() === 'vendor-shared';
    }
 
    /**
