@@ -364,6 +364,9 @@ async function init() {
 
      if (resolvedMode === 'production' && window.slice.controller.bundleConfig) {
         const config = window.slice.controller.bundleConfig;
+        if (!window.__SLICE_SHARED_DEPS__ || typeof window.__SLICE_SHARED_DEPS__ !== 'object') {
+           window.__SLICE_SHARED_DEPS__ = {};
+        }
         const criticalFile = config?.bundles?.critical?.file;
         if (criticalFile) {
            try {
