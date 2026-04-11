@@ -158,11 +158,15 @@ export default class Controller {
    resolveBundleName(bundleName) {
       if (typeof bundleName !== 'string' || bundleName.length === 0) {
          return bundleName;
-      }
+       }
 
-      if (bundleName.toLowerCase() === 'critical') {
-         return 'critical';
-      }
+       if (bundleName.toLowerCase() === 'critical') {
+          return 'critical';
+       }
+
+       if (this.isVendorSharedAlias(bundleName) && this.getVendorSharedBundleInfo()) {
+          return 'vendor-shared';
+       }
 
       const routeBundleName = this.findBundleNameByAlias(this.bundleConfig?.bundles?.routes, bundleName);
       if (routeBundleName) {
@@ -223,12 +227,33 @@ export default class Controller {
    getBundleInfo(bundleName) {
       if (bundleName === 'critical') {
          return this.bundleConfig?.bundles?.critical || null;
-      }
+       }
+
+       if (this.isVendorSharedAlias(bundleName)) {
+          return this.getVendorSharedBundleInfo();
+       }
 
       return (
          this.findBundleEntryByName(this.bundleConfig?.bundles?.routes, bundleName)
          || this.findBundleEntryByName(this.bundleConfig?.bundles?.shared, bundleName)
       );
+   }
+
+   getVendorSharedBundleInfo() {
+      if (this.bundleConfig?.bundles?.vendorShared && typeof this.bundleConfig.bundles.vendorShared === 'object') {
+         return this.bundleConfig.bundles.vendorShared;
+      }
+
+      return this.findBundleEntryByName(this.bundleConfig?.bundles?.shared, 'vendor-shared');
+   }
+
+   isVendorSharedAlias(bundleName) {
+      if (typeof bundleName !== 'string') {
+         return false;
+      }
+
+      const normalized = bundleName.toLowerCase();
+      return normalized === 'vendor-shared' || normalized === 'vendorshared';
    }
 
    registerVendorSharedDependencies(bundleModule, metadata, bundleName) {

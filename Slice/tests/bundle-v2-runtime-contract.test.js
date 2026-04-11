@@ -207,6 +207,98 @@ test('loadBundle resolves dependencies first and registers vendor-shared exports
    }
 });
 
+test('loadBundle resolves vendor-shared dependency from bundles.vendorShared config shape', async () => {
+   const tempDir = await mkdtemp(path.join(tmpdir(), 'slice-controller-loader-'));
+   const loaderPath = path.join(tempDir, 'components-alias-loader.mjs');
+   await writeFile(
+      loaderPath,
+      `export async function resolve(specifier, context, nextResolve) {
+   if (specifier === '/Components/components.js') {
+      return {
+         shortCircuit: true,
+         url: 'data:text/javascript,export default {};',
+      };
+   }
+   return nextResolve(specifier, context);
+}
+`,
+      'utf8'
+   );
+   register(pathToFileURL(loaderPath).href);
+
+   const controllerModuleUrl = new URL('../Components/Structural/Controller/Controller.js', import.meta.url).href;
+   const { default: Controller } = await import(controllerModuleUrl);
+   const controller = new Controller();
+   const originalSlice = globalThis.slice;
+   const originalWindow = globalThis.window;
+
+   controller.bundleConfig = {
+      bundles: {
+         vendorShared: {
+            file: 'slice-bundle.vendor-shared.js',
+         },
+         routes: {
+            dashboard: {
+               file: 'slice-bundle.dashboard.js',
+               dependencies: ['vendor-shared'],
+            },
+         },
+      },
+   };
+
+   const importOrder = [];
+   const registerOrder = [];
+   const importsByPath = {
+      '/bundles/slice-bundle.vendor-shared.js': {
+         SLICE_BUNDLE_META: {
+            bundleKey: 'vendor-shared',
+            type: 'shared',
+         },
+         SLICE_SHARED_DEPS: {
+            'vendors/dompurify': {
+               sanitize: () => 'ok',
+            },
+         },
+         registerAll: async () => {
+            registerOrder.push('vendor-shared');
+         },
+      },
+      '/bundles/slice-bundle.dashboard.js': {
+         SLICE_BUNDLE_META: {
+            bundleKey: 'dashboard',
+            type: 'route',
+         },
+         registerAll: async () => {
+            registerOrder.push('dashboard');
+         },
+      },
+   };
+
+   controller.importBundleOnce = async (bundlePath) => {
+      importOrder.push(bundlePath);
+      return importsByPath[bundlePath];
+   };
+
+   try {
+      globalThis.slice = {
+         stylesManager: {},
+      };
+      globalThis.window = {
+         __SLICE_SHARED_DEPS__: {},
+      };
+
+      await controller.loadBundle('dashboard');
+
+      assert.deepEqual(importOrder, ['/bundles/slice-bundle.vendor-shared.js', '/bundles/slice-bundle.dashboard.js']);
+      assert.deepEqual(registerOrder, ['vendor-shared', 'dashboard']);
+      assert.equal(typeof globalThis.window.__SLICE_SHARED_DEPS__['vendors/dompurify']?.sanitize, 'function');
+   } finally {
+      globalThis.slice = originalSlice;
+      globalThis.window = originalWindow;
+      await rm(tempDir, { recursive: true, force: true });
+   }
+});
+
 test('loadBundle dedupes concurrent and repeated alias/case requests using canonical bundle key', async () => {
    const tempDir = await mkdtemp(path.join(tmpdir(), 'slice-controller-loader-'));
    const loaderPath = path.join(tempDir, 'components-alias-loader.mjs');
