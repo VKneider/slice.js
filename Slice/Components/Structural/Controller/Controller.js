@@ -130,8 +130,8 @@ export default class Controller {
             const bundleModule = await this.importBundleOnce(bundlePath);
             const { metadata, registerAll } = await this.validateBundleModule(bundleModule, resolvedBundleName);
 
-            this.registerVendorSharedDependencies(bundleModule, metadata, resolvedBundleName);
-            await registerAll(this, slice.stylesManager);
+            const registerResult = await registerAll(this, slice.stylesManager);
+            this.registerVendorSharedDependencies(bundleModule, metadata, resolvedBundleName, registerResult);
 
             this.loadedBundles.add(resolvedBundleName);
             const loadedBundleKey = metadata.bundleKey;
@@ -256,19 +256,25 @@ export default class Controller {
       return normalized === 'vendor-shared' || normalized === 'vendorshared';
    }
 
-   registerVendorSharedDependencies(bundleModule, metadata, bundleName) {
+   registerVendorSharedDependencies(bundleModule, metadata, bundleName, registerResult) {
       const isVendorShared = this.isVendorSharedBundleName(metadata?.bundleKey)
          || this.isVendorSharedBundleName(bundleName)
          || metadata?.registerVendorSharedDependencies === true;
 
       if (!isVendorShared) {
          return;
-      }
+       }
 
-      const sharedDeps = bundleModule?.SLICE_SHARED_DEPS;
-      if (!sharedDeps || typeof sharedDeps !== 'object') {
-         return;
-      }
+       let sharedDeps = bundleModule?.SLICE_SHARED_DEPS;
+       if (!sharedDeps && registerResult && typeof registerResult === 'object') {
+          sharedDeps = registerResult.SLICE_SHARED_DEPS
+             || registerResult.SLICE_BUNDLE_DEPENDENCIES
+             || registerResult;
+       }
+
+       if (!sharedDeps || typeof sharedDeps !== 'object') {
+          return;
+       }
 
       if (!window.__SLICE_SHARED_DEPS__ || typeof window.__SLICE_SHARED_DEPS__ !== 'object') {
          window.__SLICE_SHARED_DEPS__ = {};
