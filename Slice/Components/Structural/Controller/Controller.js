@@ -65,6 +65,20 @@ export default class Controller {
       return importPromise;
    }
 
+   buildBundleImportPath(bundleInfo) {
+      if (!bundleInfo || typeof bundleInfo.file !== 'string' || bundleInfo.file.length === 0) {
+         throw new Error('Bundle file is required');
+      }
+
+      const basePath = `/bundles/${bundleInfo.file}`;
+      const bundleHash = typeof bundleInfo.hash === 'string' ? bundleInfo.hash.trim() : '';
+      if (!bundleHash) {
+         return basePath;
+      }
+
+      return `${basePath}?v=${encodeURIComponent(bundleHash)}`;
+   }
+
    /**
     * Validate Bundling V2 module contract.
     * Requires named exports: SLICE_BUNDLE_META and registerAll.
@@ -126,7 +140,7 @@ export default class Controller {
                await this.loadBundleWithDependencies(dependencyName, loadingStack);
             }
 
-            const bundlePath = `/bundles/${bundleInfo.file}`;
+            const bundlePath = this.buildBundleImportPath(bundleInfo);
             const bundleModule = await this.importBundleOnce(bundlePath);
             const { metadata, registerAll } = await this.validateBundleModule(bundleModule, resolvedBundleName);
 

@@ -379,6 +379,66 @@ test('loadBundle registers vendor-shared dependencies from registerAll return wh
    }
 });
 
+test('loadBundle appends bundle hash as query param when importing bundle files', async () => {
+   const tempDir = await mkdtemp(path.join(tmpdir(), 'slice-controller-loader-'));
+   const loaderPath = path.join(tempDir, 'components-alias-loader.mjs');
+   await writeFile(
+      loaderPath,
+      `export async function resolve(specifier, context, nextResolve) {
+   if (specifier === '/Components/components.js') {
+      return {
+         shortCircuit: true,
+         url: 'data:text/javascript,export default {};',
+      };
+   }
+   return nextResolve(specifier, context);
+}
+`,
+      'utf8'
+   );
+   register(pathToFileURL(loaderPath).href);
+
+   const controllerModuleUrl = new URL('../Components/Structural/Controller/Controller.js', import.meta.url).href;
+   const { default: Controller } = await import(controllerModuleUrl);
+   const controller = new Controller();
+   const originalSlice = globalThis.slice;
+
+   controller.bundleConfig = {
+      bundles: {
+         routes: {
+            dashboard: {
+               file: 'slice-bundle.dashboard.js',
+               hash: 'abc123hash',
+            },
+         },
+      },
+   };
+
+   let importedPath = null;
+   controller.importBundleOnce = async (bundlePath) => {
+      importedPath = bundlePath;
+      return {
+         SLICE_BUNDLE_META: {
+            bundleKey: 'dashboard',
+            type: 'route',
+         },
+         registerAll: async () => {},
+      };
+   };
+
+   try {
+      globalThis.slice = {
+         stylesManager: {},
+      };
+
+      await controller.loadBundle('dashboard');
+      assert.equal(importedPath, '/bundles/slice-bundle.dashboard.js?v=abc123hash');
+   } finally {
+      globalThis.slice = originalSlice;
+      await rm(tempDir, { recursive: true, force: true });
+   }
+});
+
 test('loadBundle dedupes concurrent and repeated alias/case requests using canonical bundle key', async () => {
    const tempDir = await mkdtemp(path.join(tmpdir(), 'slice-controller-loader-'));
    const loaderPath = path.join(tempDir, 'components-alias-loader.mjs');
