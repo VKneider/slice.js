@@ -1,4 +1,5 @@
 import components from '/Components/components.js';
+import { collectInvalidAllowedValueProps, formatAllowedValuesForLog } from './allowedValuesValidation.js';
 
 export default class Controller {
    constructor() {
@@ -904,6 +905,14 @@ export default class Controller {
       if (missingRequired.length > 0) {
          slice.logger.logError(componentName, `Missing required props: [${missingRequired.join(', ')}]`);
       }
+
+      const invalidAllowedValueProps = collectInvalidAllowedValueProps(staticProps, providedProps);
+      invalidAllowedValueProps.forEach(({ propName, value, allowedValues }) => {
+         slice.logger.logError(
+            componentName,
+            `Invalid value for prop "${propName}": ${JSON.stringify(value)}. Allowed values: ${formatAllowedValuesForLog(allowedValues)}`
+         );
+      });
    }
 
    extractUsedProps(component, staticProps = null) {
