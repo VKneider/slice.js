@@ -1,0 +1,14 @@
+{
+  "mcp": {
+    "thinking": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-sequential-thinking"],
+      "enabled": true
+    },
+    "slicemcp": {
+      "type": "local",
+      "command": ["npx", "-y", "slicejs-mcp"],
+      "enabled": true
+    }
+}
+}
