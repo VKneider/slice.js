@@ -6,16 +6,18 @@
     "node": ">=20"
   },
   "scripts": {
+    "dev": "node ./node_modules/slicejs-cli/client.js dev",
+    "build": "node ./node_modules/slicejs-cli/client.js build",
+    "start": "node ./node_modules/slicejs-cli/client.js start",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "slice:init": "node node_modules/slicejs-cli/client.js init",
-    "slice:create": "node node_modules/slicejs-cli/client.js component create",
-    "slice:delete": "node node_modules/slicejs-cli/client.js component delete",
-    "slice:list": "node node_modules/slicejs-cli/client.js component list",
-    "slice:start": "node api/index.js",
+    "slice:init": "node ./node_modules/slicejs-cli/client.js init",
+    "slice:create": "node ./node_modules/slicejs-cli/client.js component create",
+    "slice:delete": "node ./node_modules/slicejs-cli/client.js component delete",
+    "slice:list": "node ./node_modules/slicejs-cli/client.js component list",
+    "slice:start": "node ./node_modules/slicejs-cli/client.js start",
     "format": "prettier --write \"**/*.js\"",
-    "run": "node api/index.js",
-    "development": "npm run",
-    "slice:modify": "node node_modules/slicejs-cli/client.js modify"
+    "run": "node ./node_modules/slicejs-cli/client.js dev",
+    "slice:modify": "node ./node_modules/slicejs-cli/client.js modify"
   },
   "keywords": [],
   "author": "",
