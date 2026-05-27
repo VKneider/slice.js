@@ -13,84 +13,84 @@
   </p>
 </div>
 
-## Sobre este repositorio
+## About this repository
 
-Este repositorio contiene el core del framework Slice.js: el runtime de componentes, el sistema de routing, el motor de bundles y la API del framework. Es el paquete publicado como `slicejs-web-framework` en npm.
+This repository contains the core of the Slice.js framework: the component runtime, routing system, bundle engine, and framework API. It is the package published as `slicejs-web-framework` on npm.
 
-## Requisitos
+## Prerequisites
 
 - Node.js >= 20
-- npm o pnpm
+- npm or pnpm
 
-## Desarrollo local
+## Local development
 
-1. **Clonar el repositorio**
+1. **Clone the repository**
    ```bash
    git clone https://github.com/VKneider/slice.js.git
    cd slice.js
    ```
 
-2. **Instalar dependencias**
+2. **Install dependencies**
    ```bash
    npm install
    ```
 
-3. **Inicializar proyecto de prueba** (opcional, para desarrollo con el CLI)
+3. **Initialize a test project** (optional, for CLI-based development)
    ```bash
    npx slicejs-cli init
    ```
 
-4. **Probar cambios localmente**
+4. **Test changes locally**
    ```bash
    npx slicejs-cli dev
    ```
 
-## Comandos disponibles
+## Available commands
 
-El framework no expone comandos directamente. Se usa a través del CLI (`slicejs-cli`):
+The framework does not expose commands directly. Use it through the CLI (`slicejs-cli`):
 
-| Comando | Descripción |
+| Command | Description |
 |---------|-------------|
-| `npx slicejs-cli init` | Inicializar un proyecto Slice.js |
-| `npx slicejs-cli dev` | Iniciar servidor de desarrollo |
-| `npx slicejs-cli build` | Compilar para producción |
-| `npx slicejs-cli start` | Servir build de producción |
+| `npx slicejs-cli init` | Initialize a Slice.js project |
+| `npx slicejs-cli dev` | Start development server |
+| `npx slicejs-cli build` | Build for production |
+| `npx slicejs-cli start` | Serve production build |
 
-## Documentación
+## Documentation
 
-La documentación completa está en [slice-js-docs.vercel.app](https://slice-js-docs.vercel.app/Documentation).
+Full documentation is available at [slice-js-docs.vercel.app](https://slice-js-docs.vercel.app/Documentation).
 
-Slice.js también provee un servidor MCP para acceso programático a la documentación:
+Slice.js also provides an MCP server for programmatic documentation access:
 
 ```bash
 npx slicejs-mcp
 ```
 
-Esto permite que asistentes de IA y herramientas consulten, busquen y recuperen documentación de Slice.js.
+This allows AI assistants and tools to query, search, and retrieve Slice.js documentation.
 
-## Estructura del proyecto
+## Project structure
 
 ```
 slice.js/
-├── api/           # API server del framework
-├── src/           # Código fuente del runtime
-│   ├── App/       # Motor de aplicación
-│   ├── Components/# Sistema de componentes
-│   └── ...        # Routing, bundles, utilidades
-├── Slice/         # Framework para componentes visuales
-├── types/         # Declaraciones TypeScript
-└── docs/          # Guías de contribución
+├── api/           # Framework API server
+├── src/           # Runtime source code
+│   ├── App/       # Application engine
+│   ├── Components/# Component system
+│   └── ...        # Routing, bundles, utilities
+├── Slice/         # Visual component framework
+├── types/         # TypeScript declarations
+└── docs/          # Contribution guides
 ```
 
-## Contribuir
+## Contributing
 
-Damos la bienvenida a contribuciones. Revisa las guías en [CONTRIBUTING.md](docs/CONTRIBUTING.md) antes de enviar cambios.
+We welcome contributions. Please review the guidelines in [CONTRIBUTING.md](docs/CONTRIBUTING.md) before submitting changes.
 
-## Licencia
+## License
 
-Distribuido bajo licencia MIT. Ver `LICENSE` para más información.
+Distributed under the MIT License. See `LICENSE` for more information.
 
-## Contacto
+## Contact
 
 Slice.js - [@VKneider](https://github.com/VKneider)
 
