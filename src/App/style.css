@@ -1,40 +1,11 @@
-/* :root {
-  --docs-width: 64%;
-}
-slice-layout {
-  display: flex;
-  justify-content: center;
+/* App-level base styles. Component styles live in each component's own .css. */
+* {
+  box-sizing: border-box;
+  font-family: var(--font-family, system-ui, -apple-system, Segoe UI, Roboto, sans-serif);
 }
 
-p {
-  text-align: justify;
-}
-h1 {
-  padding-top: 10px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--secondary-background-color);
-}
-h2 {
-  padding-top: 10px;
-}
-.grid-container {
-  overflow-x: auto;
-}
-@media only screen and (max-width: 770px) {
-  :root {
-    --docs-width: 100%;
-  }
-}
-* {
-  font-family: var(--font-family);
-}
-.docs_container {
+body {
+  margin: 0;
+  background: var(--primary-background-color);
   color: var(--font-primary-color);
-  margin-top: 100px;
-  overflow-y: scroll;
-  overflow-x: hidden;
-  width: var(--docs-width);
-  padding-left: 10px;
-  padding-right: 10px;
-  padding-bottom: 25px;
-} */
+}

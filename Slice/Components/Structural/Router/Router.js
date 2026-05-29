@@ -298,24 +298,42 @@ export default class Router {
    // ============================================
 
    /**
-    * Navigate to a route path with guards support. Add replace to do router.replace() instead of push.
+    * Navigate to a route path (guards run automatically).
     * @param {string} path
-    * @param {string[]} [_redirectChain]
-    * @param {{ replace?: boolean }} [_options]
+    * @param {{ replace?: boolean }} [options] - `{ replace: true }` replaces history instead of pushing.
     * @returns {Promise<void>}
     */
-   async navigate(path, _redirectChain = [], _options = {}) {
+   async navigate(path, options = {}, legacyOptions) {
+      // Backward compatibility with the previous signature navigate(path, _redirectChain, _options):
+      // if the 2nd argument is the internal redirect chain (an array) or a 3rd argument is passed,
+      // use the 3rd argument as the options object.
+      if (Array.isArray(options)) {
+         options = legacyOptions || {};
+      } else if (legacyOptions !== undefined) {
+         options = legacyOptions || options;
+      }
+      return this._navigateWithGuards(path, options || {}, []);
+   }
+
+   /**
+    * Internal navigation that tracks the guard redirection chain (loop protection).
+    * @param {string} path
+    * @param {{ replace?: boolean }} options
+    * @param {string[]} redirectChain
+    * @returns {Promise<void>}
+    */
+   async _navigateWithGuards(path, options, redirectChain) {
       const currentPath = window.location.pathname;
 
       // Detectar loops infinitos: si ya visitamos esta ruta en la cadena de redirecciones
-      if (_redirectChain.includes(path)) {
-         slice.logger.logError('Router', `Guard redirection loop detected: ${_redirectChain.join(' → ')} → ${path}`);
+      if (redirectChain.includes(path)) {
+         slice.logger.logError('Router', `Guard redirection loop detected: ${redirectChain.join(' → ')} → ${path}`);
          return;
       }
 
       // Límite de seguridad: máximo 10 redirecciones
-      if (_redirectChain.length >= 10) {
-         slice.logger.logError('Router', `Too many redirections: ${_redirectChain.join(' → ')} → ${path}`);
+      if (redirectChain.length >= 10) {
+         slice.logger.logError('Router', `Too many redirections: ${redirectChain.join(' → ')} → ${path}`);
          return;
       }
 
@@ -332,8 +350,7 @@ export default class Router {
 
       // Si el guard redirige
       if (guardResult && guardResult.path) {
-         const newChain = [..._redirectChain, path];
-         return this.navigate(guardResult.path, newChain, guardResult.options);
+         return this._navigateWithGuards(guardResult.path, guardResult.options || {}, [...redirectChain, path]);
       }
 
       // Si el guard cancela la navegación (next(false))
@@ -344,7 +361,7 @@ export default class Router {
 
       // No hay redirección - continuar con la navegación normal
       // Usar replace o push según las opciones
-      if (_options.replace) {
+      if (options.replace) {
          window.history.replaceState({}, path, window.location.origin + path);
       } else {
          window.history.pushState({}, path, window.location.origin + path);
@@ -466,7 +483,7 @@ export default class Router {
       const guardResult = await this._executeBeforeEachGuard(to, from);
 
       if (guardResult && guardResult.path) {
-         return this.navigate(guardResult.path, [], guardResult.options);
+         return this.navigate(guardResult.path, guardResult.options || {});
       }
 
       // Si el guard cancela la navegación inicial (caso raro pero posible)
@@ -662,7 +679,20 @@ export default class Router {
     * @returns {RouteMatch}
     */
    matchRoute(path) {
-      const exactMatch = this.pathToRouteMap.get(path);
+      // Normalize a trailing slash ('/about/' -> '/about'); keep root '/' as-is.
+      path = path.length > 1 ? path.replace(/\/+$/, '') : path;
+      // Exact match first (fast path), then a case-insensitive match on static paths
+      // so '/About' resolves to a route declared as '/about'.
+      let exactMatch = this.pathToRouteMap.get(path);
+      if (!exactMatch) {
+         const lowerPath = path.toLowerCase();
+         for (const [routePattern, route] of this.pathToRouteMap.entries()) {
+            if (!routePattern.includes('${') && routePattern.toLowerCase() === lowerPath) {
+               exactMatch = route;
+               break;
+            }
+         }
+      }
       if (exactMatch) {
          if (exactMatch.parentRoute) {
             return {
@@ -716,6 +746,7 @@ export default class Router {
          }) +
          '$';
 
-      return { regex: new RegExp(regexPattern), paramNames };
+      // 'i' flag: paths match case-insensitively. Captured param values keep their original case.
+      return { regex: new RegExp(regexPattern, 'i'), paramNames };
    }
 }

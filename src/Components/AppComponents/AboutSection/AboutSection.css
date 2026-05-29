@@ -1,0 +1,9 @@
+.about {
+  padding: 16px 0;
+}
+
+.about p {
+  color: var(--font-secondary-color);
+  max-width: 65ch;
+  line-height: 1.6;
+}

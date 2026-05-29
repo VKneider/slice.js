@@ -799,675 +799,625 @@ customElements.define('slice-debugger', Debugger);
 
 function productionOnlyCSS(){
 return `
-#debugger-container {
-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-display: none;
-position: fixed;
-top: 20px;
-right: 20px;
-width: min(420px, calc(100vw - 40px));
-height: 85vh;
-max-height: 85vh;
-background: var(--primary-background-color);
-border: 1px solid var(--medium-color);
-border-radius: 12px;
-box-shadow: 0 20px 40px rgba(var(--primary-color-rgb), 0.15), 0 4px 12px rgba(0, 0, 0, 0.1);
-z-index: 10000;
-overflow: hidden;
-backdrop-filter: blur(10px);
-   box-sizing: border-box;
+/* ============================================================
+   Slice Instruments — Component Inspector
+   All selectors are scoped under the <slice-debugger> tag so the
+   panel never clashes with (or leaks into) app styles. Tokens live
+   on the tag so both #debugger-container and the sibling
+   #editor-modal inherit them. Chrome colors are static; only the
+   accent reads the theme (--primary-color) with a static fallback.
+   ============================================================ */
+slice-debugger {
+   --si-accent: var(--primary-color, #6ee7ff);
+   --si-accent-rgb: var(--primary-color-rgb, 110, 231, 255);
+   --si-surface: rgba(17, 19, 28, 0.88);
+   --si-raised: rgba(255, 255, 255, 0.035);
+   --si-raised-2: rgba(255, 255, 255, 0.06);
+   --si-inset: rgba(0, 0, 0, 0.28);
+   --si-border: rgba(255, 255, 255, 0.09);
+   --si-text: #e8eaf2;
+   --si-dim: #888fa6;
+   --si-danger: #ff6b6b;
+   --si-success: #46d39a;
+   --si-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', 'Cascadia Code', Menlo, Consolas, monospace;
+   --si-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 }
 
-#debugger-container.active {
+slice-debugger *,
+slice-debugger *::before,
+slice-debugger *::after { box-sizing: border-box; }
+
+slice-debugger #debugger-container {
+   font-family: var(--si-sans);
+   display: none;
+   position: fixed;
+   top: 20px;
+   right: 20px;
+   width: 430px;
+   height: 85vh;
+   max-height: 85vh;
+   background: var(--si-surface);
+   border: 1px solid var(--si-border);
+   border-radius: 16px;
+   box-shadow:
+      0 30px 70px -16px rgba(0, 0, 0, 0.6),
+      0 0 0 1px rgba(0, 0, 0, 0.2),
+      0 0 46px -20px rgba(var(--si-accent-rgb), 0.6);
+   color: var(--si-text);
+   z-index: 10000;
+   overflow: hidden;
+   -webkit-backdrop-filter: blur(24px) saturate(1.3);
+   backdrop-filter: blur(24px) saturate(1.3);
+}
+
+slice-debugger #debugger-container.active {
    display: flex;
    flex-direction: column;
+   animation: si-inspector-in 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.debugger-header {
-   background: linear-gradient(135deg, var(--primary-color), var(--primary-color-shade));
-   color: var(--primary-color-contrast);
-   padding: 12px 16px;
-   border-radius: 12px 12px 0 0;
+@keyframes si-inspector-in {
+   from { opacity: 0; transform: translateY(12px) scale(0.985); }
+   to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+slice-debugger #debugger-container::before {
+   content: '';
+   position: absolute;
+   left: 0; top: 0; bottom: 0;
+   width: 2px;
+   background: linear-gradient(180deg, var(--si-accent), transparent 60%);
+   opacity: 0.9;
+   pointer-events: none;
+   z-index: 2;
+}
+
+slice-debugger .debugger-header {
+   background:
+      radial-gradient(140% 160% at 0% 0%, rgba(var(--si-accent-rgb), 0.14), transparent 55%),
+      var(--si-raised);
+   color: var(--si-text);
+   padding: 13px 15px;
+   border-bottom: 1px solid var(--si-border);
    user-select: none;
    cursor: grab;
 }
+slice-debugger .debugger-header:active { cursor: grabbing; }
 
-.debugger-header:active {
-   cursor: grabbing;
-}
-
-.header-content {
+slice-debugger .header-content {
    display: flex;
    justify-content: space-between;
    align-items: center;
 }
 
-.component-info {
+slice-debugger .component-info {
    display: flex;
    align-items: center;
-   gap: 10px;
+   gap: 11px;
+   min-width: 0;
 }
 
-.component-icon {
-   font-size: 20px;
-   opacity: 0.9;
+slice-debugger .component-icon {
+   font-size: 17px;
+   width: 30px; height: 30px;
+   display: flex; align-items: center; justify-content: center;
+   border-radius: 9px;
+   background: rgba(var(--si-accent-rgb), 0.12);
+   border: 1px solid rgba(var(--si-accent-rgb), 0.28);
+   color: var(--si-accent);
+   flex-shrink: 0;
 }
 
-.component-name {
-   font-size: 14px;
+slice-debugger .component-name {
+   font-size: 13px;
    font-weight: 600;
+   font-family: var(--si-mono);
+   color: var(--si-text);
    margin-bottom: 2px;
+   overflow: hidden;
+   text-overflow: ellipsis;
+   white-space: nowrap;
 }
 
-.component-id {
-   font-size: 11px;
-   opacity: 0.8;
+slice-debugger .component-id {
+   font-size: 10.5px;
+   font-family: var(--si-mono);
+   color: var(--si-dim);
+   letter-spacing: 0.02em;
 }
 
-.header-actions {
-   display: flex;
-   gap: 8px;
-}
+slice-debugger .header-actions { display: flex; gap: 6px; }
 
-.minimize-btn, #close-debugger {
-   background: rgba(255, 255, 255, 0.2);
-   border: none;
-   color: var(--primary-color-contrast);
+slice-debugger .minimize-btn,
+slice-debugger #close-debugger {
+   background: var(--si-raised);
+   border: 1px solid var(--si-border);
+   color: var(--si-dim);
    width: 28px;
    height: 28px;
-   border-radius: 6px;
+   border-radius: 8px;
    cursor: pointer;
    display: flex;
    align-items: center;
    justify-content: center;
-   font-size: 16px;
-   font-weight: bold;
-   transition: background 0.2s ease;
+   font-size: 15px;
+   font-weight: 500;
+   line-height: 1;
+   transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
 }
-
-.minimize-btn:hover, #close-debugger:hover {
-   background: rgba(255, 255, 255, 0.3);
+slice-debugger .minimize-btn:hover,
+slice-debugger #close-debugger:hover {
+   color: var(--si-text);
+   background: var(--si-raised-2);
+   border-color: rgba(var(--si-accent-rgb), 0.5);
 }
+slice-debugger #close-debugger:hover { color: var(--si-danger); border-color: rgba(255, 107, 107, 0.5); }
+slice-debugger .minimize-btn:active,
+slice-debugger #close-debugger:active { transform: scale(0.92); }
 
-.debugger-content {
+slice-debugger .debugger-content {
    flex: 1;
    display: flex;
    flex-direction: column;
    overflow: hidden;
 }
 
-.tabs-container {
-   border-bottom: 1px solid var(--medium-color);
-}
+slice-debugger .tabs-container { border-bottom: 1px solid var(--si-border); }
 
-.tab-nav {
+slice-debugger .tab-nav {
    display: flex;
-   background: var(--tertiary-background-color);
+   background: var(--si-inset);
+   padding: 0 6px;
+   gap: 2px;
 }
 
-.tab-btn {
+slice-debugger .tab-btn {
    flex: 1;
-   padding: 10px 14px;
+   padding: 11px 14px;
    border: none;
    background: transparent;
-   color: var(--font-secondary-color);
-   font-size: 12px;
-   font-weight: 500;
+   color: var(--si-dim);
+   font-family: var(--si-mono);
+   font-size: 11px;
+   letter-spacing: 0.08em;
+   text-transform: uppercase;
    cursor: pointer;
-   transition: all 0.2s ease;
+   transition: color 0.18s ease, border-color 0.18s ease;
    border-bottom: 2px solid transparent;
 }
-
-.tab-btn:hover {
-   background: var(--secondary-background-color);
-   color: var(--font-primary-color);
+slice-debugger .tab-btn:hover { color: var(--si-text); }
+slice-debugger .tab-btn.active {
+   color: var(--si-accent);
+   border-bottom-color: var(--si-accent);
 }
 
-.tab-btn.active {
-   background: var(--primary-background-color);
-   color: var(--primary-color);
-   border-bottom-color: var(--primary-color);
-   font-weight: 600;
-}
-
-.tab-content {
+slice-debugger .tab-content {
    flex: 1;
    overflow: hidden;
-   min-height: 0;
+   height: calc(85vh - 104px);
 }
 
-.tab-pane {
+slice-debugger .tab-pane {
    display: none;
    height: 100%;
    overflow-y: auto;
    overflow-x: hidden;
    padding: 16px;
-   box-sizing: border-box;
 }
+slice-debugger .tab-pane.active { display: block; }
 
-.tab-pane.active {
-   display: block;
+slice-debugger .tab-pane::-webkit-scrollbar { width: 8px; }
+slice-debugger .tab-pane::-webkit-scrollbar-track { background: transparent; }
+slice-debugger .tab-pane::-webkit-scrollbar-thumb {
+   background: var(--si-raised-2);
+   border-radius: 8px;
+   border: 2px solid transparent;
+   background-clip: padding-box;
 }
+slice-debugger .tab-pane::-webkit-scrollbar-thumb:hover { background: rgba(var(--si-accent-rgb), 0.4); background-clip: padding-box; }
 
-.tab-pane::-webkit-scrollbar {
-   width: 4px;
-}
-
-.tab-pane::-webkit-scrollbar-track {
-   background: var(--tertiary-background-color);
-   border-radius: 2px;
-}
-
-.tab-pane::-webkit-scrollbar-thumb {
-   background: var(--medium-color);
-   border-radius: 2px;
-}
-
-.tab-pane::-webkit-scrollbar-thumb:hover {
-   background: var(--primary-color);
-}
-
-.props-container {
+slice-debugger .props-container {
    display: flex;
    flex-direction: column;
    gap: 12px;
    margin-bottom: 16px;
-   min-width: 0;
-   overflow-x: hidden;
 }
 
-#debugger-container *,
-#debugger-container *::before,
-#debugger-container *::after {
-   box-sizing: border-box;
-}
-
-.props-actions {
-   border-top: 1px solid var(--medium-color);
+slice-debugger .props-actions {
+   border-top: 1px solid var(--si-border);
    padding-top: 16px;
    margin-top: 8px;
 }
 
-.actions-note {
+slice-debugger .actions-note {
    margin-top: 12px;
-   padding: 8px 12px;
-   background: var(--tertiary-background-color);
-   border-radius: 6px;
-   border: 1px solid var(--medium-color);
+   padding: 9px 12px;
+   background: var(--si-raised);
+   border-radius: 8px;
+   border: 1px solid var(--si-border);
 }
-
-.actions-note small {
-   color: var(--font-secondary-color);
+slice-debugger .actions-note small {
+   color: var(--si-dim);
    font-size: 11px;
    display: flex;
    align-items: center;
    gap: 6px;
 }
 
-.props-section {
-   background: var(--tertiary-background-color);
-   border: 1px solid var(--medium-color);
-   border-radius: 8px;
-   padding: 12px;
+slice-debugger .props-section {
+   background: var(--si-raised);
+   border: 1px solid var(--si-border);
+   border-radius: 12px;
+   padding: 13px;
 }
 
-.section-title {
-   font-size: 12px;
+slice-debugger .section-title {
+   font-size: 10.5px;
    font-weight: 600;
-   color: var(--font-primary-color);
+   letter-spacing: 0.1em;
+   text-transform: uppercase;
+   color: var(--si-dim);
    margin-bottom: 12px;
    display: flex;
    align-items: center;
    gap: 6px;
 }
 
-.prop-item {
+slice-debugger .prop-item {
    display: flex;
    flex-direction: column;
    gap: 6px;
    padding: 12px;
-   background: var(--primary-background-color);
-   border: 1px solid var(--medium-color);
-   border-radius: 6px;
+   background: var(--si-inset);
+   border: 1px solid var(--si-border);
+   border-left: 2px solid transparent;
+   border-radius: 10px;
    margin-bottom: 8px;
-   transition: border-color 0.2s ease;
-   min-width: 0;
-   overflow: hidden;
+   transition: border-color 0.18s ease, background 0.18s ease;
+}
+slice-debugger .prop-item:hover {
+   border-left-color: var(--si-accent);
+   background: rgba(0, 0, 0, 0.34);
 }
 
-.prop-item:hover {
-   border-color: var(--primary-color);
-}
-
-.prop-header {
+slice-debugger .prop-header {
    display: flex;
    justify-content: space-between;
    align-items: center;
    gap: 8px;
-   min-width: 0;
 }
 
-.prop-title {
-   display: flex;
-   align-items: center;
-   gap: 6px;
-   min-width: 0;
-   flex: 1;
-}
-
-.prop-title strong {
-   min-width: 0;
-   overflow: hidden;
-   text-overflow: ellipsis;
-   white-space: nowrap;
-}
-
-.prop-name {
-   font-size: 13px;
+slice-debugger .prop-name {
+   font-size: 12.5px;
    font-weight: 600;
-   color: var(--font-primary-color);
+   font-family: var(--si-mono);
+   color: var(--si-text);
 }
-
-.prop-name.required::after {
+slice-debugger .prop-name.required::after {
    content: " *";
-   color: var(--danger-color);
+   color: var(--si-danger);
 }
 
-.prop-meta {
+slice-debugger .prop-meta {
    display: flex;
    align-items: center;
    gap: 8px;
 }
 
-.prop-type {
-   font-size: 11px;
-   padding: 2px 6px;
-   background: var(--secondary-color);
-   color: var(--secondary-color-contrast);
-   border-radius: 4px;
-   font-family: monospace;
+slice-debugger .prop-type {
+   font-size: 10px;
+   padding: 2px 7px;
+   background: rgba(var(--si-accent-rgb), 0.12);
+   color: var(--si-accent);
+   border: 1px solid rgba(var(--si-accent-rgb), 0.28);
+   border-radius: 999px;
+   font-family: var(--si-mono);
    font-weight: 500;
-   flex-shrink: 0;
+   letter-spacing: 0.02em;
 }
 
-.prop-status {
-   font-size: 12px;
-   font-weight: 500;
-   flex-shrink: 0;
-}
+slice-debugger .prop-status { font-size: 14px; line-height: 1; }
+slice-debugger .status-used { color: var(--si-success); }
+slice-debugger .status-missing { color: var(--si-danger); }
+slice-debugger .status-optional { color: var(--si-dim); }
 
-.status-used {
-   color: var(--success-color);
-}
+slice-debugger .prop-input { margin-top: 6px; }
+slice-debugger .input-group { position: relative; }
 
-.status-missing {
-   color: var(--danger-color);
-}
-
-.status-optional {
-   color: var(--medium-color);
-}
-
-.prop-input {
-   margin-top: 8px;
-   min-width: 0;
-   overflow: hidden;
-}
-
-.input-group {
-   position: relative;
-   max-width: 100%;
-   min-width: 0;
-   overflow: hidden;
-}
-
-.prop-control {
+slice-debugger .prop-control {
    width: 100%;
-   max-width: 100%;
-   min-width: 0;
-   padding: 8px 32px 8px 10px;
-   border: 1px solid var(--medium-color);
-   border-radius: 6px;
-   background: var(--primary-background-color);
-   color: var(--font-primary-color);
-   font-size: 13px;
-   transition: border-color 0.2s ease, box-shadow 0.2s ease;
-   font-family: monospace;
-   box-sizing: border-box;
-   display: block;
+   padding: 9px 34px 9px 11px;
+   border: 1px solid var(--si-border);
+   border-radius: 8px;
+   background: rgba(0, 0, 0, 0.35);
+   color: var(--si-text);
+   font-size: 12.5px;
+   font-family: var(--si-mono);
+   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
-
-.prop-control:focus {
+slice-debugger .prop-control::placeholder { color: var(--si-dim); }
+slice-debugger .prop-control:focus {
    outline: none;
-   border-color: var(--primary-color);
-   box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.1);
+   border-color: rgba(var(--si-accent-rgb), 0.6);
+   box-shadow: 0 0 0 3px rgba(var(--si-accent-rgb), 0.13);
 }
-
-.prop-control:disabled {
-   background: var(--disabled-color);
-   color: var(--font-secondary-color);
-   cursor: not-allowed;
-}
-
-.prop-control[readonly] {
-   background: var(--tertiary-background-color);
-   cursor: pointer;
-   text-overflow: ellipsis;
-   overflow: hidden;
-   white-space: nowrap;
-   max-width: 100%;
-}
-
-.prop-control[readonly]:focus {
-   border-color: var(--accent-color);
-   box-shadow: 0 0 0 3px rgba(var(--accent-color), 0.1);
-}
-
-/* Estilos específicos para checkboxes */
-.prop-control[type="checkbox"] {
-   width: auto;
+slice-debugger .prop-control:disabled { opacity: 0.5; cursor: not-allowed; }
+slice-debugger .prop-control[readonly] { background: var(--si-raised); cursor: pointer; }
+slice-debugger .prop-control[readonly]:focus { border-color: rgba(var(--si-accent-rgb), 0.6); }
+slice-debugger .prop-control[type="checkbox"] {
+   width: 18px;
+   height: 18px;
    padding: 0;
    margin: 0;
    cursor: pointer;
+   accent-color: var(--si-accent);
 }
 
-.edit-btn {
+slice-debugger .edit-btn {
    position: absolute;
-   right: 4px;
+   right: 5px;
    top: 50%;
    transform: translateY(-50%);
-   background: var(--accent-color);
-   border: none;
-   color: white;
-   width: 24px;
-   height: 24px;
-   border-radius: 4px;
+   background: rgba(var(--si-accent-rgb), 0.14);
+   border: 1px solid rgba(var(--si-accent-rgb), 0.3);
+   color: var(--si-accent);
+   width: 25px;
+   height: 25px;
+   border-radius: 6px;
    cursor: pointer;
    font-size: 12px;
    display: flex;
    align-items: center;
    justify-content: center;
-   transition: background 0.2s ease;
+   transition: background 0.15s ease, transform 0.15s ease;
+}
+slice-debugger .edit-btn:hover { background: rgba(var(--si-accent-rgb), 0.26); }
+slice-debugger .edit-btn:active { transform: translateY(-50%) scale(0.9); }
+
+slice-debugger .default-value {
+   font-size: 10.5px;
+   color: var(--si-dim);
+   font-family: var(--si-mono);
+   margin-top: 2px;
 }
 
-.edit-btn:hover {
-   background: var(--primary-color);
-}
+slice-debugger .info-list { display: flex; flex-direction: column; gap: 8px; }
 
-.default-value {
-   font-size: 11px;
-   color: var(--font-secondary-color);
-   font-style: italic;
-   margin-top: 4px;
-}
-
-.info-list {
-   display: flex;
-   flex-direction: column;
-   gap: 12px;
-}
-
-.info-item {
+slice-debugger .info-item {
    display: flex;
    justify-content: space-between;
-   padding: 12px;
-   background: var(--tertiary-background-color);
-   border-radius: 6px;
-   border: 1px solid var(--medium-color);
+   align-items: center;
+   gap: 12px;
+   padding: 12px 13px;
+   background: var(--si-raised);
+   border-radius: 10px;
+   border: 1px solid var(--si-border);
 }
 
-.info-label {
-   font-weight: 600;
-   color: var(--font-primary-color);
-   font-size: 13px;
-}
-
-.info-value {
-   color: var(--font-secondary-color);
-   font-family: monospace;
-   font-size: 12px;
-}
-
-.actions-container {
-   display: flex;
-   flex-direction: column;
-   gap: 16px;
-}
-
-.action-buttons {
-   display: flex;
-   flex-direction: column;
-   gap: 8px;
-}
-
-.action-btn {
-   padding: 12px 16px;
-   border: none;
-   border-radius: 6px;
-   font-size: 13px;
+slice-debugger .info-label {
    font-weight: 500;
+   color: var(--si-dim);
+   font-size: 11px;
+   letter-spacing: 0.04em;
+   text-transform: uppercase;
+}
+
+slice-debugger .info-value {
+   color: var(--si-text);
+   font-family: var(--si-mono);
+   font-size: 12px;
+   text-align: right;
+   overflow: hidden;
+   text-overflow: ellipsis;
+   white-space: nowrap;
+}
+
+slice-debugger .actions-container { display: flex; flex-direction: column; gap: 16px; }
+slice-debugger .action-buttons { display: flex; flex-direction: column; gap: 8px; }
+
+slice-debugger .action-btn {
+   padding: 12px 16px;
+   border: 1px solid transparent;
+   border-radius: 9px;
+   font-size: 12.5px;
+   font-weight: 600;
    cursor: pointer;
-   transition: all 0.2s ease;
+   transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
    display: flex;
    align-items: center;
    justify-content: center;
    gap: 8px;
 }
-
-.action-btn.primary {
-   background: var(--primary-color);
-   color: var(--primary-color-contrast);
+slice-debugger .action-btn:active { transform: scale(0.99); }
+slice-debugger .action-btn.primary { background: var(--si-accent); color: #0b1020; }
+slice-debugger .action-btn.primary:hover { filter: brightness(1.08); }
+slice-debugger .action-btn.secondary {
+   background: rgba(var(--si-accent-rgb), 0.12);
+   color: var(--si-accent);
+   border-color: rgba(var(--si-accent-rgb), 0.3);
 }
-
-.action-btn.primary:hover {
-   background: var(--primary-color-shade);
+slice-debugger .action-btn.secondary:hover { background: rgba(var(--si-accent-rgb), 0.2); }
+slice-debugger .action-btn.tertiary {
+   background: var(--si-raised);
+   color: var(--si-text);
+   border-color: var(--si-border);
 }
+slice-debugger .action-btn.tertiary:hover { background: var(--si-raised-2); }
 
-.action-btn.secondary {
-   background: var(--secondary-color);
-   color: var(--secondary-color-contrast);
-}
-
-.action-btn.secondary:hover {
-   opacity: 0.9;
-}
-
-.action-btn.tertiary {
-   background: var(--tertiary-background-color);
-   color: var(--font-primary-color);
-   border: 1px solid var(--medium-color);
-}
-
-.action-btn.tertiary:hover {
-   background: var(--secondary-background-color);
-}
-
-/* Modal Styles */
-.editor-modal {
+slice-debugger .editor-modal {
    display: none;
    position: fixed;
    top: 0;
    left: 0;
    width: 100%;
    height: 100%;
-   background: rgba(0, 0, 0, 0.6);
+   background: rgba(6, 8, 14, 0.62);
    z-index: 20000;
-   backdrop-filter: blur(4px);
+   -webkit-backdrop-filter: blur(6px);
+   backdrop-filter: blur(6px);
 }
-
-.editor-modal.active {
+slice-debugger .editor-modal.active {
    display: flex;
    align-items: center;
    justify-content: center;
+   animation: si-inspector-in 0.2s ease;
 }
 
-.modal-content {
-background: var(--primary-background-color);
-border-radius: 12px;
-width: min(600px, 92vw);
-max-width: 600px;
-max-height: 80%;
-display: flex;
-flex-direction: column;
-box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
-border: 1px solid var(--medium-color);
-   box-sizing: border-box;
+slice-debugger .modal-content {
+   background: var(--si-surface);
+   border-radius: 16px;
+   width: 90%;
+   max-width: 620px;
+   max-height: 80%;
+   display: flex;
+   flex-direction: column;
+   box-shadow: 0 30px 70px -16px rgba(0, 0, 0, 0.7);
+   border: 1px solid var(--si-border);
+   -webkit-backdrop-filter: blur(24px);
+   backdrop-filter: blur(24px);
 }
 
-.modal-header {
-   padding: 16px 20px;
-   background: var(--tertiary-background-color);
-   border-radius: 12px 12px 0 0;
-   border-bottom: 1px solid var(--medium-color);
+slice-debugger .modal-header {
+   padding: 15px 20px;
+   background: var(--si-raised);
+   border-radius: 16px 16px 0 0;
+   border-bottom: 1px solid var(--si-border);
    display: flex;
    justify-content: space-between;
    align-items: center;
 }
-
-.modal-header h3 {
+slice-debugger .modal-header h3 {
    margin: 0;
-   font-size: 16px;
+   font-size: 13px;
    font-weight: 600;
-   color: var(--font-primary-color);
+   font-family: var(--si-mono);
+   letter-spacing: 0.04em;
+   color: var(--si-text);
 }
 
-.modal-close {
-   background: none;
-   border: none;
-   font-size: 20px;
-   color: var(--font-secondary-color);
+slice-debugger .modal-close {
+   background: var(--si-raised);
+   border: 1px solid var(--si-border);
+   font-size: 16px;
+   color: var(--si-dim);
    cursor: pointer;
-   width: 32px;
-   height: 32px;
-   border-radius: 6px;
+   width: 30px;
+   height: 30px;
+   border-radius: 8px;
    display: flex;
    align-items: center;
    justify-content: center;
-   transition: background 0.2s ease;
+   transition: color 0.15s ease, background 0.15s ease;
+}
+slice-debugger .modal-close:hover { color: var(--si-danger); background: var(--si-raised-2); }
+
+slice-debugger .modal-body {
+   flex: 1;
+   padding: 20px;
+   display: flex;
+   flex-direction: column;
+   gap: 16px;
+   overflow: hidden;
 }
 
-.modal-close:hover {
-   background: var(--secondary-background-color);
-}
-
-.modal-body {
-flex: 1;
-padding: 20px;
-display: flex;
-flex-direction: column;
-gap: 16px;
-overflow: hidden;
-   min-height: 0;
-}
-
-.editor-type-selector {
+slice-debugger .editor-type-selector {
    display: flex;
    gap: 4px;
-   background: var(--tertiary-background-color);
+   background: var(--si-inset);
    padding: 4px;
-   border-radius: 6px;
+   border-radius: 9px;
+   border: 1px solid var(--si-border);
 }
 
-.type-btn {
+slice-debugger .type-btn {
    flex: 1;
    padding: 8px 12px;
    border: none;
    background: transparent;
-   color: var(--font-secondary-color);
-   font-size: 12px;
+   color: var(--si-dim);
+   font-size: 11px;
+   font-family: var(--si-mono);
    font-weight: 500;
    cursor: pointer;
-   border-radius: 4px;
-   transition: all 0.2s ease;
+   border-radius: 6px;
+   transition: color 0.15s ease, background 0.15s ease;
+}
+slice-debugger .type-btn.active {
+   background: rgba(var(--si-accent-rgb), 0.16);
+   color: var(--si-accent);
 }
 
-.type-btn.active {
-   background: var(--primary-color);
-   color: var(--primary-color-contrast);
+slice-debugger .editor-container {
+   flex: 1;
+   position: relative;
+   min-height: 200px;
 }
 
-.editor-container {
-flex: 1;
-position: relative;
-min-height: 200px;
-   min-width: 0;
+slice-debugger #property-editor {
+   width: 100%;
+   height: 100%;
+   border: 1px solid var(--si-border);
+   border-radius: 10px;
+   padding: 14px;
+   background: rgba(0, 0, 0, 0.4);
+   color: var(--si-text);
+   font-family: var(--si-mono);
+   font-size: 12.5px;
+   line-height: 1.6;
+   resize: none;
+   outline: none;
+   min-height: 200px;
+   tab-size: 2;
+}
+slice-debugger #property-editor:focus {
+   border-color: rgba(var(--si-accent-rgb), 0.6);
+   box-shadow: 0 0 0 3px rgba(var(--si-accent-rgb), 0.13);
 }
 
-#property-editor {
-width: 100%;
-height: 100%;
-border: 1px solid var(--medium-color);
-border-radius: 6px;
-padding: 12px;
-background: var(--primary-background-color);
-color: var(--font-primary-color);
-font-family: 'Monaco', 'Consolas', monospace;
-font-size: 13px;
-line-height: 1.5;
-resize: none;
-outline: none;
-min-height: 200px;
-   box-sizing: border-box;
-}
-
-#property-editor:focus {
-   border-color: var(--primary-color);
-   box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.1);
-}
-
-.validation-message {
-   font-size: 12px;
-   color: var(--danger-color);
+slice-debugger .validation-message {
+   font-size: 11.5px;
+   color: var(--si-danger);
    min-height: 18px;
    display: flex;
    align-items: center;
    gap: 6px;
+   font-family: var(--si-mono);
 }
 
-.modal-actions {
-   padding: 16px 20px;
-   background: var(--tertiary-background-color);
-   border-radius: 0 0 12px 12px;
-   border-top: 1px solid var(--medium-color);
+slice-debugger .modal-actions {
+   padding: 15px 20px;
+   background: var(--si-raised);
+   border-radius: 0 0 16px 16px;
+   border-top: 1px solid var(--si-border);
    display: flex;
    gap: 12px;
    justify-content: flex-end;
 }
 
-.modal-btn {
+slice-debugger .modal-btn {
    padding: 10px 20px;
-   border: none;
-   border-radius: 6px;
-   font-size: 13px;
-   font-weight: 500;
+   border: 1px solid transparent;
+   border-radius: 8px;
+   font-size: 12.5px;
+   font-weight: 600;
    cursor: pointer;
-   transition: all 0.2s ease;
+   transition: background 0.15s ease, border-color 0.15s ease;
 }
+slice-debugger .modal-btn.cancel {
+   background: var(--si-raised);
+   color: var(--si-text);
+   border-color: var(--si-border);
+}
+slice-debugger .modal-btn.cancel:hover { background: var(--si-raised-2); }
+slice-debugger .modal-btn.save { background: var(--si-success); color: #06231a; }
+slice-debugger .modal-btn.save:hover { filter: brightness(1.08); }
+slice-debugger .modal-btn.save:disabled { opacity: 0.45; cursor: not-allowed; filter: none; }
 
-.modal-btn.cancel {
-   background: var(--tertiary-background-color);
-   color: var(--font-primary-color);
-   border: 1px solid var(--medium-color);
+@media (prefers-reduced-motion: reduce) {
+   slice-debugger #debugger-container.active,
+   slice-debugger .editor-modal.active { animation: none; }
 }
-
-.modal-btn.cancel:hover {
-   background: var(--secondary-background-color);
-}
-
-.modal-btn.save {
-   background: var(--success-color);
-   color: var(--success-contrast);
-}
-
-.modal-btn.save:hover {
-   opacity: 0.9;
-}
-
-.modal-btn.save:disabled {
-   background: var(--disabled-color);
-   cursor: not-allowed;
-}
-   `
+`
 }
 
 function productionOnlyHtml(){

@@ -27,9 +27,18 @@ export default class MultiRoute extends HTMLElement {
       */
    }
 
+   // Find the route whose path matches the current URL, case-insensitively.
+   // '/About' matches a route declared as '/about'. (Dynamic params like ${id}
+   // are still resolved by the top-level router, not by MultiRoute.)
+   matchRoute() {
+      const currentPath = window.location.pathname.toLowerCase();
+      return this.props.routes.find(
+         (route) => typeof route.path === 'string' && route.path.toLowerCase() === currentPath
+      );
+   }
+
    async render() {
-      const currentPath = window.location.pathname;
-      const routeMatch = this.props.routes.find((route) => route.path === currentPath);
+      const routeMatch = this.matchRoute();
 
       if (routeMatch) {
          const { component } = routeMatch;
@@ -68,8 +77,7 @@ export default class MultiRoute extends HTMLElement {
    }
 
    async renderIfCurrentRoute() {
-      const currentPath = window.location.pathname;
-      const routeMatch = this.props.routes.find((route) => route.path === currentPath);
+      const routeMatch = this.matchRoute();
 
       if (routeMatch) {
          await this.render(); // Llamamos a render() para manejar el renderizado desde la caché si es necesario
@@ -79,8 +87,7 @@ export default class MultiRoute extends HTMLElement {
    }
 
    removeComponent() {
-      const currentPath = window.location.pathname;
-      const routeMatch = this.props.routes.find((route) => route.path === currentPath);
+      const routeMatch = this.matchRoute();
 
       if (routeMatch) {
          const { component } = routeMatch;

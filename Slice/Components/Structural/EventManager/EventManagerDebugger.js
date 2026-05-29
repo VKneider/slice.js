@@ -173,15 +173,19 @@ export default class EventManagerDebugger extends HTMLElement {
       return `
       <div id="events-debugger">
          <div class="events-header">
-            <div class="title">Events</div>
+            <div class="brand">
+               <span class="status-dot"></span>
+               <span class="glyph">◇</span>
+               <span class="title">EVENTS</span>
+            </div>
             <div class="actions">
-               <button id="events-refresh" class="btn">Refresh</button>
-               <button id="events-close" class="btn">Close</button>
+               <button id="events-refresh" class="btn" title="Refresh" aria-label="Refresh">⟳</button>
+               <button id="events-close" class="btn" title="Close" aria-label="Close">✕</button>
             </div>
          </div>
          <div class="events-toolbar">
-            <input id="events-filter" type="text" placeholder="Filter events" />
-            <div class="count">Total: <span id="events-count">0</span></div>
+            <input id="events-filter" type="text" placeholder="filter events…" autocomplete="off" spellcheck="false" />
+            <div class="count"><span id="events-count">0</span></div>
          </div>
          <div class="events-list" id="events-list"></div>
       </div>
@@ -190,170 +194,281 @@ export default class EventManagerDebugger extends HTMLElement {
 
    renderStyles() {
       return `
-      #events-debugger {
-         position: fixed;
-         bottom: 20px;
-         right: 20px;
-         width: min(360px, calc(100vw - 40px));
-         max-height: 60vh;
-         background: var(--primary-background-color);
-         border: 1px solid var(--medium-color);
-         border-radius: 12px;
-         box-shadow: 0 16px 32px rgba(0, 0, 0, 0.15);
-         display: none;
-         flex-direction: column;
-         z-index: 10001;
-         overflow: hidden;
-      }
+/* Slice Instruments — events console. All selectors scoped to the
+   <slice-eventmanager-debugger> tag so nothing clashes with app styles. */
+slice-eventmanager-debugger {
+   --si-accent: var(--primary-color, #6ee7ff);
+   --si-accent-rgb: var(--primary-color-rgb, 110, 231, 255);
+   --si-surface: rgba(17, 19, 28, 0.86);
+   --si-raised: rgba(255, 255, 255, 0.035);
+   --si-raised-2: rgba(255, 255, 255, 0.06);
+   --si-border: rgba(255, 255, 255, 0.09);
+   --si-text: #e8eaf2;
+   --si-dim: #888fa6;
+   --si-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', 'Cascadia Code', Menlo, Consolas, monospace;
+}
 
-      #events-debugger.active {
-         display: flex;
-      }
+slice-eventmanager-debugger #events-debugger {
+   position: fixed;
+   bottom: 20px;
+   right: 20px;
+   width: min(380px, calc(100vw - 40px));
+   max-height: 64vh;
+   background: var(--si-surface);
+   border: 1px solid var(--si-border);
+   border-radius: 14px;
+   box-shadow:
+      0 24px 60px -12px rgba(0, 0, 0, 0.55),
+      0 0 0 1px rgba(0, 0, 0, 0.2),
+      0 0 38px -18px rgba(var(--si-accent-rgb), 0.55);
+   -webkit-backdrop-filter: blur(22px) saturate(1.3);
+   backdrop-filter: blur(22px) saturate(1.3);
+   display: none;
+   flex-direction: column;
+   z-index: 10001;
+   overflow: hidden;
+   color: var(--si-text);
+   font-family: var(--si-mono);
+}
 
-      #events-debugger * {
-         box-sizing: border-box;
-      }
+slice-eventmanager-debugger #events-debugger.active {
+   display: flex;
+   animation: si-events-in 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+}
 
-      .events-header {
-         display: flex;
-         justify-content: space-between;
-         align-items: center;
-         padding: 12px 14px;
-         background: var(--tertiary-background-color);
-         border-bottom: 1px solid var(--medium-color);
-         user-select: none;
-      }
+@keyframes si-events-in {
+   from { opacity: 0; transform: translateY(10px) scale(0.985); }
+   to   { opacity: 1; transform: translateY(0) scale(1); }
+}
 
-      .events-header .title {
-         font-weight: 600;
-         color: var(--font-primary-color);
-      }
+slice-eventmanager-debugger #events-debugger * { box-sizing: border-box; }
 
-      .events-header .actions {
-         display: flex;
-         gap: 8px;
-      }
+slice-eventmanager-debugger #events-debugger::before {
+   content: '';
+   position: absolute;
+   left: 0; top: 0; bottom: 0;
+   width: 2px;
+   background: linear-gradient(180deg, var(--si-accent), transparent 70%);
+   opacity: 0.85;
+   pointer-events: none;
+}
 
-      .events-header .btn {
-         padding: 6px 10px;
-         border-radius: 6px;
-         border: 1px solid var(--medium-color);
-         background: var(--primary-background-color);
-         color: var(--font-primary-color);
-         cursor: pointer;
-         font-size: 12px;
-      }
+slice-eventmanager-debugger .events-header {
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+   padding: 12px 14px;
+   background:
+      radial-gradient(120% 140% at 0% 0%, rgba(var(--si-accent-rgb), 0.10), transparent 60%),
+      var(--si-raised);
+   border-bottom: 1px solid var(--si-border);
+   user-select: none;
+}
 
-      .events-toolbar {
-         display: flex;
-         gap: 10px;
-         align-items: center;
-         padding: 10px 12px;
-         border-bottom: 1px solid var(--medium-color);
-      }
+slice-eventmanager-debugger .brand { display: flex; align-items: center; gap: 9px; }
 
-      .events-toolbar input {
-         flex: 1;
-         min-width: 0;
-         padding: 6px 8px;
-         border-radius: 6px;
-         border: 1px solid var(--medium-color);
-         background: var(--primary-background-color);
-         color: var(--font-primary-color);
-      }
+slice-eventmanager-debugger .status-dot {
+   width: 7px; height: 7px;
+   border-radius: 50%;
+   background: var(--si-accent);
+   animation: si-pulse-ev 2.4s ease-out infinite;
+}
 
-      .events-list {
-         padding: 10px 12px;
-         overflow: auto;
-         display: flex;
-         flex-direction: column;
-         gap: 8px;
-      }
+@keyframes si-pulse-ev {
+   0%   { box-shadow: 0 0 0 0 rgba(var(--si-accent-rgb), 0.55); }
+   70%  { box-shadow: 0 0 0 7px rgba(var(--si-accent-rgb), 0); }
+   100% { box-shadow: 0 0 0 0 rgba(var(--si-accent-rgb), 0); }
+}
 
-      .event-row {
-         display: block;
-         padding: 8px 10px;
-         background: var(--tertiary-background-color);
-         border-radius: 6px;
-         border: 1px solid var(--medium-color);
-      }
+slice-eventmanager-debugger .glyph { color: var(--si-accent); font-size: 12px; opacity: 0.9; }
 
-      .event-row summary {
-         display: flex;
-         align-items: center;
-         justify-content: space-between;
-         gap: 8px;
-         cursor: pointer;
-         list-style: none;
-      }
+slice-eventmanager-debugger .title {
+   font-weight: 600;
+   font-size: 11px;
+   letter-spacing: 0.18em;
+   color: var(--si-text);
+}
 
-      .event-row summary::-webkit-details-marker {
-         display: none;
-      }
+slice-eventmanager-debugger .actions { display: flex; gap: 6px; }
 
-      .event-name {
-         font-family: monospace;
-         font-size: 12px;
-         color: var(--font-primary-color);
-         overflow: hidden;
-         text-overflow: ellipsis;
-         white-space: nowrap;
-      }
+slice-eventmanager-debugger .btn {
+   width: 26px; height: 26px;
+   display: flex; align-items: center; justify-content: center;
+   border-radius: 7px;
+   border: 1px solid var(--si-border);
+   background: var(--si-raised);
+   color: var(--si-dim);
+   cursor: pointer;
+   font-size: 13px;
+   line-height: 1;
+   transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+slice-eventmanager-debugger .btn:hover {
+   color: var(--si-text);
+   background: var(--si-raised-2);
+   border-color: rgba(var(--si-accent-rgb), 0.5);
+}
+slice-eventmanager-debugger .btn:active { transform: scale(0.92); }
+slice-eventmanager-debugger #events-refresh:hover { color: var(--si-accent); }
 
-      .event-count {
-         font-weight: 600;
-         color: var(--primary-color);
-      }
+slice-eventmanager-debugger .events-toolbar {
+   display: flex;
+   gap: 10px;
+   align-items: center;
+   padding: 10px 12px;
+   border-bottom: 1px solid var(--si-border);
+}
 
-      .subscriber-list {
-         margin-top: 10px;
-         display: flex;
-         flex-direction: column;
-         gap: 8px;
-      }
+slice-eventmanager-debugger .events-toolbar input {
+   flex: 1;
+   min-width: 0;
+   padding: 7px 10px 7px 30px;
+   border-radius: 8px;
+   border: 1px solid var(--si-border);
+   background:
+      var(--si-raised) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='%23888fa6' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m21 21-4.3-4.3'/%3E%3C/svg%3E") no-repeat 10px center;
+   color: var(--si-text);
+   font-family: var(--si-mono);
+   font-size: 12px;
+   transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+slice-eventmanager-debugger .events-toolbar input::placeholder { color: var(--si-dim); }
+slice-eventmanager-debugger .events-toolbar input:focus {
+   outline: none;
+   border-color: rgba(var(--si-accent-rgb), 0.6);
+   box-shadow: 0 0 0 3px rgba(var(--si-accent-rgb), 0.12);
+}
 
-      .subscriber-row {
-         display: flex;
-         justify-content: space-between;
-         gap: 8px;
-         padding: 6px 8px;
-         border-radius: 6px;
-         background: var(--primary-background-color);
-         border: 1px solid var(--medium-color);
-      }
+slice-eventmanager-debugger .events-toolbar .count { font-size: 11px; color: var(--si-dim); min-width: 22px; text-align: center; }
+slice-eventmanager-debugger .events-toolbar .count span { color: var(--si-accent); font-weight: 600; }
 
-      .subscriber-name {
-         font-size: 12px;
-         color: var(--font-primary-color);
-         overflow: hidden;
-         text-overflow: ellipsis;
-         white-space: nowrap;
-      }
+slice-eventmanager-debugger .events-list {
+   padding: 10px 12px 12px;
+   overflow: auto;
+   display: flex;
+   flex-direction: column;
+   gap: 7px;
+}
+slice-eventmanager-debugger .events-list::-webkit-scrollbar { width: 8px; }
+slice-eventmanager-debugger .events-list::-webkit-scrollbar-thumb {
+   background: var(--si-raised-2);
+   border-radius: 8px;
+   border: 2px solid transparent;
+   background-clip: padding-box;
+}
+slice-eventmanager-debugger .events-list::-webkit-scrollbar-thumb:hover { background: rgba(var(--si-accent-rgb), 0.4); background-clip: padding-box; }
 
-      .subscriber-meta {
-         font-size: 11px;
-         color: var(--font-secondary-color);
-         display: flex;
-         align-items: center;
-         gap: 6px;
-         white-space: nowrap;
-      }
+slice-eventmanager-debugger .event-row {
+   display: block;
+   padding: 9px 11px;
+   background: var(--si-raised);
+   border-radius: 9px;
+   border: 1px solid var(--si-border);
+   border-left: 2px solid transparent;
+   transition: border-color 0.18s ease, background 0.18s ease;
+}
+slice-eventmanager-debugger .event-row:hover { background: var(--si-raised-2); border-left-color: var(--si-accent); }
 
-      .badge {
-         padding: 2px 6px;
-         border-radius: 999px;
-         background: var(--secondary-color);
-         color: var(--secondary-color-contrast);
-         font-size: 10px;
-         text-transform: uppercase;
-      }
+slice-eventmanager-debugger .event-row summary {
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   gap: 10px;
+   cursor: pointer;
+   list-style: none;
+}
+slice-eventmanager-debugger .event-row summary::-webkit-details-marker { display: none; }
+slice-eventmanager-debugger .event-row summary::after {
+   content: '›';
+   margin-left: auto;
+   color: var(--si-dim);
+   font-size: 15px;
+   line-height: 1;
+   transition: transform 0.2s ease, color 0.2s ease;
+}
+slice-eventmanager-debugger .event-row[open] summary::after { transform: rotate(90deg); color: var(--si-accent); }
 
-      .empty {
-         color: var(--font-secondary-color);
-         font-size: 12px;
-         text-align: center;
-         padding: 12px 0;
-      }
+slice-eventmanager-debugger .event-name {
+   font-family: var(--si-mono);
+   font-size: 12px;
+   color: var(--si-text);
+   overflow: hidden;
+   text-overflow: ellipsis;
+   white-space: nowrap;
+}
+
+slice-eventmanager-debugger .event-count {
+   font-weight: 600;
+   font-size: 11px;
+   color: var(--si-accent);
+   background: rgba(var(--si-accent-rgb), 0.12);
+   border: 1px solid rgba(var(--si-accent-rgb), 0.25);
+   padding: 1px 8px;
+   border-radius: 999px;
+   min-width: 22px;
+   text-align: center;
+}
+
+slice-eventmanager-debugger .subscriber-list {
+   margin-top: 9px;
+   padding-top: 9px;
+   border-top: 1px dashed var(--si-border);
+   display: flex;
+   flex-direction: column;
+   gap: 6px;
+}
+
+slice-eventmanager-debugger .subscriber-row {
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+   gap: 10px;
+   padding: 6px 9px;
+   border-radius: 7px;
+   background: rgba(0, 0, 0, 0.22);
+   border: 1px solid var(--si-border);
+}
+
+slice-eventmanager-debugger .subscriber-name {
+   font-size: 11.5px;
+   color: var(--si-text);
+   overflow: hidden;
+   text-overflow: ellipsis;
+   white-space: nowrap;
+}
+
+slice-eventmanager-debugger .subscriber-meta {
+   font-size: 10.5px;
+   color: var(--si-dim);
+   display: flex;
+   align-items: center;
+   gap: 6px;
+   white-space: nowrap;
+}
+
+slice-eventmanager-debugger .badge {
+   padding: 1px 6px;
+   border-radius: 999px;
+   background: rgba(var(--si-accent-rgb), 0.16);
+   color: var(--si-accent);
+   border: 1px solid rgba(var(--si-accent-rgb), 0.3);
+   font-size: 9px;
+   letter-spacing: 0.06em;
+   text-transform: uppercase;
+}
+
+slice-eventmanager-debugger .empty {
+   color: var(--si-dim);
+   font-size: 11px;
+   letter-spacing: 0.04em;
+   text-align: center;
+   padding: 22px 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+   slice-eventmanager-debugger #events-debugger.active { animation: none; }
+   slice-eventmanager-debugger .status-dot { animation: none; }
+}
       `;
    }
 }
