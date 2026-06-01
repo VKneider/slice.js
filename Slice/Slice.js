@@ -161,7 +161,7 @@ export default class Slice {
 
          // 📦 If component is from bundle but not in cache, it should have been registered by registerBundle
          if (isFromBundle) {
-            console.log(`📦 Using bundled component: ${componentName}`);
+            this.logger.logInfo('Slice', `📦 Using bundled component: ${componentName}`);
          }
 
          if (html || html === '') {
@@ -181,7 +181,6 @@ export default class Slice {
             this.logger.logInfo('Slice', `CSS ${componentName} loaded`);
          }
       } catch (error) {
-         console.log(error);
          this.logger.logError('Slice', `Error loading resources for ${componentName}`, error);
          return null;
       }
@@ -196,20 +195,10 @@ export default class Slice {
          delete props.sliceId;
 
        const ComponentClass = this.controller.classes.get(componentName);
-       if (componentName === 'Loading') {
-          console.log('🔎 Build component: Loading', {
-             classType: typeof ComponentClass,
-             isFunction: typeof ComponentClass === 'function',
-             classValue: ComponentClass
-          });
-       }
-       if (componentName === 'InputSearchDocs' || componentName === 'MainMenu') {
-          console.log(`🔎 Build component: ${componentName}`, {
-             classType: typeof ComponentClass,
-             isFunction: typeof ComponentClass === 'function',
-             classValue: ComponentClass
-          });
-       }
+       this.logger.logInfo(
+          'Slice',
+          `🔎 Build component: ${componentName} (classType: ${typeof ComponentClass}, isFunction: ${typeof ComponentClass === 'function'})`
+       );
        const componentInstance = new ComponentClass(props);
 
          if (componentIds.id && isVisual) componentInstance.id = componentIds.id;
@@ -234,7 +223,6 @@ export default class Slice {
          this.logger.logInfo('Slice', `Instance ${componentInstance.sliceId} created`);
          return componentInstance;
       } catch (error) {
-         console.log(error);
          this.logger.logError('Slice', `Error creating instance ${componentName}`, error);
          return null;
       }

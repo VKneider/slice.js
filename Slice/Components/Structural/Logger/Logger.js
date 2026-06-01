@@ -5,7 +5,6 @@ export default class Logger {
       this.logs = [];
       this.logEnabled = slice.loggerConfig.enabled;
       this.showLogsConfig = slice.loggerConfig.showLogs;
-      console.log(slice.loggerConfig)
 
       this.showLog = function showLog(log) {
          if (!this.showLogsConfig) return;

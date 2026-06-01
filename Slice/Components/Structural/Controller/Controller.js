@@ -132,7 +132,7 @@ export default class Controller {
          try {
             const bundleInfo = this.getBundleInfo(resolvedBundleName);
             if (!bundleInfo) {
-               console.warn(`Bundle ${resolvedBundleName} not found in configuration`);
+               slice.logger.logWarning('Controller', `Bundle ${resolvedBundleName} not found in configuration`);
                return;
              }
 
@@ -308,7 +308,7 @@ export default class Controller {
    registerBundleLegacy(bundle) {
       const { components, metadata } = bundle;
 
-      console.log(`📦 Registering bundle: ${metadata.type} (${metadata.componentCount} components)`);
+      slice.logger.logInfo('Controller', `📦 Registering bundle: ${metadata.type} (${metadata.componentCount} components)`);
 
       // Phase 1: Register templates and CSS for all components first
       for (const [componentName, componentData] of Object.entries(components)) {
@@ -329,7 +329,7 @@ export default class Controller {
                }
             }
          } catch (error) {
-            console.warn(`❌ Failed to register assets for ${componentName}:`, error);
+            slice.logger.logError('Controller', `❌ Failed to register assets for ${componentName}`, error);
          }
       }
 
@@ -369,8 +369,8 @@ export default class Controller {
                            window.document
                         );
                      } catch (evalError) {
-                        console.warn(`❌ Failed to evaluate processed dependency ${depName}:`, evalError);
-                        console.warn('Processed content preview:', processedContent.substring(0, 200));
+                        slice.logger.logWarning('Controller', `❌ Failed to evaluate processed dependency ${depName}: ${evalError}`);
+                        slice.logger.logWarning('Controller', `Processed content preview: ${processedContent.substring(0, 200)}`);
                         // Try evaluating the original content as fallback
                         try {
                            new Function('slice', 'customElements', 'window', 'document', depContent)(
@@ -379,16 +379,16 @@ export default class Controller {
                               window,
                               window.document
                            );
-                           console.log(`✅ Fallback evaluation succeeded for ${depName}`);
+                           slice.logger.logInfo('Controller', `✅ Fallback evaluation succeeded for ${depName}`);
                         } catch (fallbackError) {
-                           console.warn(`❌ Fallback evaluation also failed for ${depName}:`, fallbackError);
+                           slice.logger.logWarning('Controller', `❌ Fallback evaluation also failed for ${depName}: ${fallbackError}`);
                         }
                      }
 
                      processedDeps.add(depName);
-                     console.log(`📄 Dependency loaded: ${depName}`);
+                     slice.logger.logInfo('Controller', `📄 Dependency loaded: ${depName}`);
                   } catch (depError) {
-                     console.warn(`⚠️ Failed to load dependency ${depName} for ${componentName}:`, depError);
+                     slice.logger.logWarning('Controller', `⚠️ Failed to load dependency ${depName} for ${componentName}: ${depError}`);
                   }
                }
             }
@@ -443,11 +443,11 @@ export default class Controller {
 
                if (componentClass) {
                   this.classes.set(componentName, componentClass);
-                  console.log(`📝 Class registered for: ${componentName}`);
+                  slice.logger.logInfo('Controller', `📝 Class registered for: ${componentName}`);
                }
             } catch (error) {
-               console.warn(`❌ Failed to evaluate class for ${componentName}:`, error);
-               console.warn('Code that failed:', componentData.js.substring(0, 200) + '...');
+               slice.logger.logWarning('Controller', `❌ Failed to evaluate class for ${componentName}: ${error}`);
+               slice.logger.logWarning('Controller', `Code that failed: ${componentData.js.substring(0, 200) + '...'}`);
             }
          }
       }
@@ -459,7 +459,7 @@ export default class Controller {
      registerBundle(bundle) {
        const validation = this.validateBundle(bundle);
        if (!validation.isValid) {
-          console.warn(`❌ Bundle validation failed: ${validation.error}`);
+          slice.logger.logWarning('Controller', `❌ Bundle validation failed: ${validation.error}`);
           return Promise.resolve(false);
        }
 
@@ -474,7 +474,7 @@ export default class Controller {
         }
      }
 
-    console.log(`📦 Registering bundle: ${metadata.type} (${metadata.componentCount} components)`);
+    slice.logger.logInfo('Controller', `📦 Registering bundle: ${metadata.type} (${metadata.componentCount} components)`);
 
       const entries = Object.entries(components);
       const chunkSize = 50;
@@ -505,22 +505,20 @@ export default class Controller {
                       : componentName;
                    this.classes.set(registeredName, componentData.class);
                    if (componentName === 'Loading') {
-                      console.log('🔎 Bundle class registered: Loading', {
-                         registeredName,
-                         type: typeof componentData.class,
-                         isFunction: typeof componentData.class === 'function'
-                      });
+                      slice.logger.logInfo(
+                         'Controller',
+                         `🔎 Bundle class registered: Loading (registeredName=${registeredName}, type=${typeof componentData.class}, isFunction=${typeof componentData.class === 'function'})`
+                      );
                    }
                    if (componentName === 'InputSearchDocs' || componentName === 'MainMenu') {
-                      console.log(`🔎 Bundle class registered: ${componentName}`, {
-                         registeredName,
-                         type: typeof componentData.class,
-                         isFunction: typeof componentData.class === 'function'
-                      });
+                      slice.logger.logInfo(
+                         'Controller',
+                         `🔎 Bundle class registered: ${componentName} (registeredName=${registeredName}, type=${typeof componentData.class}, isFunction=${typeof componentData.class === 'function'})`
+                      );
                    }
                 }
             } catch (error) {
-               console.warn(`❌ Failed to register component ${componentName}:`, error);
+               slice.logger.logError('Controller', `❌ Failed to register component ${componentName}`, error);
             }
          }
 
@@ -534,7 +532,7 @@ export default class Controller {
              return;
           }
 
-          console.log(`✅ Bundle registration completed: ${metadata.componentCount} components processed`);
+          slice.logger.logInfo('Controller', `✅ Bundle registration completed: ${metadata.componentCount} components processed`);
           resolve(true);
         };
 
