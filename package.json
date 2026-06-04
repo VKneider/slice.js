@@ -1,6 +1,6 @@
 {
   "name": "slicejs-web-framework",
-  "version": "3.3.2",
+  "version": "3.3.3",
   "description": "",
   "engines": {
     "node": ">=20"
@@ -23,6 +23,10 @@
   "author": "",
   "license": "ISC",
   "type": "module",
+  "exports": {
+    ".": "./Slice/Slice.js",
+    "./api/framework/express.js": "./api/framework/express.js"
+  },
   "types": "./types/index.d.ts",
   "dependencies": {
     "express": "^4.19.2"
