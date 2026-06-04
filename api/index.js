@@ -1,5 +1,5 @@
 // api/index.js - Seguridad automática sin configuración
-import express from 'express';
+import express from './framework/express.js';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
