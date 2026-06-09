@@ -57,7 +57,8 @@ export default class ContextManager {
       // Cargar estado persistido si existe
       let state = initialState;
       if (options.persist) {
-         const persisted = this._loadFromStorage(name);
+         const storageKey = options.storageKey || `slice_context_${name}`;
+         const persisted = this._loadFromStorage(storageKey);
          if (persisted !== null) {
             state = persisted;
          }
@@ -332,15 +333,14 @@ export default class ContextManager {
    /**
     * Cargar estado desde localStorage
     */
-   _loadFromStorage(name) {
+   _loadFromStorage(storageKey) {
       try {
-         const key = `slice_context_${name}`;
-         const data = localStorage.getItem(key);
+         const data = localStorage.getItem(storageKey);
          if (data) {
             return JSON.parse(data);
          }
       } catch (error) {
-         slice.logger.logWarning('ContextManager', `Error cargando "${name}" de localStorage`, error);
+         slice.logger.logWarning('ContextManager', `Error cargando "${storageKey}" de localStorage`, error);
       }
       return null;
    }
