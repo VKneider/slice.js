@@ -716,6 +716,11 @@ export default class Controller {
       // Registrar en activeComponents
       this.activeComponents.set(component.sliceId, component);
 
+      // Exponer sliceId como atributo HTML para búsqueda por DOM (destroyByContainer, etc.)
+      if (typeof component.setAttribute === 'function') {
+         component.setAttribute('slice-id', component.sliceId);
+      }
+
       // 🚀 OPTIMIZACIÓN: Actualizar índice inverso de hijos
       if (parent) {
          if (!this.childrenIndex.has(parent.sliceId)) {
