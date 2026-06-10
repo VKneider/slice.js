@@ -20,6 +20,11 @@ export default class Controller {
       this.bundleImportPromises = new Map();
       this.bundleLoadPromises = new Map();
 
+      // 🔁 Singleton builds in flight: sliceId → Promise<instance>.
+      // Lets concurrent build({singleton:true}) calls share one build instead
+      // of racing on a duplicate sliceId. Entries are transient (deleted on settle).
+      this._pendingBuilds = new Map();
+
       this.idCounter = 0;
    }
 
@@ -731,8 +736,23 @@ export default class Controller {
       // Recursively assign parent to children
       component.querySelectorAll('*').forEach((child) => {
          if (child.tagName.startsWith('SLICE-')) {
+            // Only the call that establishes the DIRECT parent link feeds the
+            // index — the depth-first recursion sets a node's parent before an
+            // outer ancestor's forEach reaches it, so `component` here is the
+            // immediate enclosing component.
             if (!child.parentComponent) {
                child.parentComponent = component;
+               // 🔁 Maintain childrenIndex so destroyComponent(parent) cascades
+               // to children built via slice.build (which registers them WITHOUT
+               // a parent, leaving the index otherwise empty). Without this, a
+               // parent's destroy never finds — and never cleans up — its children.
+               if (child.sliceId && component.sliceId) {
+                  if (!this.childrenIndex.has(component.sliceId)) {
+                     this.childrenIndex.set(component.sliceId, new Set());
+                  }
+                  this.childrenIndex.get(component.sliceId).add(child.sliceId);
+                  child._depth = (component._depth || 0) + 1;
+               }
             }
             this.registerComponentsRecursively(child, component);
          }
@@ -746,6 +766,33 @@ export default class Controller {
     */
    getComponent(sliceId) {
       return this.activeComponents.get(sliceId);
+   }
+
+   /**
+    * Get-or-create a single instance keyed by sliceId, deduplicating concurrent
+    * builds. Returns the existing instance if already registered, the in-flight
+    * promise if a build is underway, or otherwise memoizes a fresh build via
+    * `builder` (an injected closure — the controller never builds by itself).
+    *
+    * The in-flight promise is removed once it settles, so a failed build (which
+    * resolves to `null` and never registers in activeComponents) can be retried
+    * by a later call and never poisons the registry.
+    *
+    * @param {string} sliceId
+    * @param {() => Promise<any>} builder
+    * @returns {any|Promise<any>} instance (sync) or Promise<instance>
+    */
+   getOrCreate(sliceId, builder) {
+      const existing = this.activeComponents.get(sliceId);
+      if (existing) return existing;
+
+      const pending = this._pendingBuilds.get(sliceId);
+      if (pending) return pending;
+
+      const promise = Promise.resolve(builder())
+         .finally(() => this._pendingBuilds.delete(sliceId));
+      this._pendingBuilds.set(sliceId, promise);
+      return promise;
    }
 
    loadTemplateToComponent(component) {

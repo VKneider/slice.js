@@ -90,11 +90,54 @@ export default class Slice {
 
    /**
     * Build a component instance and run init.
+    *
+    * Pass `{ singleton: true }` to get-or-create one shared instance keyed by
+    * `sliceId` (defaults to `componentName`). Concurrent singleton builds of the
+    * same id share a single in-flight build, so they never race on a duplicate
+    * sliceId. Singletons are only supported for Service components — for app-wide
+    * UI build a Provider Service that manages the Visual (see ToastProvider /
+    * ToolTipProvider), because a DOM node can only live in one place.
+    *
+    * Note: `props` only apply on the first (creating) call; later calls return
+    * the existing instance and ignore them.
+    *
+    * @param {string} componentName
+    * @param {Object} [props]
+    * @param {boolean} [props.singleton] Reuse a single instance per sliceId.
+    * @returns {Promise<HTMLElement|Object|null>}
+    */
+   async build(componentName, props = {}) {
+      if (!props || props.singleton !== true) {
+         return this._build(componentName, props);
+      }
+
+      const { singleton, ...rest } = props;
+      const sliceId = rest.sliceId || componentName;
+
+      const category = this.controller.componentCategories.get(componentName);
+      if (category !== 'Service') {
+         this.logger.logError(
+            'Slice',
+            `singleton:true is only supported for Service components ('${componentName}' is ${category || 'unknown'}). ` +
+               `For app-wide UI build a Provider Service that manages the Visual (see ToastProvider/ToolTipProvider).`
+         );
+         return null;
+      }
+
+      return this.controller.getOrCreate(sliceId, () =>
+         this._build(componentName, { ...rest, sliceId })
+      );
+   }
+
+   /**
+    * Internal build: load resources, construct, run init, register. Always
+    * creates a new instance. Public `build` delegates here (and wraps it with
+    * get-or-create when `singleton:true`).
     * @param {string} componentName
     * @param {Object} [props]
     * @returns {Promise<HTMLElement|Object|null>}
     */
-   async build(componentName, props = {}) {
+   async _build(componentName, props = {}) {
       if (!componentName) {
          this.logger.logError('Slice', null, `Component name is required to build a component`);
          return null;
@@ -193,6 +236,10 @@ export default class Slice {
 
          delete props.id;
          delete props.sliceId;
+         // `singleton` is a build directive (handled in the public build()
+         // wrapper). Strip it here too so it is consistently reserved and never
+         // leaks into a component's props on the non-singleton path.
+         delete props.singleton;
 
        const ComponentClass = this.controller.classes.get(componentName);
        this.logger.logInfo(
