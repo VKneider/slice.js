@@ -80,6 +80,44 @@ export default class Slice {
    }
 
    /**
+    * Typed accessors over the public env, so callers stop re-parsing strings.
+    *   slice.env.get('SLICE_PUBLIC_API_URL', '')
+    *   slice.env.bool('SLICE_PUBLIC_AUTH_ENABLED')   // '1'|'true'|'yes'|'on' → true
+    *   slice.env.int('SLICE_PUBLIC_TIMEOUT', 5000)
+    *   slice.env.list('SLICE_PUBLIC_MODELS')         // 'a, b' → ['a','b']
+    *   slice.env.has('X')  /  slice.env.all()
+    * @returns {{ get: Function, has: Function, all: Function, bool: Function, int: Function, list: Function }}
+    */
+   get env() {
+      const read = (name) =>
+         Object.prototype.hasOwnProperty.call(this._publicEnv, name) ? this._publicEnv[name] : undefined;
+      const present = (v) => v !== undefined && String(v).trim() !== '';
+
+      return {
+         get: (name, fallback = undefined) => this.getEnv(name, fallback),
+         has: (name) => Object.prototype.hasOwnProperty.call(this._publicEnv, name),
+         all: () => this.getPublicEnv(),
+         bool: (name, fallback = false) => {
+            const v = read(name);
+            return present(v) ? ['1', 'true', 'yes', 'on'].includes(String(v).trim().toLowerCase()) : fallback;
+         },
+         int: (name, fallback = 0) => {
+            const v = read(name);
+            const n = parseInt(v, 10);
+            return Number.isNaN(n) ? fallback : n;
+         },
+         list: (name, fallback = []) => {
+            const v = read(name);
+            if (!present(v)) return fallback;
+            return String(v)
+               .split(',')
+               .map((s) => s.trim())
+               .filter(Boolean);
+         },
+      };
+   }
+
+   /**
     * Get a component instance by sliceId.
     * @param {string} componentSliceId
     * @returns {HTMLElement|undefined}
@@ -114,11 +152,15 @@ export default class Slice {
       const { singleton, ...rest } = props;
       const sliceId = rest.sliceId || componentName;
 
+      // Singletons are allowed for any category whose *type* is 'Service' — not
+      // only the built-in 'Service' category. Custom categories declared in
+      // sliceConfig with `"type": "Service"` (e.g. AppServices) are services too.
       const category = this.controller.componentCategories.get(componentName);
-      if (category !== 'Service') {
+      const categoryType = slice.paths?.components?.[category]?.type;
+      if (categoryType !== 'Service') {
          this.logger.logError(
             'Slice',
-            `singleton:true is only supported for Service components ('${componentName}' is ${category || 'unknown'}). ` +
+            `singleton:true is only supported for Service-type components ('${componentName}' is in category '${category || 'unknown'}', type '${categoryType || 'unknown'}'). ` +
                `For app-wide UI build a Provider Service that manages the Visual (see ToastProvider/ToolTipProvider).`
          );
          return null;

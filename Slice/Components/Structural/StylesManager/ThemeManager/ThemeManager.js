@@ -5,6 +5,9 @@ export default class ThemeManager {
    constructor() {
       this.themeStyles = new Map();
       this.currentTheme = null;
+      // In-flight loads, keyed by theme name, so concurrent applyTheme() calls for
+      // the same theme share one fetch instead of racing and double-fetching.
+      this._loadingThemes = new Map();
       this.themeStyle = document.createElement('style');
       document.head.appendChild(this.themeStyle);
    }
@@ -20,12 +23,25 @@ export default class ThemeManager {
          return;
       }
 
-      if (!this.themeStyles.has(themeName)) {
-         await this.loadThemeCSS(themeName);
-      } else {
+      // Already the active theme — nothing to re-inject.
+      if (themeName === this.currentTheme) {
+         return;
+      }
+
+      if (this.themeStyles.has(themeName)) {
          this.setThemeStyle(themeName);
          this.saveThemeLocally(themeName, this.themeStyles.get(themeName));
+         return;
       }
+
+      // Coalesce concurrent loads of the same theme into a single fetch.
+      if (!this._loadingThemes.has(themeName)) {
+         this._loadingThemes.set(
+            themeName,
+            this.loadThemeCSS(themeName).finally(() => this._loadingThemes.delete(themeName))
+         );
+      }
+      await this._loadingThemes.get(themeName);
    }
 
    /**
@@ -79,6 +95,12 @@ export default class ThemeManager {
    setThemeStyle(themeName) {
       this.themeStyle.textContent = this.themeStyles.get(themeName);
       this.currentTheme = themeName;
+      // Expose the active theme on the root element so CSS can react per theme
+      // without any JS — e.g. [data-slice-theme="Dark"] .logo { filter: ... }.
+      // Non-breaking: apps opt in only if they reference the attribute.
+      if (typeof document !== 'undefined' && document.documentElement) {
+         document.documentElement.setAttribute('data-slice-theme', themeName);
+      }
       slice.logger.logInfo('ThemeManager', `Theme ${themeName} applied`);
    }
 }

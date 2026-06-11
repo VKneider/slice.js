@@ -46,6 +46,14 @@ export default class Router {
       this.activeRoute = null;
       this.pathToRouteMap = this.createPathToRouteMap(routes);
 
+      // O(1) case-insensitive lookup for static routes, so a miss on the exact map
+      // doesn't scan every route on each navigation. Param routes (which carry a
+      // precompiled `compiled` regex) are excluded — they go through the param loop.
+      this._staticLowerIndex = new Map();
+      for (const [pattern, route] of this.pathToRouteMap.entries()) {
+         if (!route.compiled) this._staticLowerIndex.set(pattern.toLowerCase(), route);
+      }
+
       // Navigation Guards
       this._beforeEachGuard = null;
       this._afterEachGuard = null;
@@ -581,6 +589,12 @@ export default class Router {
             parentRoute: parentRoute,
          };
 
+         // Compile parameterized patterns once at map-build time instead of on every
+         // navigation. Static routes leave `compiled` undefined.
+         if (fullPath.includes('${')) {
+            routeWithParent.compiled = this.compilePathPattern(fullPath);
+         }
+
          pathToRouteMap.set(fullPath, routeWithParent);
 
          if (route.children) {
@@ -685,13 +699,7 @@ export default class Router {
       // so '/About' resolves to a route declared as '/about'.
       let exactMatch = this.pathToRouteMap.get(path);
       if (!exactMatch) {
-         const lowerPath = path.toLowerCase();
-         for (const [routePattern, route] of this.pathToRouteMap.entries()) {
-            if (!routePattern.includes('${') && routePattern.toLowerCase() === lowerPath) {
-               exactMatch = route;
-               break;
-            }
-         }
+         exactMatch = this._staticLowerIndex.get(path.toLowerCase());
       }
       if (exactMatch) {
          if (exactMatch.parentRoute) {
@@ -704,9 +712,9 @@ export default class Router {
          return { route: exactMatch, params: {} };
       }
 
-      for (const [routePattern, route] of this.pathToRouteMap.entries()) {
-         if (routePattern.includes('${')) {
-            const { regex, paramNames } = this.compilePathPattern(routePattern);
+      for (const route of this.pathToRouteMap.values()) {
+         if (route.compiled) {
+            const { regex, paramNames } = route.compiled;
             const match = path.match(regex);
             if (match) {
                const params = {};

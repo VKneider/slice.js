@@ -154,6 +154,60 @@ export default class ContextManager {
       slice.logger.logInfo('ContextManager', `Contexto "${name}" actualizado`);
    }
 
+   /**
+    * Merge a partial object into the context's state (first-level merge).
+    * `setState` REPLACES the whole state; `patch` keeps the existing fields and
+    * overrides only the keys you pass — the common "update one field" case.
+    * @param {string} name - Nombre del contexto
+    * @param {Object} partial - Campos a fusionar sobre el estado actual
+    * @returns {void}
+    *
+    * @example
+    * slice.context.patch('cart', { discount: 0.1 });   // items/total se conservan
+    */
+   patch(name, partial) {
+      if (!this.contexts.has(name)) {
+         slice.logger.logError('ContextManager', `El contexto "${name}" no existe`);
+         return;
+      }
+      if (!partial || typeof partial !== 'object' || Array.isArray(partial)) {
+         slice.logger.logError('ContextManager', `patch("${name}") requiere un objeto parcial`);
+         return;
+      }
+      return this.setState(name, (prev) => ({ ...prev, ...partial }));
+   }
+
+   /**
+    * Return a handle bound to a single context so you call its methods without
+    * repeating the name on every call.
+    * @param {string} name - Nombre del contexto
+    * @returns {{ get: Function, set: Function, patch: Function, watch: Function, bind: Function, has: Function, destroy: Function }}
+    *
+    * @example
+    * const cart = slice.context.use('cart');
+    * cart.get();                         // estado actual
+    * cart.patch({ discount: 0.1 });      // merge (conserva el resto)
+    * cart.watch(this, (s) => this.render(s));
+    * // watch + render inicial en una línea:
+    * cart.bind(this, (count) => { this.$badge.textContent = count; }, (s) => s.items.length);
+    */
+   use(name) {
+      return {
+         get: () => this.getState(name),
+         set: (updater) => this.setState(name, updater),
+         patch: (partial) => this.patch(name, partial),
+         watch: (component, callback, selector = null) => this.watch(name, component, callback, selector),
+         // watch + an immediate call with the current value (initial render in one line)
+         bind: (component, callback, selector = null) => {
+            const state = this.getState(name);
+            callback(selector ? selector(state) : state);
+            return this.watch(name, component, callback, selector);
+         },
+         has: () => this.has(name),
+         destroy: () => this.destroy(name),
+      };
+   }
+
    // ============================================
    // WATCH (OBSERVAR CAMBIOS)
    // ============================================

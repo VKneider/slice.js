@@ -43,7 +43,9 @@ function createSlice() {
       paths: {
         components: {
           Service: { path: '/Components/Service', type: 'Service' },
-          Visual: { path: '/Components/Visual', type: 'Visual' }
+          Visual: { path: '/Components/Visual', type: 'Visual' },
+          // Custom category whose type is Service (e.g. an app's own services).
+          AppServices: { path: '/Components/AppServices', type: 'Service' }
         }
       },
       themeManager: {},
@@ -60,6 +62,9 @@ function createSlice() {
   // Pre-seed the class so _build skips the network fetch (the real path for a
   // class already cached by the controller). Everything else is real.
   instance.controller.classes.set('Probe', Probe);
+  // AppProbe is a Service-shaped class registered under the custom 'AppServices'
+  // category; reuse the Probe class (same shape).
+  instance.controller.classes.set('AppProbe', Probe);
   return instance;
 }
 
@@ -154,6 +159,24 @@ test(
     assert.equal(result, null, 'returns null for a Visual');
     assert.equal(errored, true, 'logs an error');
     assert.equal(constructCount, 0, 'never constructed');
+  })
+);
+
+test(
+  'singleton:true is allowed for a custom Service-type category (AppServices)',
+  withSlice(async (slice) => {
+    let errored = false;
+    slice.logger.logError = () => {
+      errored = true;
+    };
+
+    const a = await slice.build('AppProbe', { singleton: true });
+    const b = await slice.build('AppProbe', { singleton: true });
+
+    assert.ok(a, 'builds the instance');
+    assert.equal(a, b, 'returns the same singleton instance');
+    assert.equal(errored, false, 'does not log an error for a Service-type category');
+    assert.equal(constructCount, 1, 'constructed exactly once');
   })
 );
 

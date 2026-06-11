@@ -5,7 +5,9 @@
 // map only that exact specifier to a small fixture components map (just data,
 // the same shape the real components.js exports). Everything else resolves
 // normally, so the tests exercise the real Slice + Controller code, not mocks.
-const COMPONENTS = { Probe: 'Service', ModalProbe: 'Visual' };
+// AppProbe lives in a CUSTOM category ('AppServices') whose type is 'Service' —
+// it must be allowed as a singleton (the type, not the category name, decides).
+const COMPONENTS = { Probe: 'Service', ModalProbe: 'Visual', AppProbe: 'AppServices' };
 const STUB = `export default ${JSON.stringify(COMPONENTS)};`;
 
 export async function resolve(specifier, context, nextResolve) {

@@ -72,6 +72,10 @@ export default class StylesManager {
     * @returns {void}
     */
    registerComponentStyles(componentName, cssText) {
+      // Idempotent: a component's CSS is injected at most once, no matter how many
+      // times it is built or how a caller reaches here (Controller guards upstream,
+      // but the debuggers and the resource loader do not).
+      if (slice.controller.requestedStyles.has(componentName)) return;
       slice.controller.requestedStyles.add(componentName);
       this.appendComponentStyles(cssText);
    }
