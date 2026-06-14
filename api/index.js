@@ -110,9 +110,14 @@ app.get('/slice-env.json', (req, res) => {
 if (runMode === 'production') {
   app.get('/Slice/Slice.js', (req, res) => {
     const slicePath = path.join(__dirname, '..', 'node_modules', 'slicejs-web-framework', 'Slice', 'Slice.js');
-    if (fs.existsSync(slicePath)) {
-      res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
-      return res.send(fs.readFileSync(slicePath, 'utf8'));
+    try {
+      if (fs.existsSync(slicePath)) {
+        res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+        return res.send(fs.readFileSync(slicePath, 'utf8'));
+      }
+    } catch (error) {
+      console.error(`Error reading Slice.js:`, error);
+      return res.status(500).send('Error loading framework');
     }
     return res.status(404).send('Slice.js not found');
   });
@@ -141,7 +146,7 @@ app.use('/bundles/', (req, res, next) => {
         console.log(`✅ Serving bundle: ${req.path} (${fileContent.length} bytes, ${Buffer.byteLength(fileContent, 'utf8')} bytes UTF-8)`);
         return res.send(fileContent);
       } catch (error) {
-        console.log(`❌ Error reading bundle file: ${error.message}`);
+        console.error(`Error reading bundle file:`, error);
         return res.status(500).send('Error reading bundle file');
       }
     } else {
@@ -175,37 +180,34 @@ if (runMode === 'development') {
   app.use(express.static(path.join(__dirname, `../${folderDeployed}`)));
 } else {
   app.use('/App', express.static(path.join(__dirname, `../${folderDeployed}`, 'App')));
+  const serveStaticFile = (req, res, filePath, contentType, fileName) => {
+    try {
+      if (fs.existsSync(filePath)) {
+        res.setHeader('Content-Type', contentType);
+        return res.send(fs.readFileSync(filePath, 'utf8'));
+      }
+    } catch (error) {
+      console.error(`Error reading ${fileName}:`, error);
+      return res.status(500).send(`Error reading ${fileName}`);
+    }
+    return res.status(404).send(`${fileName} not found`);
+  };
+
   app.get('/manifest.json', (req, res) => {
     const manifestPath = path.join(__dirname, `../${folderDeployed}`, 'manifest.json');
-    if (fs.existsSync(manifestPath)) {
-      res.setHeader('Content-Type', 'application/json; charset=utf-8');
-      return res.send(fs.readFileSync(manifestPath, 'utf8'));
-    }
-    return res.status(404).send('manifest.json not found');
+    serveStaticFile(req, res, manifestPath, 'application/json; charset=utf-8', 'manifest.json');
   });
   app.get('/service-worker.js', (req, res) => {
     const workerPath = path.join(__dirname, `../${folderDeployed}`, 'service-worker.js');
-    if (fs.existsSync(workerPath)) {
-      res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
-      return res.send(fs.readFileSync(workerPath, 'utf8'));
-    }
-    return res.status(404).send('service-worker.js not found');
+    serveStaticFile(req, res, workerPath, 'application/javascript; charset=utf-8', 'service-worker.js');
   });
   app.get('/routes.js', (req, res) => {
     const routesPath = path.join(__dirname, `../${folderDeployed}`, 'routes.js');
-    if (fs.existsSync(routesPath)) {
-      res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
-      return res.send(fs.readFileSync(routesPath, 'utf8'));
-    }
-    return res.status(404).send('routes.js not found');
+    serveStaticFile(req, res, routesPath, 'application/javascript; charset=utf-8', 'routes.js');
   });
   app.get('/sliceConfig.json', (req, res) => {
     const configPath = path.join(__dirname, `../${folderDeployed}`, 'sliceConfig.json');
-    if (fs.existsSync(configPath)) {
-      res.setHeader('Content-Type', 'application/json; charset=utf-8');
-      return res.send(fs.readFileSync(configPath, 'utf8'));
-    }
-    return res.status(404).send('sliceConfig.json not found');
+    serveStaticFile(req, res, configPath, 'application/json; charset=utf-8', 'sliceConfig.json');
   });
   for (const folder of normalizedPublicFolders) {
     app.use(folder, express.static(path.join(__dirname, `../${folderDeployed}`, folder)));
@@ -245,15 +247,8 @@ app.get('*', (req, res) => {
   const indexPath = path.join(__dirname, `../${folderDeployed}`, "App", 'index.html');
   res.sendFile(indexPath, (err) => {
     if (err) {
-      res.status(404).send(`
-        <h1>404 - Page Not Found</h1>
-        <p>The requested file could not be found in /${folderDeployed}</p>
-        <p>Make sure you've run the appropriate build command:</p>
-        <ul>
-          <li>For development: Files should be in /src</li>
-          <li>For production: Run "npm run slice:build" first</li>
-        </ul>
-      `);
+      console.error(`[SPA Fallback] Error sending ${indexPath}:`, err);
+      res.status(500).send(`<h1>500 - Internal Server Error</h1><p>Could not serve application file</p>`);
     }
   });
 });

@@ -128,7 +128,8 @@ export default class ContextManagerDebugger extends HTMLElement {
       this.countLabel.textContent = String(items.length);
       this.list.innerHTML = items.length
          ? items.map((item) => {
-              const preview = JSON.stringify(item.state, null, 2);
+              let preview;
+              try { preview = JSON.stringify(item.state, null, 2); } catch { preview = String(item.state); }
               return `
                <div class="context-row">
                   <div class="context-row-head">

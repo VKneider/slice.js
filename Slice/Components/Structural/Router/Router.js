@@ -77,14 +77,22 @@ export default class Router {
     * @returns {void}
     */
    init() {
-      window.addEventListener('popstate', this.onRouteChange.bind(this));
+      window.addEventListener('popstate', () => {
+         try {
+            this.onRouteChange();
+         } catch (error) {
+            slice.logger.error('Router', 'Error in popstate handler', error);
+         }
+      });
 
-      // Auto-start después de 50ms si el usuario no llama start() manualmente
-      // Esto da tiempo para que el usuario configure guards si lo necesita
       this._autoStartTimeout = setTimeout(async () => {
          if (!this._started) {
-            slice.logger.logInfo('Router', 'Auto-starting router (no manual start() called)');
-            await this.start();
+            try {
+               slice.logger.info('Router', 'Auto-starting router (no manual start() called)');
+               await this.start();
+            } catch (error) {
+               slice.logger.error('Router', 'Auto-start failed', error);
+            }
          }
       }, 50);
    }
@@ -273,8 +281,8 @@ export default class Router {
          // Retornar tanto el path como las opciones
          return redirectPath ? { path: redirectPath, options: redirectOptions } : null;
       } catch (error) {
-         slice.logger.logError('Router', 'Error in beforeEach guard', error);
-         return null; // En caso de error, continuar con la navegación
+         slice.logger.error('Router', `Error in beforeEach guard from "${from?.path}" to "${to?.path}"`, error);
+         return { path: false, options: {} };
       }
    }
 
@@ -405,23 +413,25 @@ export default class Router {
     * @returns {Promise<void>}
     */
    async onRouteChange() {
-      // Cancelar el timeout anterior si existe
       if (this.routeChangeTimeout) {
          clearTimeout(this.routeChangeTimeout);
       }
 
-      // Debounce de 10ms para evitar múltiples llamadas seguidas
       this.routeChangeTimeout = setTimeout(async () => {
-         const path = window.location.pathname;
-         const routeContainersFlag = await this.renderRoutesComponentsInPage();
+         try {
+            const path = window.location.pathname;
+            const routeContainersFlag = await this.renderRoutesComponentsInPage();
 
-         if (routeContainersFlag) {
-            return;
-         }
+            if (routeContainersFlag) {
+               return;
+            }
 
-         const { route, params } = this.matchRoute(path);
-         if (route) {
-            await this.handleRoute(route, params);
+            const { route, params } = this.matchRoute(path);
+            if (route) {
+               await this.handleRoute(route, params);
+            }
+         } catch (error) {
+            slice.logger.error('Router', `Route change failed for ${window.location.pathname}`, error);
          }
       }, 10);
    }
@@ -538,29 +548,33 @@ export default class Router {
    setupMutationObserver() {
       if (typeof MutationObserver !== 'undefined') {
          this.observer = new MutationObserver((mutations) => {
-            let shouldInvalidateCache = false;
+            try {
+               let shouldInvalidateCache = false;
 
-            mutations.forEach((mutation) => {
-               if (mutation.type === 'childList') {
-                  const addedNodes = Array.from(mutation.addedNodes);
-                  const removedNodes = Array.from(mutation.removedNodes);
+               mutations.forEach((mutation) => {
+                  if (mutation.type === 'childList') {
+                     const addedNodes = Array.from(mutation.addedNodes || []);
+                     const removedNodes = Array.from(mutation.removedNodes || []);
 
-                  const hasRouteNodes = [...addedNodes, ...removedNodes].some(
-                     (node) =>
-                        node.nodeType === Node.ELEMENT_NODE &&
-                        (node.tagName === 'SLICE-ROUTE' ||
-                           node.tagName === 'SLICE-MULTI-ROUTE' ||
-                           node.querySelector?.('slice-route, slice-multi-route'))
-                  );
+                     const hasRouteNodes = [...addedNodes, ...removedNodes].some(
+                        (node) =>
+                           node.nodeType === Node.ELEMENT_NODE &&
+                           (node.tagName === 'SLICE-ROUTE' ||
+                              node.tagName === 'SLICE-MULTI-ROUTE' ||
+                              node.querySelector?.('slice-route, slice-multi-route'))
+                     );
 
-                  if (hasRouteNodes) {
-                     shouldInvalidateCache = true;
+                     if (hasRouteNodes) {
+                        shouldInvalidateCache = true;
+                     }
                   }
-               }
-            });
+               });
 
-            if (shouldInvalidateCache) {
-               this.invalidateCache();
+               if (shouldInvalidateCache) {
+                  this.invalidateCache();
+               }
+            } catch (error) {
+               slice.logger.error('Router', 'Error in MutationObserver callback', error);
             }
          });
 
@@ -631,7 +645,8 @@ export default class Router {
                routerContainersFlag = true;
             }
          } catch (error) {
-            slice.logger.logError('Router', `Error rendering route container`, error);
+            const containerName = routeContainer?.tagName || routeContainer?.constructor?.name || 'unknown';
+            slice.logger.error('Router', `Error rendering route container "${containerName}"`, error);
          }
       }
 

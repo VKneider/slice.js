@@ -1,4 +1,11 @@
-import Log from './Log.js';
+   import Log from './Log.js';
+
+const logTypes = {
+   ERROR: 'error',
+   WARN: 'warn',
+   INFO: 'info',
+   DEBUG: 'debug',
+};
 
 export default class Logger {
    constructor() {
@@ -18,18 +25,45 @@ export default class Logger {
                      switch (logType) {
                         case logTypes.ERROR:
                            console.error(
-                              `\x1b[31mERROR\x1b[0m - ${log.componentCategory} - ${log.componentSliceId} - ${log.message} - ${log.error}`
+                              `\x1b[31mERROR\x1b[0m - ${log.componentCategory} - ${log.componentSliceId} - ${log.message}`,
+                              log.error
                            );
                            break;
-                        case logTypes.WARNING:
-                           console.warn(
-                              `\x1b[33m⚠ WARNING\x1b[0m - ${log.componentCategory} - ${log.componentSliceId} - ${log.message}`
-                           );
+                        case logTypes.WARN:
+                           if (log.error) {
+                              console.warn(
+                                 `\x1b[33m⚠ WARN\x1b[0m - ${log.componentCategory} - ${log.componentSliceId} - ${log.message}`,
+                                 log.error
+                              );
+                           } else {
+                              console.warn(
+                                 `\x1b[33m⚠ WARN\x1b[0m - ${log.componentCategory} - ${log.componentSliceId} - ${log.message}`
+                              );
+                           }
                            break;
                         case logTypes.INFO:
-                           console.log(
-                              `\x1b[32m✔ INFO\x1b[0m - ${log.componentCategory} - ${log.componentSliceId} - ${log.message}`
-                           );
+                           if (log.error) {
+                              console.log(
+                                 `\x1b[32m✔ INFO\x1b[0m - ${log.componentCategory} - ${log.componentSliceId} - ${log.message}`,
+                                 log.error
+                              );
+                           } else {
+                              console.log(
+                                 `\x1b[32m✔ INFO\x1b[0m - ${log.componentCategory} - ${log.componentSliceId} - ${log.message}`
+                              );
+                           }
+                           break;
+                        case logTypes.DEBUG:
+                           if (log.error) {
+                              console.debug(
+                                 `\x1b[36m🔍 DEBUG\x1b[0m - ${log.componentCategory} - ${log.componentSliceId} - ${log.message}`,
+                                 log.error
+                              );
+                           } else {
+                              console.debug(
+                                 `\x1b[36m🔍 DEBUG\x1b[0m - ${log.componentCategory} - ${log.componentSliceId} - ${log.message}`
+                              );
+                           }
                            break;
                         default:
                            console.log(
@@ -49,7 +83,7 @@ export default class Logger {
 
       try {
          componentName = slice.controller.activeComponents.get(componentSliceId).constructor.name;
-      } catch (error) {
+      } catch (_err) {
          componentName = componentSliceId;
       }
 
@@ -67,7 +101,7 @@ export default class Logger {
     * @param {any} [error]
     * @returns {void}
     */
-   logError(componentSliceId, message, error) {
+   error(componentSliceId, message, error) {
       this.createLog(logTypes.ERROR, componentSliceId, message, error);
    }
 
@@ -75,20 +109,50 @@ export default class Logger {
     * Log a warning message.
     * @param {string} componentSliceId
     * @param {string} message
+    * @param {any} [error]
     * @returns {void}
     */
-   logWarning(componentSliceId, message) {
-      this.createLog(logTypes.WARNING, componentSliceId, message);
+   warn(componentSliceId, message, error) {
+      this.createLog(logTypes.WARN, componentSliceId, message, error);
    }
 
    /**
     * Log an info message.
     * @param {string} componentSliceId
     * @param {string} message
+    * @param {any} [error]
     * @returns {void}
     */
-   logInfo(componentSliceId, message) {
-      this.createLog(logTypes.INFO, componentSliceId, message);
+   info(componentSliceId, message, error) {
+      this.createLog(logTypes.INFO, componentSliceId, message, error);
+   }
+
+   /**
+    * Log a debug message.
+    * @param {string} componentSliceId
+    * @param {string} message
+    * @param {any} [error]
+    * @returns {void}
+    */
+   debug(componentSliceId, message, error) {
+      this.createLog(logTypes.DEBUG, componentSliceId, message, error);
+   }
+
+   // ── Retrocompatibilidad: métodos antiguos redirigen a los nuevos ──
+
+   /** @deprecated Use .error() instead */
+   logError(componentSliceId, message, error) {
+      this.error(componentSliceId, message, error);
+   }
+
+   /** @deprecated Use .warn() instead */
+   logWarning(componentSliceId, message, error) {
+      this.warn(componentSliceId, message, error);
+   }
+
+   /** @deprecated Use .info() instead */
+   logInfo(componentSliceId, message, error) {
+      this.info(componentSliceId, message, error);
    }
 
    /**
@@ -134,12 +198,3 @@ export default class Logger {
       return this.logs.filter((log) => log.componentSliceId === componentSliceId);
    }
 }
-
-// En esta misma idea, se tiene que tomar en cuenta que el componente de ToastAlert será un toastProvider y que solo debe
-// haber un toastProvider en la página, por lo que se debe implementar un Singleton para el ToastProvider
-
-const logTypes = {
-   ERROR: 'error',
-   WARNING: 'warning',
-   INFO: 'info',
-};

@@ -8,7 +8,13 @@ function parseEnvFile(envFilePath) {
       return {};
    }
 
-   const fileContent = readFileSync(envFilePath, 'utf8').replace(/^\uFEFF/, '');
+   let fileContent;
+   try {
+      fileContent = readFileSync(envFilePath, 'utf8').replace(/^\uFEFF/, '');
+   } catch (error) {
+      console.error(`Error reading env file ${envFilePath}:`, error);
+      return {};
+   }
    const parsed = {};
    const lines = fileContent.split(/\r?\n/);
 

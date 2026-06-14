@@ -39,7 +39,8 @@ export default class Slice {
          const { default: myClass } = await import(module);
          return await myClass;
       } catch (error) {
-         this.logger.logError('Slice', `Error loading class ${module}`, error);
+         this.logger.error('Slice', `Error loading class ${module}`, error);
+         throw error;
       }
    }
 
@@ -181,12 +182,12 @@ export default class Slice {
     */
    async _build(componentName, props = {}) {
       if (!componentName) {
-         this.logger.logError('Slice', null, `Component name is required to build a component`);
+         this.logger.error('Slice', 'Component name is required to build a component');
          return null;
       }
 
       if (typeof componentName !== 'string') {
-         this.logger.logError('Slice', null, `Component name must be a string`);
+         this.logger.error('Slice', 'Component name must be a string');
          return null;
       }
 
@@ -196,10 +197,8 @@ export default class Slice {
          await this.controller.loadBundle(bundleName);
       }
 
-      // After bundle loading attempt, allow build when class is already available
-      // even if components map has no category entry (stale/components.js mismatch).
       if (!this.controller.componentCategories.has(componentName) && !this.controller.classes.has(componentName)) {
-         this.logger.logError('Slice', null, `Component ${componentName} not found in components.js file`);
+         this.logger.error('Slice', `Component ${componentName} not found in components.js file`);
          return null;
       }
 
@@ -212,11 +211,7 @@ export default class Slice {
       const isFromBundle = this.controller.isComponentFromBundle(componentName);
 
       if (componentCategory === 'Structural') {
-         this.logger.logError(
-            'Slice',
-            null,
-            `Component ${componentName} is a Structural component and cannot be built`
-         );
+         this.logger.error('Slice', `Component ${componentName} is a Structural component and cannot be built`);
          return null;
       }
 
@@ -346,12 +341,12 @@ export default class Slice {
 
 async function loadConfig() {
    try {
-      const response = await fetch('/sliceConfig.json'); // 🔹 Express lo sirve desde `src/`
+      const response = await fetch('/sliceConfig.json');
       if (!response.ok) throw new Error('Error loading sliceConfig.json');
       const json = await response.json();
       return json;
    } catch (error) {
-      console.error(`Error loading config file: ${error.message}`);
+      console.error('Error loading config file:', error);
       return null;
    }
 }
@@ -359,10 +354,9 @@ async function loadConfig() {
 async function init() {
    const sliceConfig = await loadConfig();
    if (!sliceConfig) {
-      //Display error message in console with colors and alert in english
-      console.error('%c⛔️ Error loading Slice configuration ⛔️', 'color: red; font-size: 20px;');
+      console.error('%c\u26A0\uFE0F Error loading Slice configuration', 'color: red; font-size: 20px;');
       alert('Error loading Slice configuration');
-      return;
+      throw new Error('Slice initialization failed: unable to load sliceConfig.json');
    }
 
     // 1+2. Fetch mode endpoint and bundle config in parallel — both are independent.
@@ -372,10 +366,10 @@ async function init() {
     const [envResult, configResult] = await Promise.all([
       fetch('/slice-env.json', { cache: 'no-store' })
         .then(r => r.ok ? r.json() : null)
-        .catch(() => null),
+        .catch(error => { console.error('[Slice.js] Error fetching /slice-env.json:', error); return null; }),
       fetch('/bundles/bundle.config.json', { cache: 'no-store' })
         .then(r => r.ok ? r.json() : null)
-        .catch(() => null)
+        .catch(error => { console.error('[Slice.js] Error fetching bundle.config.json:', error); return null; })
     ]);
     const envMode = envResult?.mode ?? null;
     const bundleConfigJson = configResult;
@@ -401,8 +395,7 @@ async function init() {
            frameworkClasses = window.SLICE_FRAMEWORK_CLASSES;
          }
         } catch (e) {
-          // framework bundle failed — fall through to individual imports
-          console.error('[Slice.js] framework bundle import failed:', e?.message || e);
+          console.error('[Slice.js] framework bundle import failed, falling through to individual imports:', e);
         }
      }
 
@@ -416,10 +409,10 @@ async function init() {
            Controller: imports[0].default,
            StylesManager: imports[1].default
          };
-       } catch (e) {
-         console.error('[Slice.js] individual imports fallback failed:', e?.message || e);
-         throw e;
-       }
+        } catch (e) {
+          console.error('[Slice.js] individual imports fallback failed:', e);
+          throw e;
+        }
      }
 
     // 5. Create Slice instance and set resolved mode
@@ -468,20 +461,22 @@ async function init() {
 
         const preloadRouteBundles = () => {
            loadRouteBundles().catch((error) => {
-              const bundlingError = createBundlingInitError(
-                 `idle route preload "${initialPath}"`,
-                 error
-              );
-              queueMicrotask(() => {
-                 throw bundlingError;
-              });
+              window.slice?.logger?.error('Slice', `Idle route preload failed for "${initialPath}"`, error);
            });
         };
 
+        const safePreload = () => {
+           try {
+              preloadRouteBundles();
+           } catch (error) {
+              window.slice?.logger?.error('Slice', 'Error in route preload callback', error);
+           }
+        };
+
         if (typeof requestIdleCallback === 'function') {
-           requestIdleCallback(() => preloadRouteBundles());
+           requestIdleCallback(() => safePreload());
         } else {
-           setTimeout(() => preloadRouteBundles(), 0);
+           setTimeout(() => safePreload(), 0);
         }
      }
 
@@ -492,10 +487,10 @@ async function init() {
          || await window.slice.getClass(`${slice.paths.structuralComponentFolderPath}/Logger/Logger.js`);
        window.slice.logger = new LoggerModule();
    } else {
+      const noop = () => {};
       window.slice.logger = {
-         logError: () => {},
-         logWarning: () => {},
-         logInfo: () => {},
+         error: noop, warn: noop, info: noop, debug: noop,
+         logError: noop, logWarning: noop, logInfo: noop,
       };
    }
 
@@ -616,4 +611,8 @@ async function init() {
    await window.slice.router.init();
 }
 
- await init();
+ try {
+   await init();
+} catch (initError) {
+   console.error('[Slice.js] Initialization failed:', initError);
+ }

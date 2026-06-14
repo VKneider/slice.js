@@ -364,7 +364,11 @@ export default class Debugger extends HTMLElement {
          <div class="prop-input">
             ${this.createInputForType(prop, currentValue, valueType, config)}
          </div>
-         ${config.default !== undefined ? `<div class="default-value">Default: ${JSON.stringify(config.default)}</div>` : ''}
+          ${(() => {
+             if (config.default === undefined) return '';
+             try { return `<div class="default-value">Default: ${JSON.stringify(config.default)}</div>`; }
+             catch { return `<div class="default-value">Default: ${String(config.default)}</div>`; }
+          })()}
       `;
 
       return propWrapper;
@@ -557,7 +561,8 @@ export default class Debugger extends HTMLElement {
          try {
             this.propertyEditor.value = JSON.stringify(value, null, 2);
          } catch (error) {
-            this.propertyEditor.value = 'null';
+            slice.logger?.warn?.('Debugger', 'Error serializing property value for editor', error);
+            this.propertyEditor.value = `/* Error: ${error.message} */`;
          }
       }
       
@@ -587,6 +592,7 @@ export default class Debugger extends HTMLElement {
          this.validationMessage.textContent = `❌ ${error.message}`;
          this.validationMessage.style.color = '#F44336';
          this.querySelector('#modal-save').disabled = true;
+         slice.logger?.warn?.('Debugger', 'Validation error in editor', error);
       }
    }
 
@@ -621,6 +627,7 @@ export default class Debugger extends HTMLElement {
       } catch (error) {
          this.validationMessage.textContent = `❌ ${error.message}`;
          this.validationMessage.style.color = '#F44336';
+         slice.logger?.error?.('Debugger', `Failed to save ${this.currentEditingProp}`, error);
       }
    }
 
@@ -628,7 +635,7 @@ export default class Debugger extends HTMLElement {
     * Close the advanced editor modal.
     * @returns {void}
     */
-   closeModal() {
+    closeModal() {
       this.editorModal.classList.remove('active');
       this.currentEditingProp = null;
       this.currentEditingType = null;

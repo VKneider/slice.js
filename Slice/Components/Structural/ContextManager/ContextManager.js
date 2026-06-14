@@ -345,8 +345,8 @@ export default class ContextManager {
       try {
          return selector(state);
       } catch (error) {
-         slice.logger.logWarning('ContextManager', 'Error al aplicar selector', error);
-         return undefined;
+         slice.logger.error('ContextManager', 'Error applying selector', error);
+         throw error;
       }
    }
 
@@ -394,19 +394,16 @@ export default class ContextManager {
             return JSON.parse(data);
          }
       } catch (error) {
-         slice.logger.logWarning('ContextManager', `Error cargando "${storageKey}" de localStorage`, error);
+         slice.logger.error('ContextManager', `Error loading data from localStorage "${storageKey}"`, error);
       }
       return null;
    }
 
-   /**
-    * Guardar estado en localStorage
-    */
    _saveToStorage(name, state, storageKey) {
       try {
          localStorage.setItem(storageKey, JSON.stringify(state));
       } catch (error) {
-         slice.logger.logWarning('ContextManager', `Error guardando "${name}" en localStorage`, error);
+         slice.logger.error('ContextManager', `Error saving "${name}" to localStorage`, error);
       }
    }
 
@@ -417,7 +414,7 @@ export default class ContextManager {
       try {
          localStorage.removeItem(storageKey);
       } catch (error) {
-         // Ignorar errores al eliminar
+         slice.logger.warn('ContextManager', `Error removing "${storageKey}" from localStorage`, error);
       }
    }
 }

@@ -162,8 +162,8 @@ export default class EventManager {
     * slice.events.emit('user:login', { id: 123, name: 'Juan' });
     * slice.events.emit('cart:cleared'); // Sin datos
     */
-   emit(eventName, data = null) {
-      slice.logger.logInfo('EventManager', `Emitiendo "${eventName}"`, data);
+   emit(eventName, ...args) {
+      slice.logger.info('EventManager', `Emitting "${eventName}"`, args[0] ?? null);
 
       if (!this.subscriptions.has(eventName)) {
          return;
@@ -171,22 +171,18 @@ export default class EventManager {
 
       const toRemove = [];
 
-      // Notificar a todos los suscriptores
       for (const [subscriptionId, subscription] of this.subscriptions.get(eventName)) {
-         // Verificar que el componente aún existe (si aplica)
          if (subscription.componentSliceId) {
             if (!slice.controller.activeComponents.has(subscription.componentSliceId)) {
-               // Componente ya no existe, marcar para eliminar
                toRemove.push(subscriptionId);
                continue;
             }
          }
 
-         // Ejecutar callback
          try {
-            subscription.callback(data);
+            subscription.callback(...args);
          } catch (error) {
-            slice.logger.logError('EventManager', `Error en callback de "${eventName}" [${subscriptionId}]`, error);
+            slice.logger.error('EventManager', `Error in callback for "${eventName}" [${subscriptionId}]`, error);
          }
 
          // Si es subscribeOnce, marcar para eliminar

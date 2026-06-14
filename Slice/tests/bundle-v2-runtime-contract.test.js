@@ -598,6 +598,7 @@ test('Slice init fails fast with contextual error on invalid Bundling V2 contrac
    const originalSliceDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'slice');
    const originalConsoleLog = console.log;
    const originalConsoleWarn = console.warn;
+   const originalConsoleError = console.error;
    const controllerModuleUrl = new URL('../Components/Structural/Controller/Controller.js', import.meta.url).href;
    const { default: Controller } = await import(controllerModuleUrl);
    const originalLoadBundle = Controller.prototype.loadBundle;
@@ -656,6 +657,9 @@ test('Slice init fails fast with contextual error on invalid Bundling V2 contrac
          loggedMessages.push(args.map(String).join(' '));
       };
       console.warn = () => {};
+      console.error = (...args) => {
+         loggedMessages.push(args.map(String).join(' '));
+      };
 
       globalThis.fetch = async (url) => {
          if (url === '/sliceConfig.json') {
@@ -703,7 +707,12 @@ test('Slice init fails fast with contextual error on invalid Bundling V2 contrac
 
       const sliceModuleUrl = new URL(`../Slice.js?fail-fast-test=${Date.now()}`, import.meta.url).href;
 
-      await assert.rejects(() => import(sliceModuleUrl), /Bundling V2 initialization failed/i);
+      await import(sliceModuleUrl);
+
+      assert.ok(
+         loggedMessages.some((message) => /Bundling V2 initialization failed/i.test(message)),
+         'init must log contextual error on Bundling V2 contract failure'
+      );
 
       assert.equal(
          loggedMessages.some((message) => message.includes('Using individual component loading (no bundles found)')),
@@ -723,6 +732,7 @@ test('Slice init fails fast with contextual error on invalid Bundling V2 contrac
       }
       console.log = originalConsoleLog;
       console.warn = originalConsoleWarn;
+      console.error = originalConsoleError;
       await rm(tempDir, { recursive: true, force: true });
    }
 });

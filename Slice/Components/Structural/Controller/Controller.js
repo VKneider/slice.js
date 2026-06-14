@@ -374,27 +374,26 @@ export default class Controller {
                            window.document
                         );
                      } catch (evalError) {
-                        slice.logger.logWarning('Controller', `❌ Failed to evaluate processed dependency ${depName}: ${evalError}`);
-                        slice.logger.logWarning('Controller', `Processed content preview: ${processedContent.substring(0, 200)}`);
-                        // Try evaluating the original content as fallback
-                        try {
-                           new Function('slice', 'customElements', 'window', 'document', depContent)(
-                              window.slice,
-                              window.customElements,
-                              window,
-                              window.document
-                           );
-                           slice.logger.logInfo('Controller', `✅ Fallback evaluation succeeded for ${depName}`);
-                        } catch (fallbackError) {
-                           slice.logger.logWarning('Controller', `❌ Fallback evaluation also failed for ${depName}: ${fallbackError}`);
-                        }
-                     }
+                         slice.logger.error('Controller', `Failed to evaluate processed dependency ${depName}`, evalError);
+                         slice.logger.warn('Controller', `Processed content preview: ${processedContent.substring(0, 200)}`);
+                         try {
+                            new Function('slice', 'customElements', 'window', 'document', depContent)(
+                               window.slice,
+                               window.customElements,
+                               window,
+                               window.document
+                            );
+                            slice.logger.info('Controller', `Fallback evaluation succeeded for ${depName}`);
+                         } catch (fallbackError) {
+                            slice.logger.error('Controller', `Fallback evaluation also failed for ${depName}`, fallbackError);
+                         }
+                      }
 
-                     processedDeps.add(depName);
-                     slice.logger.logInfo('Controller', `📄 Dependency loaded: ${depName}`);
-                  } catch (depError) {
-                     slice.logger.logWarning('Controller', `⚠️ Failed to load dependency ${depName} for ${componentName}: ${depError}`);
-                  }
+                      processedDeps.add(depName);
+                      slice.logger.info('Controller', `Dependency loaded: ${depName}`);
+                   } catch (depError) {
+                      slice.logger.error('Controller', `Failed to load dependency ${depName} for ${componentName}`, depError);
+                   }
                }
             }
          }
@@ -450,10 +449,10 @@ export default class Controller {
                   this.classes.set(componentName, componentClass);
                   slice.logger.logInfo('Controller', `📝 Class registered for: ${componentName}`);
                }
-            } catch (error) {
-               slice.logger.logWarning('Controller', `❌ Failed to evaluate class for ${componentName}: ${error}`);
-               slice.logger.logWarning('Controller', `Code that failed: ${componentData.js.substring(0, 200) + '...'}`);
-            }
+             } catch (error) {
+                slice.logger.error('Controller', `Failed to evaluate class for ${componentName}`, error);
+                slice.logger.warn('Controller', `Code that failed: ${componentData.js.substring(0, 200) + '...'}`);
+             }
          }
       }
    }
@@ -462,9 +461,9 @@ export default class Controller {
     * 📦 New bundle registration method (simplified and robust)
     */
      registerBundle(bundle) {
-       const validation = this.validateBundle(bundle);
-       if (!validation.isValid) {
-          slice.logger.logWarning('Controller', `❌ Bundle validation failed: ${validation.error}`);
+      const validation = this.validateBundle(bundle);
+        if (!validation.isValid) {
+           slice.logger.error('Controller', `Bundle validation failed: ${validation.error}`);
           return Promise.resolve(false);
        }
 
@@ -486,64 +485,63 @@ export default class Controller {
       let index = 0;
 
        return new Promise((resolve) => {
-         const processChunk = () => {
-          const sliceEntries = entries.slice(index, index + chunkSize);
+          const processChunk = () => {
+             try {
+                const sliceEntries = entries.slice(index, index + chunkSize);
 
-         for (const [componentName, componentData] of sliceEntries) {
-            try {
-               if (componentData.html !== undefined && !this.templates.has(componentName)) {
-                  const template = document.createElement('template');
-                  template.innerHTML = componentData.html || '';
-                  this.templates.set(componentName, template);
-               }
+                for (const [componentName, componentData] of sliceEntries) {
+                   try {
+                      if (componentData.html !== undefined && !this.templates.has(componentName)) {
+                         const template = document.createElement('template');
+                         template.innerHTML = componentData.html || '';
+                         this.templates.set(componentName, template);
+                      }
 
-               if (componentData.css !== undefined && !this.requestedStyles.has(componentName)) {
-                  if (window.slice && window.slice.stylesManager) {
-                     window.slice.stylesManager.registerComponentStyles(componentName, componentData.css || '');
-                     this.requestedStyles.add(componentName);
-                  }
-               }
+                      if (componentData.css !== undefined && !this.requestedStyles.has(componentName)) {
+                         if (window.slice && window.slice.stylesManager) {
+                            window.slice.stylesManager.registerComponentStyles(componentName, componentData.css || '');
+                            this.requestedStyles.add(componentName);
+                         }
+                      }
 
-                if (componentData.class && !this.classes.has(componentName)) {
-                   const registeredName = componentData.isFramework
-                      ? `Framework/Structural/${componentName}`
-                      : componentName;
-                   this.classes.set(registeredName, componentData.class);
-                   if (componentName === 'Loading') {
-                      slice.logger.logInfo(
-                         'Controller',
-                         `🔎 Bundle class registered: Loading (registeredName=${registeredName}, type=${typeof componentData.class}, isFunction=${typeof componentData.class === 'function'})`
-                      );
-                   }
-                   if (componentName === 'InputSearchDocs' || componentName === 'MainMenu') {
-                      slice.logger.logInfo(
-                         'Controller',
-                         `🔎 Bundle class registered: ${componentName} (registeredName=${registeredName}, type=${typeof componentData.class}, isFunction=${typeof componentData.class === 'function'})`
-                      );
+                       if (componentData.class && !this.classes.has(componentName)) {
+                          const registeredName = componentData.isFramework
+                             ? `Framework/Structural/${componentName}`
+                             : componentName;
+                          this.classes.set(registeredName, componentData.class);
+                          if (componentName === 'Loading') {
+                             slice.logger.logInfo('Controller', `Bundle class registered: Loading (registeredName=${registeredName})`);
+                          }
+                          if (componentName === 'InputSearchDocs' || componentName === 'MainMenu') {
+                             slice.logger.logInfo('Controller', `Bundle class registered: ${componentName}`);
+                          }
+                       }
+                   } catch (error) {
+                      slice.logger.error('Controller', `Failed to register component ${componentName}`, error);
                    }
                 }
-            } catch (error) {
-               slice.logger.logError('Controller', `❌ Failed to register component ${componentName}`, error);
-            }
-         }
 
-         index += chunkSize;
-          if (index < entries.length) {
-             if (typeof requestIdleCallback === 'function') {
-                requestIdleCallback(processChunk);
-             } else {
-                setTimeout(processChunk, 0);
+                index += chunkSize;
+                if (index < entries.length) {
+                   if (typeof requestIdleCallback === 'function') {
+                      requestIdleCallback(processChunk);
+                   } else {
+                      setTimeout(processChunk, 0);
+                   }
+                   return;
+                }
+
+                slice.logger.info('Controller', `Bundle registration completed: ${metadata.componentCount} components processed`);
+                resolve(true);
+             } catch (error) {
+                slice.logger.error('Controller', 'Fatal error in registerBundle chunk processing', error);
+                resolve(false);
              }
-             return;
-          }
+          };
 
-          slice.logger.logInfo('Controller', `✅ Bundle registration completed: ${metadata.componentCount} components processed`);
-          resolve(true);
-        };
-
-        processChunk();
-       });
-     }
+          processChunk();
+        });
+      }
 
     /**
      * Validates bundle structure before registering.
@@ -805,7 +803,7 @@ export default class Controller {
       const template = this.templates.get(className);
 
       if (!template) {
-         slice.logger.logError(`Template not found for component: ${className}`);
+         slice.logger.error('Controller', `Template not found for component: ${className}`);
          return;
       }
 
@@ -958,9 +956,10 @@ export default class Controller {
 
       const invalidAllowedValueProps = collectInvalidAllowedValueProps(staticProps, providedProps);
       invalidAllowedValueProps.forEach(({ propName, value, allowedValues }) => {
-         slice.logger.logError(
+         const safeValue = (() => { try { return JSON.stringify(value); } catch { return String(value); } })();
+         slice.logger.error(
             componentName,
-            `Invalid value for prop "${propName}": ${JSON.stringify(value)}. Allowed values: ${formatAllowedValuesForLog(allowedValues)}`
+            `Invalid value for prop "${propName}": ${safeValue}. Allowed values: ${formatAllowedValuesForLog(allowedValues)}`
          );
       });
    }
