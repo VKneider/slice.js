@@ -10,6 +10,7 @@ const logTypes = {
 export default class Logger {
    constructor() {
       this.logs = [];
+      this._logListeners = new Set();
       this.logEnabled = slice.loggerConfig.enabled;
       this.showLogsConfig = slice.loggerConfig.showLogs;
 
@@ -92,6 +93,9 @@ export default class Logger {
       const log = new Log(logType, componentCategory, componentSliceId, message, error);
       this.logs.push(log);
       this.showLog(log);
+      for (const listener of this._logListeners) {
+         try { listener(log); } catch (_) { }
+      }
    }
 
    /**
@@ -153,6 +157,27 @@ export default class Logger {
    /** @deprecated Use .info() instead */
    logInfo(componentSliceId, message, error) {
       this.info(componentSliceId, message, error);
+   }
+
+   /**
+    * Subscribe to new log entries in real time.
+    * @param {Function} callback — receives the Log instance
+    * @returns {Function} the same callback (for passing to offLog)
+    */
+   onLog(callback) {
+      if (typeof callback === 'function') {
+         this._logListeners.add(callback);
+      }
+      return callback;
+   }
+
+   /**
+    * Unsubscribe a previously registered listener.
+    * @param {Function} callback
+    * @returns {void}
+    */
+   offLog(callback) {
+      this._logListeners.delete(callback);
    }
 
    /**

@@ -564,9 +564,23 @@ async function init() {
       window.slice.logger.logError('Slice', 'ContextManager disabled');
    }
 
-    if (sliceConfig.loading.enabled) {
-      const loading = await window.slice.build('Loading', {});
-      window.slice.loading = loading;
+     if (sliceConfig.logger?.ui?.enabled) {
+        try {
+           const logViewer = await window.slice.build('LogViewer', {});
+           if (logViewer) {
+              window.slice.logViewer = logViewer;
+              logViewer.style.display = 'none';
+              document.body.appendChild(logViewer);
+              if (typeof logViewer.init === 'function') logViewer.init();
+           }
+        } catch (e) {
+           window.slice.logger?.warn?.('Slice', 'Could not load LogViewer component', e);
+        }
+     }
+
+     if (sliceConfig.loading.enabled) {
+       const loading = await window.slice.build('Loading', {});
+       window.slice.loading = loading;
       if (typeof loading?.start === 'function') {
          loading.start();
       }
@@ -575,7 +589,7 @@ async function init() {
    const stylesInitPromise = window.slice.stylesManager.init();
    const routesModulePromise = import(slice.paths.routesFile);
 
-   if (sliceConfig.events?.ui?.shortcut || sliceConfig.context?.ui?.shortcut) {
+   if (sliceConfig.events?.ui?.shortcut || sliceConfig.context?.ui?.shortcut || sliceConfig.logger?.ui?.shortcut) {
       const normalize = (value) => (typeof value === 'string' ? value.toLowerCase() : '');
       const toKey = (event) => {
          const parts = [];
@@ -593,6 +607,7 @@ async function init() {
       const handlers = {
          [normalize(sliceConfig.events?.ui?.shortcut)]: () => window.slice.eventsDebugger?.toggle?.(),
          [normalize(sliceConfig.context?.ui?.shortcut)]: () => window.slice.contextDebugger?.toggle?.(),
+         [normalize(sliceConfig.logger?.ui?.shortcut)]: () => window.slice.logViewer?.toggle?.(),
       };
 
       document.addEventListener('keydown', (event) => {
