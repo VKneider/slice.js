@@ -564,19 +564,19 @@ async function init() {
       window.slice.logger.logError('Slice', 'ContextManager disabled');
    }
 
-     if (sliceConfig.logger?.ui?.enabled) {
-        try {
-           const logViewer = await window.slice.build('LogViewer', {});
-           if (logViewer) {
-              window.slice.logViewer = logViewer;
-              logViewer.style.display = 'none';
-              document.body.appendChild(logViewer);
-              if (typeof logViewer.init === 'function') logViewer.init();
-           }
-        } catch (e) {
-           window.slice.logger?.warn?.('Slice', 'Could not load LogViewer component', e);
-        }
-     }
+      if (sliceConfig.logger?.ui?.enabled) {
+         try {
+            const LogViewerModule = window.slice.frameworkClasses?.LogViewer
+               || await window.slice.getClass(`${slice.paths.structuralComponentFolderPath}/Logger/LogViewer/LogViewer.js`);
+            const logViewer = new LogViewerModule();
+            window.slice.logViewer = logViewer;
+            logViewer.style.display = 'none';
+            document.body.appendChild(logViewer);
+            if (typeof logViewer.init === 'function') logViewer.init();
+         } catch (e) {
+            window.slice.logger?.warn?.('Slice', 'Could not load LogViewer component', e);
+         }
+      }
 
      if (sliceConfig.loading.enabled) {
        const loading = await window.slice.build('Loading', {});
