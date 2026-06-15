@@ -811,24 +811,25 @@ return `
    All selectors are scoped under the <slice-debugger> tag so the
    panel never clashes with (or leaks into) app styles. Tokens live
    on the tag so both #debugger-container and the sibling
-   #editor-modal inherit them. Chrome colors are static; only the
-   accent reads the theme (--primary-color) with a static fallback.
+   #editor-modal inherit them. Every --si-* token reads the matching
+   framework theme variable from :root, falling back to the original
+   hardcoded value if absent — so debuggers always match the app theme.
    ============================================================ */
 slice-debugger {
-   --si-accent: var(--primary-color, #6ee7ff);
-   --si-accent-rgb: var(--primary-color-rgb, 110, 231, 255);
-   --si-surface: rgba(17, 19, 28, 0.88);
-   --si-raised: rgba(255, 255, 255, 0.035);
-   --si-raised-2: rgba(255, 255, 255, 0.06);
-   --si-inset: rgba(0, 0, 0, 0.28);
-   --si-border: rgba(255, 255, 255, 0.09);
-   --si-text: #e8eaf2;
-   --si-dim: #888fa6;
-   --si-danger: #ff6b6b;
-   --si-success: #46d39a;
-   --si-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', 'Cascadia Code', Menlo, Consolas, monospace;
-   --si-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-}
+    --si-accent: var(--primary-color, #6ee7ff);
+    --si-accent-rgb: var(--primary-color-rgb, 110, 231, 255);
+    --si-surface: var(--primary-background-color, rgba(17, 19, 28, 0.88));
+    --si-raised: var(--secondary-background-color, rgba(255, 255, 255, 0.035));
+    --si-raised-2: var(--tertiary-background-color, rgba(255, 255, 255, 0.06));
+    --si-inset: var(--primary-color-shade, rgba(0, 0, 0, 0.28));
+    --si-border: var(--medium-color, rgba(255, 255, 255, 0.09));
+    --si-text: var(--font-primary-color, #e8eaf2);
+    --si-dim: var(--font-secondary-color, #888fa6);
+    --si-danger: var(--danger-color, #ff6b6b);
+    --si-success: var(--success-color, #46d39a);
+    --si-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', 'Cascadia Code', Menlo, Consolas, monospace;
+    --si-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+ }
 
 slice-debugger *,
 slice-debugger *::before,

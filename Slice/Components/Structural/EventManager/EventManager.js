@@ -23,6 +23,15 @@ export default class EventManager {
       // Map<sliceId, Set<{ eventName, subscriptionId }>> - Para auto-cleanup
       this.componentSubscriptions = new Map();
 
+      // Ring buffer de últimos emits (max 500) — solo se llena cuando el debugger está abierto
+      this.emitHistory = [];
+
+      // Contador de emits por evento en la sesión actual de grabación
+      this.emitCounts = new Map();
+
+      // Flag: solo grabamos cuando algún debugger UI está visible
+      this._recording = false;
+
       // Contador para IDs únicos
       this.idCounter = 0;
    }
@@ -95,6 +104,22 @@ export default class EventManager {
     *    console.log('App lista!');
     * });
     */
+   /**
+    * Activar registro de emits (lo llama el debugger al abrirse).
+    */
+   startRecording() {
+      this._recording = true;
+      this.emitHistory = [];
+      this.emitCounts = new Map();
+   }
+
+   /**
+    * Desactivar registro de emits (lo llama el debugger al cerrarse).
+    */
+   stopRecording() {
+      this._recording = false;
+   }
+
    subscribeOnce(eventName, callback, options = {}) {
       if (typeof callback !== 'function') {
          slice.logger.logError('EventManager', 'El callback debe ser una función');
@@ -164,6 +189,13 @@ export default class EventManager {
     */
    emit(eventName, ...args) {
       slice.logger.info('EventManager', `Emitting "${eventName}"`, args[0] ?? null);
+
+      // Solo grabamos el histórico si algún debugger está abierto
+      if (this._recording) {
+         this.emitHistory.push({ eventName, timestamp: Date.now() });
+         if (this.emitHistory.length > 500) this.emitHistory.shift();
+         this.emitCounts.set(eventName, (this.emitCounts.get(eventName) || 0) + 1);
+      }
 
       if (!this.subscriptions.has(eventName)) {
          return;

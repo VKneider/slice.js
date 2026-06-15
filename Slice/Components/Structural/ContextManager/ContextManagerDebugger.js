@@ -6,6 +6,8 @@ export default class ContextManagerDebugger extends HTMLElement {
       super();
       this.isOpen = false;
       this.filterText = '';
+      this._contextSubscriptions = new Map();
+      this._debounceTimer = null;
    }
 
    /**
@@ -18,6 +20,7 @@ export default class ContextManagerDebugger extends HTMLElement {
       this.cacheElements();
       this.bindEvents();
       this.makeDraggable();
+      this._subscribeToAllContexts();
       this.renderList();
    }
 
@@ -29,6 +32,7 @@ export default class ContextManagerDebugger extends HTMLElement {
       this.isOpen = !this.isOpen;
       this.container.classList.toggle('active', this.isOpen);
       if (this.isOpen) {
+         this._subscribeToAllContexts();
          this.renderList();
       }
    }
@@ -40,6 +44,7 @@ export default class ContextManagerDebugger extends HTMLElement {
    open() {
       this.isOpen = true;
       this.container.classList.add('active');
+      this._subscribeToAllContexts();
       this.renderList();
    }
 
@@ -50,6 +55,46 @@ export default class ContextManagerDebugger extends HTMLElement {
    close() {
       this.isOpen = false;
       this.container.classList.remove('active');
+   }
+
+   disconnectedCallback() {
+      this._unsubscribeAll();
+   }
+
+   _unsubscribeAll() {
+      for (const [name, id] of this._contextSubscriptions) {
+         slice.events.unsubscribe(`context:${name}`, id);
+      }
+      this._contextSubscriptions.clear();
+      if (this._createdSub) {
+         slice.events.unsubscribe('context:__created', this._createdSub);
+         this._createdSub = null;
+      }
+   }
+
+   _subscribeToAllContexts() {
+      if (!slice?.context?.contexts) return;
+      slice.context.contexts.forEach((value, name) => {
+         if (this._contextSubscriptions.has(name)) return;
+         const id = slice.events.subscribe(`context:${name}`, () => this._scheduleRender());
+         this._contextSubscriptions.set(name, id);
+      });
+      if (!this._createdSub) {
+         this._createdSub = slice.events.subscribe('context:__created', ({ name }) => {
+            if (!this._contextSubscriptions.has(name)) {
+               const id = slice.events.subscribe(`context:${name}`, () => this._scheduleRender());
+               this._contextSubscriptions.set(name, id);
+            }
+            this._scheduleRender();
+         });
+      }
+   }
+
+   _scheduleRender() {
+      if (this._debounceTimer) clearTimeout(this._debounceTimer);
+      this._debounceTimer = setTimeout(() => {
+         if (this.isOpen) this.renderList();
+      }, 50);
    }
 
    cacheElements() {
@@ -178,18 +223,22 @@ export default class ContextManagerDebugger extends HTMLElement {
    renderStyles() {
       return `
 /* Slice Instruments — context store. All selectors scoped to the
-   <slice-contextmanager-debugger> tag so nothing clashes with app styles. */
+    <slice-contextmanager-debugger> tag so nothing clashes with app styles.
+    Every --si-* token reads the matching framework theme variable from
+    :root, falling back to the original hardcoded value if absent. */
 slice-contextmanager-debugger {
-   --si-accent: var(--primary-color, #6ee7ff);
-   --si-accent-rgb: var(--primary-color-rgb, 110, 231, 255);
-   --si-surface: rgba(17, 19, 28, 0.86);
-   --si-raised: rgba(255, 255, 255, 0.035);
-   --si-raised-2: rgba(255, 255, 255, 0.06);
-   --si-border: rgba(255, 255, 255, 0.09);
-   --si-text: #e8eaf2;
-   --si-dim: #888fa6;
-   --si-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', 'Cascadia Code', Menlo, Consolas, monospace;
-}
+    --si-accent: var(--primary-color, #6ee7ff);
+    --si-accent-rgb: var(--primary-color-rgb, 110, 231, 255);
+    --si-surface: var(--primary-background-color, rgba(17, 19, 28, 0.86));
+    --si-raised: var(--secondary-background-color, rgba(255, 255, 255, 0.035));
+    --si-raised-2: var(--tertiary-background-color, rgba(255, 255, 255, 0.06));
+    --si-border: var(--medium-color, rgba(255, 255, 255, 0.09));
+    --si-text: var(--font-primary-color, #e8eaf2);
+    --si-dim: var(--font-secondary-color, #888fa6);
+    --si-danger: var(--danger-color, #ff6b6b);
+    --si-success: var(--success-color, #46d39a);
+    --si-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', 'Cascadia Code', Menlo, Consolas, monospace;
+ }
 
 slice-contextmanager-debugger #context-debugger {
    position: fixed;

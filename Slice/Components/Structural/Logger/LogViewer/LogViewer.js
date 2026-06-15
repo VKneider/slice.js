@@ -52,7 +52,12 @@ export default class LogViewer extends HTMLElement {
   toggle() {
     this._isOpen = !this._isOpen;
     this.style.display = this._isOpen ? '' : 'none';
-    if (this._isOpen) this._render();
+    if (this._isOpen) {
+      this._subscribeLogger();
+      this._render();
+    } else {
+      this._unsubscribeLogger();
+    }
     return this._isOpen;
   }
 
@@ -239,6 +244,18 @@ customElements.define('slice-log-viewer', LogViewer);
 function productionOnlyCSS() {
   return `/* ── LogViewer (Structural) ── */
 slice-log-viewer {
+  --si-accent: var(--primary-color, #6ee7ff);
+  --si-accent-rgb: var(--primary-color-rgb, 110, 231, 255);
+  --si-surface: var(--primary-background-color, #1e1e2e);
+  --si-raised: var(--secondary-background-color, rgba(255, 255, 255, 0.035));
+  --si-raised-2: var(--tertiary-background-color, #2a2a3e);
+  --si-border: var(--medium-color, #555);
+  --si-text: var(--font-primary-color, #cdd6f4);
+  --si-dim: var(--font-secondary-color, #a6adc8);
+  --si-danger: var(--danger-color, #f38ba8);
+  --si-warning: var(--warning-color, #f9e2af);
+  --si-info: var(--secondary-color, #89dceb);
+  --si-mono: 'SF Mono', 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
   position: fixed;
   z-index: 2147483647;
   bottom: 24px;
@@ -251,9 +268,9 @@ slice-log-viewer {
   font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
   font-size: 12px;
   line-height: 1.5;
-  border: 1px solid color-mix(in srgb, var(--medium-color, #555) 60%, transparent);
+  border: 1px solid color-mix(in srgb, var(--si-border, #555) 60%, transparent);
   border-radius: 12px;
-  background: color-mix(in srgb, var(--primary-background-color, #1e1e2e) 97%, #000);
+  background: color-mix(in srgb, var(--si-surface, #1e1e2e) 97%, #000);
   box-shadow: 0 12px 48px rgba(0,0,0,.45), 0 0 0 1px rgba(0,0,0,.08);
   overflow: hidden;
   user-select: none;
@@ -279,8 +296,8 @@ slice-log-viewer[data-minimized] .lv__body {
   justify-content: space-between;
   gap: 8px;
   padding: 8px 10px 8px 14px;
-  background: color-mix(in srgb, var(--tertiary-background-color, #2a2a3e) 80%, #000);
-  border-bottom: 1px solid color-mix(in srgb, var(--medium-color, #555) 40%, transparent);
+  background: color-mix(in srgb, var(--si-raised-2, #2a2a3e) 80%, #000);
+  border-bottom: 1px solid color-mix(in srgb, var(--si-border, #555) 40%, transparent);
   cursor: grab;
   position: relative;
   z-index: 1;
@@ -299,7 +316,7 @@ slice-log-viewer[data-minimized] .lv__body {
   font-size: 13px;
   font-weight: 700;
   letter-spacing: .02em;
-  color: var(--font-primary-color, #cdd6f4);
+  color: var(--si-text, #cdd6f4);
   white-space: nowrap;
 }
 
@@ -308,8 +325,8 @@ slice-log-viewer[data-minimized] .lv__body {
   font-weight: 600;
   padding: 1px 6px;
   border-radius: 6px;
-  background: color-mix(in srgb, var(--medium-color, #555) 40%, transparent);
-  color: var(--font-secondary-color, #a6adc8);
+  background: color-mix(in srgb, var(--si-border, #555) 40%, transparent);
+  color: var(--si-dim, #a6adc8);
   font-variant-numeric: tabular-nums;
 }
 
@@ -329,8 +346,8 @@ slice-log-viewer[data-minimized] .lv__body {
   font-weight: 600;
   padding: 3px 7px;
   border-radius: 6px;
-  color: var(--font-secondary-color, #a6adc8);
-  background: color-mix(in srgb, var(--medium-color, #555) 25%, transparent);
+  color: var(--si-dim, #a6adc8);
+  background: color-mix(in srgb, var(--si-border, #555) 25%, transparent);
   transition: background .12s ease, color .12s ease;
   font-family: inherit;
   line-height: 1.4;
@@ -339,30 +356,30 @@ slice-log-viewer[data-minimized] .lv__body {
 .lv__filter:hover,
 .lv__clear:hover,
 .lv__close:hover {
-  background: color-mix(in srgb, var(--medium-color, #555) 45%, transparent);
-  color: var(--font-primary-color, #cdd6f4);
+  background: color-mix(in srgb, var(--si-border, #555) 45%, transparent);
+  color: var(--si-text, #cdd6f4);
 }
 
-.lv__filter[data-active] { color: #fff; }
+.lv__filter[data-active] { color: var(--si-text, #fff); }
 
 .lv__filter[data-active][data-filter="error"] {
-  background: #f38ba8;
-  color: #1e1e2e;
+  background: var(--si-danger, #f38ba8);
+  color: var(--danger-contrast, #1e1e2e);
 }
 
 .lv__filter[data-active][data-filter="warn"] {
-  background: #f9e2af;
-  color: #1e1e2e;
+  background: var(--si-warning, #f9e2af);
+  color: var(--warning-contrast, #1e1e2e);
 }
 
 .lv__filter[data-active][data-filter="info"] {
-  background: #89dceb;
-  color: #1e1e2e;
+  background: var(--si-info, #89dceb);
+  color: var(--secondary-color-contrast, #1e1e2e);
 }
 
 .lv__filter[data-active][data-filter="debug"] {
-  background: #a6adc8;
-  color: #1e1e2e;
+  background: var(--si-dim, #a6adc8);
+  color: var(--si-text, #1e1e2e);
 }
 
 .lv__clear { margin-left: 2px; }
@@ -384,7 +401,7 @@ slice-log-viewer[data-minimized] .lv__body {
 .lv__body::-webkit-scrollbar { width: 5px; }
 .lv__body::-webkit-scrollbar-track { background: transparent; }
 .lv__body::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, var(--medium-color, #555) 40%, transparent);
+  background: color-mix(in srgb, var(--si-border, #555) 40%, transparent);
   border-radius: 3px;
 }
 
@@ -393,20 +410,20 @@ slice-log-viewer[data-minimized] .lv__body {
   align-items: flex-start;
   gap: 8px;
   padding: 5px 14px;
-  border-bottom: 1px solid color-mix(in srgb, var(--medium-color, #555) 12%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--si-border, #555) 12%, transparent);
   transition: background .1s ease;
   cursor: pointer;
 }
 
 .lv__entry:hover {
-  background: color-mix(in srgb, var(--medium-color, #555) 8%, transparent);
+  background: color-mix(in srgb, var(--si-border, #555) 8%, transparent);
 }
 
 .lv__entry:last-child { border-bottom: none; }
 
 .lv__entry-time {
   font-size: 10px;
-  color: color-mix(in srgb, var(--font-secondary-color, #a6adc8) 55%, transparent);
+  color: color-mix(in srgb, var(--si-dim, #a6adc8) 55%, transparent);
   white-space: nowrap;
   flex-shrink: 0;
   font-variant-numeric: tabular-nums;
@@ -425,23 +442,23 @@ slice-log-viewer[data-minimized] .lv__body {
 }
 
 .lv__entry--error .lv__entry-badge {
-  background: #f38ba8;
-  color: #1e1e2e;
+  background: var(--si-danger, #f38ba8);
+  color: var(--danger-contrast, #1e1e2e);
 }
 
 .lv__entry--warn .lv__entry-badge {
-  background: #f9e2af;
-  color: #1e1e2e;
+  background: var(--si-warning, #f9e2af);
+  color: var(--warning-contrast, #1e1e2e);
 }
 
 .lv__entry--info .lv__entry-badge {
-  background: #89dceb;
-  color: #1e1e2e;
+  background: var(--si-info, #89dceb);
+  color: var(--secondary-color-contrast, #1e1e2e);
 }
 
 .lv__entry--debug .lv__entry-badge {
-  background: color-mix(in srgb, var(--medium-color, #555) 40%, transparent);
-  color: var(--font-secondary-color, #a6adc8);
+  background: color-mix(in srgb, var(--si-border, #555) 40%, transparent);
+  color: var(--si-dim, #a6adc8);
 }
 
 .lv__entry-body {
@@ -452,28 +469,28 @@ slice-log-viewer[data-minimized] .lv__body {
 .lv__entry-component {
   font-size: 10px;
   font-weight: 600;
-  color: var(--font-primary-color, #cdd6f4);
+  color: var(--si-text, #cdd6f4);
   margin-bottom: 1px;
 }
 
 .lv__entry-message {
   font-size: 11px;
-  color: var(--font-secondary-color, #a6adc8);
+  color: var(--si-dim, #a6adc8);
   word-break: break-word;
   line-height: 1.45;
 }
 
-.lv__entry--error .lv__entry-message { color: #f38ba8; }
-.lv__entry--warn .lv__entry-message { color: #f9e2af; }
+.lv__entry--error .lv__entry-message { color: var(--si-danger, #f38ba8); }
+.lv__entry--warn .lv__entry-message { color: var(--si-warning, #f9e2af); }
 
 .lv__entry-error {
   display: none;
   margin-top: 5px;
   padding: 6px 8px;
   border-radius: 6px;
-  background: color-mix(in srgb, var(--primary-background-color, #1e1e2e) 60%, #000);
+  background: color-mix(in srgb, var(--si-surface, #1e1e2e) 60%, #000);
   font-size: 10px;
-  color: color-mix(in srgb, var(--font-secondary-color, #a6adc8) 80%, transparent);
+  color: color-mix(in srgb, var(--si-dim, #a6adc8) 80%, transparent);
   white-space: pre-wrap;
   word-break: break-all;
   font-family: inherit;
@@ -491,7 +508,7 @@ slice-log-viewer[data-minimized] .lv__body {
   justify-content: center;
   height: 100%;
   gap: 6px;
-  color: color-mix(in srgb, var(--font-secondary-color, #a6adc8) 40%, transparent);
+  color: color-mix(in srgb, var(--si-dim, #a6adc8) 40%, transparent);
   font-size: 12px;
 }
 

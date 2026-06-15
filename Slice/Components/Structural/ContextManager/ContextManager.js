@@ -72,6 +72,8 @@ export default class ContextManager {
          },
       });
 
+      slice.events.emit('context:__created', { name, state });
+
       slice.logger.logInfo('ContextManager', `Contexto "${name}" creado`);
 
       return true;
