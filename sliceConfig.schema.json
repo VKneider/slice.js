@@ -35,7 +35,15 @@
       "additionalProperties": true,
       "properties": {
         "enabled": { "type": "boolean" },
-        "showLogs": { "type": "object", "additionalProperties": true }
+        "showLogs": { "type": "object", "additionalProperties": true },
+        "ui": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "shortcut": { "type": "string" }
+          }
+        }
       }
     },
     "events": {
