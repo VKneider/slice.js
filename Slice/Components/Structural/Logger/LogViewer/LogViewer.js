@@ -31,10 +31,14 @@ export default class LogViewer extends HTMLElement {
     this.$header = this.querySelector('.lv__header');
     this.$body = this.querySelector('[data-body]');
     this.$count = this.querySelector('[data-count]');
+    this.$componentSelect = this.querySelector('[data-component-select]');
+    this.$queryInput = this.querySelector('[data-query-input]');
 
     this._isOpen = false;
     this._logCount = 0;
     this._filters = new Set();
+    this._componentFilter = '';
+    this._queryFilter = '';
     this._dragState = null;
     this._logHandler = null;
   }
@@ -45,6 +49,8 @@ export default class LogViewer extends HTMLElement {
     this._attachClear();
     this._attachMinimize();
     this._attachBodyClick();
+    this._attachComponentSelect();
+    this._attachQueryInput();
     this._render();
     this._subscribeLogger();
   }
@@ -165,6 +171,28 @@ export default class LogViewer extends HTMLElement {
     });
   }
 
+  /* -- component select -- */
+  _attachComponentSelect() {
+    if (!this.$componentSelect) return;
+    this.$componentSelect.addEventListener('change', () => {
+      this._componentFilter = this.$componentSelect.value;
+      this._render();
+    });
+  }
+
+  /* -- query text input (debounced) -- */
+  _attachQueryInput() {
+    if (!this.$queryInput) return;
+    let timer;
+    this.$queryInput.addEventListener('input', () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        this._queryFilter = this.$queryInput.value.trim().toLowerCase();
+        this._render();
+      }, 150);
+    });
+  }
+
   /* -- real-time subscription via logger.onLog -- */
   _subscribeLogger() {
     const logger = slice.logger;
@@ -192,9 +220,23 @@ export default class LogViewer extends HTMLElement {
 
     const filters = this._filters;
     const hasFilters = filters.size > 0;
+    const hasComponent = this._componentFilter !== '';
+    const hasQuery = this._queryFilter !== '';
 
     if (this.$count) {
       this.$count.textContent = logs.length;
+    }
+
+    /* refresh component select options */
+    if (this.$componentSelect) {
+      const currentVal = this.$componentSelect.value;
+      const components = [...new Set(logs.map(l => l.componentSliceId).filter(Boolean))].sort();
+      let opts = '<option value="">All components</option>';
+      for (const c of components) {
+        const sel = c === currentVal ? ' selected' : '';
+        opts += `<option value="${escapeHtml(c)}"${sel}>${escapeHtml(c)}</option>`;
+      }
+      this.$componentSelect.innerHTML = opts;
     }
 
     if (!this.$body) return;
@@ -204,8 +246,18 @@ export default class LogViewer extends HTMLElement {
       return;
     }
 
-    const filtered = hasFilters ? logs.filter((log) => filters.has(log.logType)) : logs;
+    let filtered = logs;
+    if (hasFilters) filtered = filtered.filter((log) => filters.has(log.logType));
+    if (hasComponent) filtered = filtered.filter((log) => log.componentSliceId === this._componentFilter);
+    if (hasQuery) filtered = filtered.filter((log) => (log.message || '').toLowerCase().includes(this._queryFilter));
     const reversed = [...filtered].reverse();
+
+    if (reversed.length === 0) {
+      this.$body.innerHTML = '<div class="lv__empty"><span class="lv__empty-icon">&#128269;</span><span>No matches</span></div>';
+      return;
+    }
+
+    const prevScrollTop = this.$body.scrollTop;
 
     let html = '';
     for (const log of reversed) {
@@ -233,9 +285,8 @@ export default class LogViewer extends HTMLElement {
     }
 
     this.$body.innerHTML = html;
-    if (this.$body.scrollTop < 20) {
-      this.$body.scrollTop = 0;
-    }
+    /* preserve scroll — if user was at top (newest), stay at top */
+    this.$body.scrollTop = prevScrollTop === 0 ? 0 : Math.min(prevScrollTop, this.$body.scrollHeight);
   }
 }
 
@@ -286,6 +337,7 @@ slice-log-viewer[data-minimized] {
   min-height: 0;
 }
 
+slice-log-viewer[data-minimized] .lv__toolbar,
 slice-log-viewer[data-minimized] .lv__body {
   display: none;
 }
@@ -390,10 +442,73 @@ slice-log-viewer[data-minimized] .lv__body {
   padding: 3px 8px 4px;
 }
 
+.lv__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  background: color-mix(in srgb, var(--si-surface, #1e1e2e) 98%, #000);
+  border-bottom: 1px solid color-mix(in srgb, var(--si-border, #555) 18%, transparent);
+}
+
+.lv__component-select {
+  all: unset;
+  flex: 0 0 auto;
+  max-width: 160px;
+  font-size: 10px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--si-text, #cdd6f4);
+  background: color-mix(in srgb, var(--si-border, #555) 20%, transparent);
+  padding: 3px 20px 3px 7px;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8'%3E%3Cpath fill='%23a6adc8' d='M2 2.5l2 2 2-2'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.lv__component-select:hover {
+  background-color: color-mix(in srgb, var(--si-border, #555) 35%, transparent);
+}
+
+.lv__component-select option {
+  background: var(--si-surface, #1e1e2e);
+  color: var(--si-text, #cdd6f4);
+  font-size: 10px;
+}
+
+.lv__query-input {
+  all: unset;
+  flex: 1;
+  min-width: 0;
+  font-size: 10px;
+  font-family: inherit;
+  color: var(--si-text, #cdd6f4);
+  background: color-mix(in srgb, var(--si-border, #555) 15%, transparent);
+  padding: 3px 7px;
+  border-radius: 6px;
+  transition: background .12s ease;
+}
+
+.lv__query-input::placeholder {
+  color: color-mix(in srgb, var(--si-dim, #a6adc8) 45%, transparent);
+}
+
+.lv__query-input:focus {
+  background: color-mix(in srgb, var(--si-border, #555) 25%, transparent);
+  outline: 1px solid color-mix(in srgb, var(--si-accent, #6ee7ff) 30%, transparent);
+}
+
 .lv__body {
   overflow-y: auto;
   overflow-x: hidden;
-  height: calc(100% - 38px);
+  height: calc(100% - 76px);
   padding: 4px 0;
   cursor: auto;
 }
@@ -535,6 +650,12 @@ function productionOnlyHtml() {
       <button class="lv__clear" title="Clear all logs">Clear</button>
       <button class="lv__close" title="Close">&times;</button>
     </div>
+  </div>
+  <div class="lv__toolbar">
+    <select class="lv__component-select" data-component-select>
+      <option value="">All components</option>
+    </select>
+    <input class="lv__query-input" data-query-input type="text" placeholder="Search logs..." />
   </div>
   <div class="lv__body" data-body></div>
 </div>`;
