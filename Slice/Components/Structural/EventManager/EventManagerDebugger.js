@@ -22,7 +22,24 @@ export default class EventManagerDebugger extends HTMLElement {
       this.cacheElements();
       this.bindEvents();
       this.makeDraggable();
+      this._loadStaticGraph();
       this.renderList();
+   }
+
+   /**
+    * Best-effort load of the generated static event graph (documentation layer).
+    * Produced by `slice types generate` at /slice-events.generated.js. Absent =>
+    * the Registry tab simply shows no static emitters/listeners (no error).
+    */
+   async _loadStaticGraph() {
+      if (slice.events?.graph) return;
+      try {
+         const module = await import(/* @vite-ignore */ '/slice-events.generated.js');
+         if (module?.default) slice.events.loadGraph(module.default);
+         if (this.isOpen && this.activeTab === 'registry') this.renderRegistry();
+      } catch {
+         /* manifest not generated — documentation layer stays empty, runtime tracing still works */
+      }
    }
 
    /**
@@ -69,11 +86,7 @@ export default class EventManagerDebugger extends HTMLElement {
       this._stopAutoRefresh();
       this._autoRefreshTimer = setInterval(() => {
          if (!this.isOpen) return;
-         if (this.activeTab === 'history') {
-            this.renderHistory();
-         } else {
-            this.renderList();
-         }
+         this._renderActive();
       }, 1500);
    }
 
@@ -93,34 +106,36 @@ export default class EventManagerDebugger extends HTMLElement {
       this.refreshButton = this.querySelector('#events-refresh');
       this.closeButton = this.querySelector('#events-close');
       this.tabSubs = this.querySelector('#tab-subscribers');
+      this.tabRegistry = this.querySelector('#tab-registry');
       this.tabHistory = this.querySelector('#tab-history');
    }
 
    bindEvents() {
-      this.refreshButton.addEventListener('click', () => {
-         if (this.activeTab === 'history') this.renderHistory();
-         else this.renderList();
-      });
+      this.refreshButton.addEventListener('click', () => this._renderActive());
       this.closeButton.addEventListener('click', () => this.close());
       this.filterInput.addEventListener('input', (event) => {
          this.filterText = event.target.value.trim().toLowerCase();
-         if (this.activeTab === 'history') this.renderHistory();
-         else this.renderList();
+         this._renderActive();
       });
-      this.tabSubs.addEventListener('click', () => {
-         this.activeTab = 'subscribers';
-         this.tabSubs.classList.add('active');
-         this.tabHistory.classList.remove('active');
-         this.filterInput.placeholder = 'filter events…';
-         this.renderList();
-      });
-      this.tabHistory.addEventListener('click', () => {
-         this.activeTab = 'history';
-         this.tabHistory.classList.add('active');
-         this.tabSubs.classList.remove('active');
-         this.filterInput.placeholder = 'filter history…';
-         this.renderHistory();
-      });
+      this.tabSubs.addEventListener('click', () => this._selectTab('subscribers'));
+      this.tabRegistry.addEventListener('click', () => this._selectTab('registry'));
+      this.tabHistory.addEventListener('click', () => this._selectTab('history'));
+   }
+
+   _selectTab(tab) {
+      this.activeTab = tab;
+      this.tabSubs.classList.toggle('active', tab === 'subscribers');
+      this.tabRegistry.classList.toggle('active', tab === 'registry');
+      this.tabHistory.classList.toggle('active', tab === 'history');
+      const placeholders = { subscribers: 'filter events…', registry: 'filter registry…', history: 'filter history…' };
+      this.filterInput.placeholder = placeholders[tab] || 'filter…';
+      this._renderActive();
+   }
+
+   _renderActive() {
+      if (this.activeTab === 'history') this.renderHistory();
+      else if (this.activeTab === 'registry') this.renderRegistry();
+      else this.renderList();
    }
 
    makeDraggable() {
@@ -185,7 +200,7 @@ export default class EventManagerDebugger extends HTMLElement {
             return;
          }
 
-         items.push({ eventName, count: subs.size, emitCount, entries });
+         items.push({ eventName, count: subs.size, emitCount, entries, emitters: this._emittersFor(eventName) });
       });
 
       items.sort((a, b) => a.eventName.localeCompare(b.eventName));
@@ -200,28 +215,209 @@ export default class EventManagerDebugger extends HTMLElement {
                   const onceBadge = entry.once ? '<span class="badge">once</span>' : '';
                   return `
                    <div class="subscriber-row">
-                      <div class="subscriber-name">${label}</div>
+                      <div class="subscriber-name">${this.escapeHtml(label)}</div>
                       <div class="subscriber-meta">${entry.id}${onceBadge}</div>
                    </div>
                 `;
                }).join('');
 
+               const emittersHtml = item.emitters.length
+                  ? item.emitters.map((emitter) => `
+                       <div class="subscriber-row emitter-row">
+                          <div class="subscriber-name">${this.escapeHtml(this._emitterLabel(emitter))}</div>
+                          <div class="subscriber-meta">×${emitter.count}</div>
+                       </div>
+                    `).join('')
+                  : '<div class="empty">No emitters recorded</div>';
+
                return `
                 <details class="event-row">
                    <summary>
-                      <div class="event-name">${item.eventName}</div>
+                      <div class="event-name">${this.escapeHtml(item.eventName)}</div>
                       <div class="event-metrics">
                          <span class="emit-count" title="Emits this session">⚡${item.emitCount}</span>
                          <span class="event-count">${item.count}</span>
                       </div>
                    </summary>
-                   <div class="subscriber-list">
+                   <div class="trace-section">
+                      <div class="trace-label">emitted by</div>
+                      ${emittersHtml}
+                   </div>
+                   <div class="trace-section">
+                      <div class="trace-label">listeners</div>
                       ${details || '<div class="empty">No subscribers</div>'}
                    </div>
                 </details>
              `;
             }).join('')
           : '<div class="empty">No events</div>';
+   }
+
+   /**
+    * Emitters recorded for an event (only while the debugger is open).
+    * @param {string} eventName
+    * @returns {Array<{ sliceId?: string, name?: string, source?: string, count: number }>}
+    */
+   _emittersFor(eventName) {
+      const map = slice?.events?.emitters;
+      if (!(map instanceof Map) || !map.has(eventName)) return [];
+      return Array.from(map.get(eventName).values()).sort((a, b) => b.count - a.count);
+   }
+
+   /**
+    * Human-readable label for an emitter (component name + sliceId, or source location).
+    */
+   _emitterLabel(emitter) {
+      if (!emitter) return 'unknown';
+      if (emitter.sliceId) return `${emitter.name || 'Component'} (${emitter.sliceId})`;
+      if (emitter.source) return emitter.source;
+      return 'unknown';
+   }
+
+   /**
+    * Render the declared event catalog (registry) merged with the live state:
+    * payload shape, current subscriber count, emit count, plus drift badges for
+    * declared-but-unused and used-but-undeclared events.
+    */
+   renderRegistry() {
+      if (!slice?.events) {
+         this.list.textContent = 'EventManager not available.';
+         this.countLabel.textContent = '0';
+         return;
+      }
+
+      const registry = slice.events.registry instanceof Map ? slice.events.registry : new Map();
+      const undeclared = slice.events.undeclared instanceof Set ? slice.events.undeclared : new Set();
+
+      if (registry.size === 0 && undeclared.size === 0) {
+         this.countLabel.textContent = '0';
+         this.list.innerHTML =
+            '<div class="empty">No events registered.<br/>Declare them with <code>slice.events.register({ ... })</code>.</div>';
+         return;
+      }
+
+      const matchesFilter = (name) => !this.filterText || name.toLowerCase().includes(this.filterText);
+
+      // Bucket declared events by namespace (segment before the first ':').
+      const groups = new Map();
+      registry.forEach((definition, eventName) => {
+         if (!matchesFilter(eventName)) return;
+         const ns = slice.events.namespaceOf?.(eventName) || '(no namespace)';
+         if (!groups.has(ns)) groups.set(ns, []);
+         groups.get(ns).push({
+            eventName,
+            description: definition?.description || '',
+            payload: definition?.payload ?? null,
+            subscriberCount: slice.events.subscriberCount?.(eventName) || 0,
+            emitCount: slice.events.emitCounts?.get(eventName) || 0
+         });
+      });
+
+      const sortedNamespaces = Array.from(groups.keys()).sort((a, b) => a.localeCompare(b));
+      const declaredCount = Array.from(groups.values()).reduce((sum, list) => sum + list.length, 0);
+      const drift = Array.from(undeclared).filter(matchesFilter).sort();
+
+      this.countLabel.textContent = String(declaredCount + drift.length);
+
+      const siteRows = (sites) => sites.map((s) => {
+         const label = s.component ? `${s.component} — ${s.file}:${s.line}` : `${s.file}:${s.line}`;
+         return `<div class="graph-site">${this.escapeHtml(label)}</div>`;
+      }).join('');
+
+      const eventRowHtml = (item) => {
+         const payloadStr = this.formatPayload(item.payload);
+         const idle = item.subscriberCount === 0
+            ? '<span class="badge badge-idle" title="No active listeners">idle</span>'
+            : '';
+         const desc = item.description
+            ? `<div class="registry-desc">${this.escapeHtml(item.description)}</div>`
+            : '';
+
+         // Static documentation layer (from the generated manifest).
+         const emitters = slice.events.staticEmittersOf?.(item.eventName) || [];
+         const listeners = slice.events.staticListenersOf?.(item.eventName) || [];
+         const graphHtml = (emitters.length || listeners.length)
+            ? `
+               <div class="graph-block">
+                  <div class="graph-label">emitters <span class="graph-tag">static</span></div>
+                  ${emitters.length ? siteRows(emitters) : '<div class="empty">none found in code</div>'}
+                  <div class="graph-label">listeners <span class="graph-tag">static</span></div>
+                  ${listeners.length ? siteRows(listeners) : '<div class="empty">none found in code</div>'}
+               </div>`
+            : '';
+
+         return `
+            <details class="event-row">
+               <summary>
+                  <div class="event-name">${this.escapeHtml(item.eventName)}</div>
+                  <div class="event-metrics">
+                     ${idle}
+                     <span class="emit-count" title="Emits this session">⚡${item.emitCount}</span>
+                     <span class="event-count" title="Active listeners">${item.subscriberCount}</span>
+                  </div>
+               </summary>
+               <div class="subscriber-list">
+                  ${desc}
+                  <div class="registry-payload"><span class="payload-key">payload</span> ${this.escapeHtml(payloadStr)}</div>
+                  ${graphHtml}
+               </div>
+            </details>
+         `;
+      };
+
+      const declaredHtml = sortedNamespaces.map((ns) => {
+         const list = groups.get(ns).sort((a, b) => a.eventName.localeCompare(b.eventName));
+         const rows = list.map(eventRowHtml).join('');
+         return `
+            <details class="ns-group" open>
+               <summary class="ns-summary">
+                  <span class="ns-name">${this.escapeHtml(ns)}</span>
+                  <span class="ns-count">${list.length}</span>
+               </summary>
+               <div class="ns-events">${rows}</div>
+            </details>
+         `;
+      }).join('');
+
+      const driftHtml = drift.length
+         ? `<div class="registry-drift-title">Used but not declared (${drift.length})</div>` +
+           drift.map((name) => `
+               <div class="history-row drift-row">
+                  <div class="history-event">${this.escapeHtml(name)}</div>
+                  <div class="history-time"><span class="badge badge-drift">undeclared</span></div>
+               </div>
+            `).join('')
+         : '';
+
+      // Footer: dynamic emit/subscribe sites (computed names the static scan can't resolve).
+      const dynamic = slice.events.graph?.dynamic;
+      const dynamicCount = (dynamic?.emitters?.length || 0) + (dynamic?.listeners?.length || 0);
+      const dynamicHtml = dynamicCount
+         ? `<div class="registry-drift-title">Dynamic sites (computed names, ${dynamicCount}) — not statically resolvable</div>`
+         : '';
+
+      this.list.innerHTML =
+         (declaredHtml || (drift.length ? '' : '<div class="empty">No matching events</div>')) + driftHtml + dynamicHtml;
+   }
+
+   /**
+    * Render a payload mini-schema for display.
+    * @param {object|null} payload
+    * @returns {string}
+    */
+   formatPayload(payload) {
+      if (payload === null || payload === undefined) return 'void';
+      if (typeof payload === 'string') return payload;
+      if (typeof payload === 'object') {
+         const parts = Object.entries(payload).map(([key, value]) => {
+            const type = typeof value === 'string'
+               ? value
+               : (value && typeof value === 'object' && value.type) || 'any';
+            return `${key}: ${type}`;
+         });
+         return `{ ${parts.join(', ')} }`;
+      }
+      return String(payload);
    }
 
    renderHistory() {
@@ -248,9 +444,15 @@ export default class EventManagerDebugger extends HTMLElement {
          const timeStr = diff < 1000 ? 'now'
             : diff < 60000 ? `${Math.floor(diff / 1000)}s ago`
             : `${Math.floor(diff / 60000)}m ago`;
+         const from = entry.emitter
+            ? `<div class="history-from" title="Emitter">↑ ${this.escapeHtml(this._emitterLabel(entry.emitter))}</div>`
+            : '';
          return `
             <div class="history-row">
-               <div class="history-event">${this.escapeHtml(entry.eventName)}</div>
+               <div class="history-main">
+                  <div class="history-event">${this.escapeHtml(entry.eventName)}</div>
+                  ${from}
+               </div>
                <div class="history-time">${timeStr}</div>
             </div>
          `;
@@ -281,6 +483,7 @@ export default class EventManagerDebugger extends HTMLElement {
          </div>
          <div class="events-tabs">
             <button id="tab-subscribers" class="tab-btn active">Subscribers</button>
+            <button id="tab-registry" class="tab-btn">Registry</button>
             <button id="tab-history" class="tab-btn">History</button>
          </div>
          <div class="events-toolbar">
@@ -634,6 +837,141 @@ slice-eventmanager-debugger .empty {
    letter-spacing: 0.04em;
    text-align: center;
    padding: 22px 0;
+}
+slice-eventmanager-debugger .empty code {
+   font-family: var(--si-mono);
+   color: var(--si-accent);
+   background: rgba(var(--si-accent-rgb), 0.1);
+   padding: 1px 5px;
+   border-radius: 5px;
+}
+
+slice-eventmanager-debugger .registry-desc {
+   font-size: 11px;
+   color: var(--si-dim);
+   padding: 4px 2px 2px;
+   line-height: 1.4;
+}
+slice-eventmanager-debugger .registry-payload {
+   font-family: var(--si-mono);
+   font-size: 11px;
+   color: var(--si-text);
+   padding: 6px 9px;
+   border-radius: 7px;
+   background: rgba(0, 0, 0, 0.22);
+   border: 1px solid var(--si-border);
+   word-break: break-word;
+}
+slice-eventmanager-debugger .payload-key {
+   color: var(--si-dim);
+   margin-right: 6px;
+}
+slice-eventmanager-debugger .badge-idle {
+   background: rgba(136, 143, 166, 0.14);
+   color: var(--si-dim);
+   border: 1px solid var(--si-border);
+}
+slice-eventmanager-debugger .badge-drift {
+   background: rgba(255, 107, 107, 0.14);
+   color: var(--si-danger);
+   border: 1px solid rgba(255, 107, 107, 0.3);
+}
+slice-eventmanager-debugger .registry-drift-title {
+   margin-top: 4px;
+   font-size: 9.5px;
+   letter-spacing: 0.1em;
+   text-transform: uppercase;
+   color: var(--si-danger);
+   opacity: 0.85;
+}
+slice-eventmanager-debugger .drift-row { border-left-color: rgba(255, 107, 107, 0.4); }
+
+slice-eventmanager-debugger .ns-group { display: block; }
+slice-eventmanager-debugger .ns-group + .ns-group { margin-top: 4px; }
+slice-eventmanager-debugger .ns-summary {
+   display: flex; align-items: center; gap: 8px; cursor: pointer; list-style: none;
+   padding: 4px 2px 6px; user-select: none;
+}
+slice-eventmanager-debugger .ns-summary::-webkit-details-marker { display: none; }
+slice-eventmanager-debugger .ns-summary::before {
+   content: '▾'; color: var(--si-dim); font-size: 10px; transition: transform 0.2s ease;
+}
+slice-eventmanager-debugger .ns-group:not([open]) .ns-summary::before { transform: rotate(-90deg); }
+slice-eventmanager-debugger .ns-name {
+   font-size: 9.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--si-accent);
+}
+slice-eventmanager-debugger .ns-count {
+   font-size: 9.5px; color: var(--si-dim);
+   background: var(--si-raised-2); border: 1px solid var(--si-border);
+   border-radius: 999px; padding: 0 6px;
+}
+slice-eventmanager-debugger .ns-events { display: flex; flex-direction: column; gap: 7px; padding-left: 4px; }
+
+slice-eventmanager-debugger .trace-section {
+   margin-top: 9px;
+   padding-top: 9px;
+   border-top: 1px dashed var(--si-border);
+   display: flex;
+   flex-direction: column;
+   gap: 6px;
+}
+slice-eventmanager-debugger .trace-label {
+   font-size: 9px;
+   font-weight: 700;
+   letter-spacing: 0.1em;
+   text-transform: uppercase;
+   color: var(--si-dim);
+}
+slice-eventmanager-debugger .emitter-row { border-left: 2px solid var(--si-success); }
+slice-eventmanager-debugger .emitter-row .subscriber-name { color: var(--si-text); }
+
+slice-eventmanager-debugger .history-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+slice-eventmanager-debugger .history-from {
+   font-size: 10px;
+   color: var(--si-success);
+   overflow: hidden;
+   text-overflow: ellipsis;
+   white-space: nowrap;
+}
+
+slice-eventmanager-debugger .graph-block {
+   margin-top: 8px;
+   padding-top: 8px;
+   border-top: 1px dashed var(--si-border);
+   display: flex;
+   flex-direction: column;
+   gap: 4px;
+}
+slice-eventmanager-debugger .graph-label {
+   font-size: 9px;
+   font-weight: 700;
+   letter-spacing: 0.08em;
+   text-transform: uppercase;
+   color: var(--si-dim);
+   margin-top: 4px;
+   display: flex;
+   align-items: center;
+   gap: 6px;
+}
+slice-eventmanager-debugger .graph-tag {
+   font-size: 8px;
+   font-weight: 600;
+   letter-spacing: 0.04em;
+   color: var(--si-accent);
+   background: rgba(var(--si-accent-rgb), 0.12);
+   border: 1px solid rgba(var(--si-accent-rgb), 0.25);
+   border-radius: 999px;
+   padding: 0 5px;
+}
+slice-eventmanager-debugger .graph-site {
+   font-family: var(--si-mono);
+   font-size: 10.5px;
+   color: var(--si-text);
+   padding: 3px 8px;
+   border-radius: 6px;
+   background: rgba(0, 0, 0, 0.2);
+   border: 1px solid var(--si-border);
+   word-break: break-word;
 }
 
 @media (prefers-reduced-motion: reduce) {

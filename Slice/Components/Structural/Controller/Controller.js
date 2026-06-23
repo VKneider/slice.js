@@ -26,6 +26,12 @@ export default class Controller {
       this._pendingBuilds = new Map();
 
       this.idCounter = 0;
+
+      // 🔍 Leak detection (dev-only). App-provided predicates that mark a
+      // detached-but-registered component as intentional (not a leak).
+      this._leakExclusions = [];
+      // Ring buffer of activeComponents.size samples for the growth heuristic.
+      this._growthSamples = [];
    }
 
    /**
@@ -1267,5 +1273,134 @@ export default class Controller {
       }
 
       return count;
+   }
+
+   // ============================================================
+   // 🔍 LEAK DETECTION (dev-only)
+   // A component is a candidate leak when it stays registered in
+   // activeComponents while detached from the live DOM and was not
+   // intentionally cached (Route/MultiRoute/Router). Read-only.
+   // ============================================================
+
+   /**
+    * Register a predicate that excludes a detached component from being flagged
+    * as a leak (e.g. caches that intentionally keep instances off-DOM).
+    * @param {(component: HTMLElement) => boolean} predicate
+    */
+   registerLeakExclusion(predicate) {
+      if (typeof predicate === 'function') {
+         this._leakExclusions.push(predicate);
+      }
+   }
+
+   /**
+    * Is this detached component intentionally retained (not a leak)?
+    * @param {HTMLElement} component
+    * @returns {boolean}
+    * @private
+    */
+   _isExcludedOrphan(component) {
+      // (1) Cache-owner marker — Route/MultiRoute flag their cached instances.
+      if (component.__sliceCached === true) return true;
+      // (2) Router-managed instances are reused across navigation by sliceId.
+      if (typeof component.sliceId === 'string' && /^route-/.test(component.sliceId)) return true;
+      // (3) App-provided predicates.
+      for (const predicate of this._leakExclusions) {
+         try {
+            if (predicate(component)) return true;
+         } catch (error) {
+            slice.logger.logError('Controller', 'Leak exclusion predicate threw', error);
+         }
+      }
+      return false;
+   }
+
+   /**
+    * Does an ancestor explain this component's detachment? If so we report only
+    * the detached root, not every descendant of a removed/cached subtree.
+    * @param {HTMLElement} component
+    * @param {Set<string>} detachedIds
+    * @returns {boolean}
+    * @private
+    */
+   _hasDetachedAncestor(component, detachedIds) {
+      let parent = component.parentComponent;
+      while (parent) {
+         if ((parent.sliceId && detachedIds.has(parent.sliceId)) || this._isExcludedOrphan(parent)) {
+            return true;
+         }
+         parent = parent.parentComponent;
+      }
+      return false;
+   }
+
+   /**
+    * Build a human-readable retain path (component → parent → …) for diagnosis.
+    * @param {HTMLElement} component
+    * @returns {string[]}
+    * @private
+    */
+   _retainPath(component) {
+      const path = [];
+      let node = component;
+      let guard = 0;
+      while (node && guard++ < 50) {
+         path.push(`${node.constructor?.name || 'Unknown'}(${node.sliceId || '?'})`);
+         node = node.parentComponent;
+      }
+      return path;
+   }
+
+   /**
+    * Find candidate leaks: components registered in activeComponents but detached
+    * from the live DOM and not intentionally cached. Pure read-only.
+    * @returns {Array<{ sliceId: string, name: string, reason: string, retainPath: string[] }>}
+    */
+   findOrphans() {
+      const detached = [];
+      for (const [sliceId, component] of this.activeComponents) {
+         if (component instanceof HTMLElement && !component.isConnected) {
+            detached.push([sliceId, component]);
+         }
+      }
+
+      const detachedIds = new Set(detached.map(([sliceId]) => sliceId));
+      const orphans = [];
+
+      for (const [sliceId, component] of detached) {
+         if (this._isExcludedOrphan(component)) continue;
+         if (this._hasDetachedAncestor(component, detachedIds)) continue;
+         orphans.push({
+            sliceId,
+            name: component.constructor?.name || 'Unknown',
+            reason: 'registered but detached from DOM without destroy',
+            retainPath: this._retainPath(component)
+         });
+      }
+
+      return orphans;
+   }
+
+   /**
+    * Record an activeComponents.size sample for the monotonic-growth heuristic.
+    * Called by the Leak Inspector on each refresh while it is open.
+    */
+   sampleComponentGrowth() {
+      this._growthSamples.push(this.activeComponents.size);
+      if (this._growthSamples.length > 20) this._growthSamples.shift();
+   }
+
+   /**
+    * Heuristic: has the active component count grown without ever shrinking
+    * across the sampled window? Suggests an accumulation leak.
+    * @returns {boolean}
+    */
+   isGrowthMonotonic() {
+      const samples = this._growthSamples;
+      if (samples.length < 5) return false;
+      for (let i = 1; i < samples.length; i++) {
+         if (samples[i] < samples[i - 1]) return false;
+      }
+      return samples[samples.length - 1] > samples[0];
    }
 }

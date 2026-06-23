@@ -10,7 +10,16 @@
       "additionalProperties": true,
       "properties": {
         "enabled": { "type": "boolean" },
-        "click": { "type": "string", "enum": ["right", "left"] }
+        "click": { "type": "string", "enum": ["right", "left"] },
+        "leakInspector": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Dev-only memory-leak panel. Disabled in production regardless of this flag.",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "shortcut": { "type": "string" }
+          }
+        }
       }
     },
     "stylesManager": {

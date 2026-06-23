@@ -104,6 +104,39 @@ app.get('/slice-env.json', (req, res) => {
 });
 
 // ==============================================
+// PWA — manifest + service worker (dev y prod)
+// ==============================================
+// Despacha los archivos PWA desde la carpeta desplegada (src en dev, dist en
+// prod) si existen; 404 si no, así no estorba cuando la app no es PWA.
+// El service worker se sirve SIN caché (para que sus actualizaciones lleguen) y
+// con Service-Worker-Allowed:/ para permitir scope raíz.
+const servePwaFile = (res, fileName, contentType, extraHeaders = {}) => {
+  const filePath = path.join(__dirname, `../${folderDeployed}`, fileName);
+  try {
+    if (fs.existsSync(filePath)) {
+      res.setHeader('Content-Type', contentType);
+      for (const [key, value] of Object.entries(extraHeaders)) res.setHeader(key, value);
+      return res.send(fs.readFileSync(filePath, 'utf8'));
+    }
+  } catch (error) {
+    console.error(`Error reading ${fileName}:`, error);
+    return res.status(500).send(`Error reading ${fileName}`);
+  }
+  return res.status(404).send(`${fileName} not found`);
+};
+
+app.get('/service-worker.js', (req, res) => {
+  servePwaFile(res, 'service-worker.js', 'application/javascript; charset=utf-8', {
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    'Service-Worker-Allowed': '/',
+  });
+});
+
+app.get('/manifest.json', (req, res) => {
+  servePwaFile(res, 'manifest.json', 'application/manifest+json; charset=utf-8');
+});
+
+// ==============================================
 // ARCHIVOS ESTÁTICOS (DESPUÉS DE SEGURIDAD)
 // ==============================================
 
@@ -193,14 +226,8 @@ if (runMode === 'development') {
     return res.status(404).send(`${fileName} not found`);
   };
 
-  app.get('/manifest.json', (req, res) => {
-    const manifestPath = path.join(__dirname, `../${folderDeployed}`, 'manifest.json');
-    serveStaticFile(req, res, manifestPath, 'application/json; charset=utf-8', 'manifest.json');
-  });
-  app.get('/service-worker.js', (req, res) => {
-    const workerPath = path.join(__dirname, `../${folderDeployed}`, 'service-worker.js');
-    serveStaticFile(req, res, workerPath, 'application/javascript; charset=utf-8', 'service-worker.js');
-  });
+  // (manifest.json y service-worker.js los sirve el bloque PWA compartido de arriba,
+  //  con headers correctos en dev y prod.)
   app.get('/routes.js', (req, res) => {
     const routesPath = path.join(__dirname, `../${folderDeployed}`, 'routes.js');
     serveStaticFile(req, res, routesPath, 'application/javascript; charset=utf-8', 'routes.js');

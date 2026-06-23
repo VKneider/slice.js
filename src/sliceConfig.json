@@ -5,7 +5,11 @@
    },
    "debugger": {
       "enabled": false,
-      "click": "right"
+      "click": "right",
+      "leakInspector": {
+         "enabled": true,
+         "shortcut": "alt+shift+k"
+      }
    },
    "events": {
       "enabled": true,

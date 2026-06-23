@@ -44,6 +44,10 @@ export interface SliceControllerApi {
   destroyComponent(components: HTMLElement | string | Array<HTMLElement | string>): number;
   destroyByContainer(container: HTMLElement): number;
   destroyByPattern(pattern: string | RegExp): number;
+  findOrphans(): Array<{ sliceId: string; name: string; reason: string; retainPath: string[] }>;
+  registerLeakExclusion(predicate: (component: HTMLElement) => boolean): void;
+  sampleComponentGrowth(): void;
+  isGrowthMonotonic(): boolean;
 }
 
 export interface SliceStylesManagerApi {
@@ -88,6 +92,13 @@ export interface SliceEventManagerApi {
   unsubscribe(eventName: string, subscriptionId: string): boolean;
   emit(eventName: string, ...data: unknown[]): void;
   bind(component: HTMLElement): SliceEventBindingApi | null;
+  register(namespace: string, catalog: Record<string, { description?: string; payload?: unknown }>): SliceEventManagerApi;
+  register(catalog: Record<string, { description?: string; payload?: unknown }>): SliceEventManagerApi;
+  loadGraph(graph: { events: Record<string, unknown>; dynamic?: unknown }): SliceEventManagerApi;
+  staticEmittersOf(eventName: string): Array<{ file: string; line: number; component: string | null }>;
+  staticListenersOf(eventName: string): Array<{ file: string; line: number; component: string | null }>;
+  isDeclared(eventName: string): boolean;
+  namespaceOf(eventName: string): string | null;
   cleanupComponent(sliceId: string): number;
   hasSubscribers(eventName: string): boolean;
   subscriberCount(eventName: string): number;
@@ -178,6 +189,7 @@ export interface SliceApi {
   debugger?: SliceDebuggerApi;
   eventsDebugger?: SlicePanelDebuggerApi;
   contextDebugger?: SlicePanelDebuggerApi;
+  leakInspector?: SlicePanelDebuggerApi;
   loading?: SliceLoadingApi;
   paths: SlicePaths;
   _mode: SliceMode;

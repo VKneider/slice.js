@@ -541,6 +541,14 @@ async function init() {
        document.body.appendChild(window.slice.contextDebugger);
     }
 
+     if (sliceConfig.debugger?.leakInspector?.enabled && !window.slice.isProduction()) {
+        const LeakInspectorModule = window.slice.frameworkClasses?.LeakInspector
+           || await window.slice.getClass(`${slice.paths.structuralComponentFolderPath}/LeakInspector/LeakInspector.js`);
+        window.slice.leakInspector = new LeakInspectorModule();
+       await window.slice.leakInspector.init();
+       document.body.appendChild(window.slice.leakInspector);
+    }
+
     if (sliceConfig.events?.enabled) {
        const EventManagerModule = window.slice.frameworkClasses?.EventManager
           || await window.slice.getClass(`${slice.paths.structuralComponentFolderPath}/EventManager/EventManager.js`);
@@ -554,10 +562,14 @@ async function init() {
          subscribeOnce: () => null,
          unsubscribe: () => false,
          emit: () => {},
+         register: () => window.slice.events,
+         loadGraph: () => window.slice.events,
+         isDeclared: () => false,
          bind: () => ({
             subscribe: () => null,
             subscribeOnce: () => null,
             emit: () => {},
+            register: () => window.slice.events,
          }),
          cleanupComponent: () => 0,
          hasSubscribers: () => false,
@@ -608,7 +620,7 @@ async function init() {
    const stylesInitPromise = window.slice.stylesManager.init();
    const routesModulePromise = import(slice.paths.routesFile);
 
-   if (sliceConfig.events?.ui?.shortcut || sliceConfig.context?.ui?.shortcut || sliceConfig.logger?.ui?.shortcut) {
+   if (sliceConfig.events?.ui?.shortcut || sliceConfig.context?.ui?.shortcut || sliceConfig.logger?.ui?.shortcut || sliceConfig.debugger?.leakInspector?.shortcut) {
       const normalize = (value) => (typeof value === 'string' ? value.toLowerCase() : '');
       const toKey = (event) => {
          const parts = [];
@@ -627,6 +639,7 @@ async function init() {
          [normalize(sliceConfig.events?.ui?.shortcut)]: () => window.slice.eventsDebugger?.toggle?.(),
          [normalize(sliceConfig.context?.ui?.shortcut)]: () => window.slice.contextDebugger?.toggle?.(),
          [normalize(sliceConfig.logger?.ui?.shortcut)]: () => window.slice.logViewer?.toggle?.(),
+         [normalize(sliceConfig.debugger?.leakInspector?.shortcut)]: () => window.slice.leakInspector?.toggle?.(),
       };
 
       document.addEventListener('keydown', (event) => {
