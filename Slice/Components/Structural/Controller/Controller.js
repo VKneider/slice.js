@@ -719,6 +719,11 @@ export default class Controller {
          component.setAttribute('slice-id', component.sliceId);
       }
 
+      // Envolver update() propio (si lo define) con re-entrada + limpieza por
+      // liveness. Se hace aquí (post-registro) para que `alive()` funcione y para
+      // que un update() llamado dentro de init() corra sin envolver. (RFC §3.6)
+      this.installUpdate(component);
+
       // 🚀 OPTIMIZACIÓN: Actualizar índice inverso de hijos
       if (parent) {
          if (!this.childrenIndex.has(parent.sliceId)) {
@@ -760,6 +765,64 @@ export default class Controller {
             this.registerComponentsRecursively(child, component);
          }
       });
+   }
+
+   /**
+    * Envuelve el `update()` propio de un componente (si lo define) para darle, de
+    * forma transparente, dos garantías que el dev no tiene que escribir:
+    *
+    *  - Re-entrada (serializa + coalesce, "gana el último"): si llega otro
+    *    `update()` mientras uno async está en vuelo, se guarda SOLO el más nuevo y
+    *    se corre una vez al terminar. Nunca dos updates pisan el DOM a la vez.
+    *  - Liveness: si el componente se destruye a mitad de un `update()` async, al
+    *    resolver se limpian (`destroyByContainer`) los hijos que ese update alcanzó
+    *    a construir, evitando fugas. El destroy NO se difiere (rompería el reuso de
+    *    sliceId); se limpia después.
+    *
+    * Componentes sin `update()` no se tocan (no hay método fantasma). Ver RFC
+    * §3.5 / §3.6 / §8.
+    * @param {HTMLElement} component
+    * @returns {void}
+    */
+   installUpdate(component) {
+      if (typeof component.update !== 'function') return;
+
+      const controller = this;
+      const inner = component.update.bind(component);
+      const alive = () => controller.activeComponents.get(component.sliceId) === component;
+
+      let running = null;
+      let pending;
+      let hasPending = false;
+
+      component.update = function (next) {
+         if (!alive()) return;                       // ya destruido: nada
+         const args = next ?? component.props;       // sin args -> this.props (lo mantiene el Router)
+
+         if (running) {                              // coalesce: conserva solo lo último
+            pending = args;
+            hasPending = true;
+            return running;
+         }
+
+         running = Promise.resolve(inner(args))
+            .catch((error) => slice.logger.logError(component.constructor.name, 'update() failed', error))
+            .finally(() => {
+               running = null;
+               if (!alive()) {                       // destruido a mitad del await: limpiar lo construido
+                  controller.destroyByContainer(component);
+                  return;                            // y NO correr el pendiente
+               }
+               if (hasPending) {
+                  hasPending = false;
+                  const next = pending;
+                  pending = undefined;
+                  component.update(next);
+               }
+            });
+
+         return running;
+      };
    }
 
    /**
@@ -887,19 +950,25 @@ export default class Controller {
       const ComponentClass = component.constructor;
       const componentName = ComponentClass.name;
 
-      // Aplicar defaults si tiene static props
-      if (ComponentClass.props) {
+      // ¿Refresco o build? En el constructor el componente aún NO está registrado
+      // bajo su sliceId (el framework lo registra después) -> build. Si ya está
+      // registrado como su propia instancia -> refresco. (RFC §3.8 — autodetección)
+      const isRefresh = !!component.sliceId && this.activeComponents.get(component.sliceId) === component;
+
+      // Defaults: solo en build. En refresco NO, para no pisar valores ya modificados.
+      if (ComponentClass.props && !isRefresh) {
          this.applyDefaultProps(component, ComponentClass.props, props);
       }
 
-      // Validar solo en desarrollo
+      // Validar solo en desarrollo. En refresco (patch parcial) no se exige `required`.
       if (ComponentClass.props && !slice.isProduction()) {
-         this.validatePropsInDevelopment(ComponentClass, props, componentName);
+         this.validatePropsInDevelopment(ComponentClass, props, componentName, { checkRequired: !isRefresh });
       }
 
-      // Aplicar props
+      // Aplicar props. En build reseteamos el backing field para forzar el setter
+      // (primer render). En refresco NO lo reseteamos, así los diff-guards cortan.
       for (const prop in props) {
-         component[`_${prop}`] = null;
+         if (!isRefresh) component[`_${prop}`] = null;
          component[prop] = props[prop];
       }
    }
@@ -931,7 +1000,8 @@ export default class Controller {
       });
    }
 
-   validatePropsInDevelopment(ComponentClass, providedProps, componentName) {
+   validatePropsInDevelopment(ComponentClass, providedProps, componentName, options = {}) {
+      const { checkRequired = true } = options;
       const staticProps = ComponentClass.props;
       const usedProps = Object.keys(providedProps || {});
 
@@ -945,13 +1015,16 @@ export default class Controller {
          );
       }
 
-      const requiredProps = Object.entries(staticProps)
-         .filter(([_, config]) => config.required)
-         .map(([prop, _]) => prop);
+      // En un refresco (patch parcial) se omiten props a propósito: no exigir required.
+      if (checkRequired) {
+         const requiredProps = Object.entries(staticProps)
+            .filter(([_, config]) => config.required)
+            .map(([prop, _]) => prop);
 
-      const missingRequired = requiredProps.filter((prop) => !(prop in (providedProps || {})));
-      if (missingRequired.length > 0) {
-         slice.logger.logError(componentName, `Missing required props: [${missingRequired.join(', ')}]`);
+         const missingRequired = requiredProps.filter((prop) => !(prop in (providedProps || {})));
+         if (missingRequired.length > 0) {
+            slice.logger.logError(componentName, `Missing required props: [${missingRequired.join(', ')}]`);
+         }
       }
 
       const invalidAllowedValueProps = collectInvalidAllowedValueProps(staticProps, providedProps);

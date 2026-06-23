@@ -128,6 +128,29 @@ export default class Slice {
    }
 
    /**
+    * Apply props to a component. The controller auto-detects build vs refresh:
+    * during construction (not yet registered) it applies defaults + required
+    * validation; once registered, it refreshes in place (no defaults, no required,
+    * respects diff-guards). Same call works for both.
+    * @param {HTMLElement} component
+    * @param {Object} props
+    * @returns {void}
+    */
+   setComponentProps(component, props) {
+      return this.controller.setComponentProps(component, props);
+   }
+
+   /**
+    * Whether `component` is still the live registered instance for its sliceId
+    * (false after it has been destroyed, or replaced by a rebuild).
+    * @param {HTMLElement} component
+    * @returns {boolean}
+    */
+   isComponentAlive(component) {
+      return !!component && this.controller.activeComponents.get(component.sliceId) === component;
+   }
+
+   /**
     * Build a component instance and run init.
     *
     * Pass `{ singleton: true }` to get-or-create one shared instance keyed by
