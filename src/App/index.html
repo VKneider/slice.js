@@ -33,7 +33,29 @@
           "@type": "Organization",
           "name": "VKneider",
           "url": "https://github.com/VKneider"
+        },
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": {
+            "@type": "EntryPoint",
+            "urlTemplate": "https://slicejs.com/?q={search_term_string}"
+          },
+          "query-input": "required name=search_term_string"
         }
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://slicejs.com/"
+          }
+        ]
       }
     </script>
   </head>

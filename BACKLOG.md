@@ -55,6 +55,16 @@ if (runMode === 'production') {
 
 **Implementado:** La lógica de `api/index.js` se movió a `api/framework/server.js` del paquete `slicejs-web-framework`. El `api/index.js` del proyecto ahora es solo un wrapper que importa `createSliceServer` y lo ejecuta.
 
+## 8. `<base href="/">` en index.html
+
+**Problema:** Ningún proyecto tiene `<base href="/">` en el `<head>`. Si en el futuro se despliega en un subdirectorio (ej. `midominio.com/slice/`), las rutas absolutas (`/images/...`, `/App/index.js`) dejarían de funcionar porque el navegador las resuelve contra la URL actual después de `history.pushState()`.
+
+**Solución:** Agregar `<base href="/">` en el `<head>` de cada `index.html`. O, alternativamente, asegurarse de que todas las rutas en templates, componentes y assets sean siempre absolutas y que el servidor las sirva correctamente desde cualquier subdirectorio.
+
+**Impacto:** Bajo — solo agregar una línea en 4 archivos. Pero requiere verificar que no haya rutas relativas que se rompan al agregar `<base>`.
+
+---
+
 ## Estado actual del ecosistema
 
 | Repositorio | Estado |
