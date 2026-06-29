@@ -1,4 +1,4 @@
-// api/middleware/securityMiddleware.js
+// api/framework/securityMiddleware.js
 import path from 'path';
 
 /**
@@ -7,7 +7,17 @@ import path from 'path';
  */
 export function securityMiddleware(options = {}) {
   const {
-    allowedExtensions = ['.js', '.css', '.html', '.json', '.svg', '.png', '.jpg', '.jpeg', '.gif', '.woff', '.woff2', '.ttf'],
+    allowedExtensions = [
+      '.js', '.mjs', '.cjs',
+      '.css',
+      '.html', '.htm',
+      '.json',
+      '.svg', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.avif', '.ico',
+      '.woff', '.woff2', '.ttf', '.otf', '.eot',
+      '.txt', '.xml', '.pdf',
+      '.webm', '.mp4', '.mp3', '.wav', '.ogg',
+      '.wasm'
+    ],
     blockedPaths = [
       '/node_modules',
       '/package.json',
@@ -15,7 +25,8 @@ export function securityMiddleware(options = {}) {
       '/.env',
       '/.git'
     ],
-    allowPublicAssets = true
+    allowPublicAssets = true,
+    publicPaths = ['/assets', '/public', '/images', '/styles']
   } = options;
 
   return (req, res, next) => {
@@ -35,9 +46,8 @@ export function securityMiddleware(options = {}) {
       });
     }
 
-    // 2. Permitir acceso a assets públicos
+    // 2. Permitir acceso a assets públicos (según sliceConfig.publicFolders)
     if (allowPublicAssets) {
-      const publicPaths = ['/assets', '/public', '/images', '/styles'];
       const isPublicAsset = publicPaths.some(publicPath => 
         requestPath.startsWith(publicPath)
       );
@@ -92,9 +102,7 @@ export function sliceFrameworkProtection(options = {}) {
 
     // Rutas del framework que requieren verificación
     const frameworkPaths = [
-      '/Slice/Components/Structural',
-      '/Slice/Core',
-      '/Slice/Services'
+      '/Slice/Components/Structural'
     ];
 
     const isFrameworkFile = frameworkPaths.some(fwPath => 
@@ -182,72 +190,8 @@ export function suspiciousRequestLogger() {
   };
 }
 
-/**
- * Middleware para bloquear acceso directo vía navegador (typing en la URL)
- * pero permitir peticiones desde scripts (fetch, import, etc.)
- */
-export function directAccessProtection(options = {}) {
-  const { protectedPaths = [] } = options;
-  
-  return (req, res, next) => {
-    const requestPath = req.path;
-    
-    const isProtectedPath = protectedPaths.some(protectedPath => 
-      requestPath.startsWith(protectedPath)
-    );
-    
-    if (!isProtectedPath) {
-      return next();
-    }
-
-    // Detectar acceso directo: 
-    // - No tiene Referer (usuario escribió la URL directamente)
-    // - Accept header indica navegación HTML
-    const referer = req.get('Referer');
-    const accept = req.get('Accept') || '';
-    
-    const isDirectBrowserAccess = !referer && accept.includes('text/html');
-    
-    if (isDirectBrowserAccess) {
-      console.warn(`🚫 Blocked direct browser access: ${requestPath}`);
-      return res.status(403).send(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>Access Denied</title>
-          <style>
-            body { 
-              font-family: system-ui; 
-              max-width: 600px; 
-              margin: 100px auto; 
-              padding: 20px;
-            }
-            h1 { color: #d32f2f; }
-            code { 
-              background: #f5f5f5; 
-              padding: 2px 6px; 
-              border-radius: 3px;
-            }
-          </style>
-        </head>
-        <body>
-          <h1>🚫 Direct Access Denied</h1>
-          <p>This file cannot be accessed directly.</p>
-          <p>Path: <code>${requestPath}</code></p>
-          <p>Framework files are automatically loaded by the application.</p>
-          <p><a href="/">← Return to application</a></p>
-        </body>
-        </html>
-      `);
-    }
-
-    next();
-  };
-}
-
 export default {
   securityMiddleware,
   sliceFrameworkProtection,
-  suspiciousRequestLogger,
-  directAccessProtection
+  suspiciousRequestLogger
 };

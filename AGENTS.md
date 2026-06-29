@@ -4,10 +4,18 @@ This repo is the **framework source** (package `slicejs-web-framework`, runtime 
 a demo/docs app (`src/`, `api/`). Read this before editing the runtime.
 
 ## ⚠️ The running app serves the PUBLISHED runtime, not this source
-`api/index.js` serves `/Slice/` from **`node_modules/slicejs-web-framework/Slice`** — the *published*
-package, NOT this repo's `Slice/`. So **editing `Slice/` does not change runtime behavior in any app
-(including this one's `npm run dev`) until the package is published / synced.** Plan releases
-accordingly. Never edit `node_modules` (global rule).
+The server (`api/framework/server.js`) serves `/Slice/` from **`node_modules/slicejs-web-framework/Slice`**
+— the *published* package, NOT this repo's `Slice/`. So **editing `Slice/` does not change runtime
+behavior in any app (including this one's `npm run dev`) until the package is published / synced.**
+Plan releases accordingly. Never edit `node_modules` (global rule).
+
+## Arquitectura del servidor
+La lógica del servidor Express (`api/index.js`) se movió a `api/framework/server.js` como factory
+`createSliceServer()`. El `api/index.js` del proyecto ahora es solo un wrapper que importa y ejecuta
+la factory. Los módulos `securityMiddleware.js` y `publicEnvResolver.js` viven en `api/framework/`.
+Desde el init del CLI se copia `api/` completo al proyecto del usuario, por lo que nuevos proyectos
+reciben el wrapper delgado automáticamente. Proyectos existentes no se ven afectados (tienen su copia
+local de `api/`).
 
 ## Testing
 - Run: `node --test Slice/tests/*.test.js` (the package `test` script is intentionally unset).

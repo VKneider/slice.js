@@ -4,7 +4,7 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { tmpdir } from 'node:os';
 
-const resolverModulePath = new URL('../utils/publicEnvResolver.js', import.meta.url);
+const resolverModulePath = new URL('../framework/publicEnvResolver.js', import.meta.url);
 
 async function withTempEnvFile(contents, callback) {
    const dir = await mkdtemp(path.join(tmpdir(), 'slice-public-env-'));

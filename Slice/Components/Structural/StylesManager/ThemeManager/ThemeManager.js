@@ -101,6 +101,62 @@ export default class ThemeManager {
       if (typeof document !== 'undefined' && document.documentElement) {
          document.documentElement.setAttribute('data-slice-theme', themeName);
       }
+      this._syncThemeColor();
       slice.logger.logInfo('ThemeManager', `Theme ${themeName} applied`);
+   }
+
+   /**
+    * Sync <meta name="theme-color"> to the theme's primary background color.
+    * Reads the CSS variable --primary-background-color from computed styles.
+    * @returns {void}
+    */
+   /**
+    * Sync <meta name="theme-color"> and <meta name="color-scheme">
+    * from --primary-background-color (the active theme's body bg).
+    * @returns {void}
+    */
+   _syncThemeColor() {
+      if (typeof document === 'undefined') return;
+      const bg = getComputedStyle(document.documentElement)
+         .getPropertyValue('--primary-background-color').trim();
+      if (!bg) return;
+
+      let meta = document.querySelector('meta[name="theme-color"]');
+      if (!meta) {
+         meta = document.createElement('meta');
+         meta.name = 'theme-color';
+         document.head.appendChild(meta);
+      }
+      meta.content = bg;
+
+      const scheme = this._isLightColor(bg) ? 'light' : 'dark';
+      let cs = document.querySelector('meta[name="color-scheme"]');
+      if (!cs) {
+         cs = document.createElement('meta');
+         cs.name = 'color-scheme';
+         document.head.appendChild(cs);
+      }
+      cs.content = scheme;
+   }
+
+   /**
+    * Rough luminance check for a hex color.
+    * Returns true when the color is perceived as light.
+    * @param {string} color hex (#fff / #282828)
+    * @returns {boolean}
+    */
+   _isLightColor(color) {
+      const hex = color.replace('#', '');
+      let r, g, b;
+      if (hex.length <= 3) {
+         r = parseInt(hex[0] + hex[0], 16);
+         g = parseInt(hex[1] + hex[1], 16);
+         b = parseInt(hex[2] + hex[2], 16);
+      } else {
+         r = parseInt(hex.slice(0, 2), 16);
+         g = parseInt(hex.slice(2, 4), 16);
+         b = parseInt(hex.slice(4, 6), 16);
+      }
+      return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.5;
    }
 }

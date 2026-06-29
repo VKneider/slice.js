@@ -1,0 +1,15 @@
+{
+  "name": "Slice.js Web Framework",
+  "short_name": "Slice.js",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F8F4FF",
+  "theme_color": "#F8F4FF",
+  "icons": [
+    {
+      "src": "/images/favicon.ico",
+      "sizes": "192x192 512x512",
+      "type": "image/x-icon"
+    }
+  ]
+}
