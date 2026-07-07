@@ -150,7 +150,14 @@ export function createSliceServer(options = {}) {
 
   if (runMode === 'production') {
     app.get('/Slice/Slice.js', (req, res) => {
-      const slicePath = path.join(projectRoot, 'node_modules', 'slicejs-web-framework', 'Slice', 'Slice.js');
+      // Prefer the self-contained copy emitted into dist by `slice build`: it is
+      // the only location guaranteed to ship inside a serverless function (Vercel
+      // bundles dist/** via includeFiles, but prunes node_modules that aren't
+      // statically imported — and under pnpm the package sits behind a symlink).
+      // Fall back to node_modules for non-serverless production (`slice start`).
+      const distSlice = path.join(projectRoot, folderDeployed, 'Slice', 'Slice.js');
+      const nodeModulesSlice = path.join(projectRoot, 'node_modules', 'slicejs-web-framework', 'Slice', 'Slice.js');
+      const slicePath = fs.existsSync(distSlice) ? distSlice : nodeModulesSlice;
       try {
         if (fs.existsSync(slicePath)) {
           res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
