@@ -415,25 +415,43 @@ export default class Router {
    async onRouteChange() {
       if (this.routeChangeTimeout) {
          clearTimeout(this.routeChangeTimeout);
+         // This call supersedes a still-pending one; resolve the superseded
+         // promise so anything awaiting it doesn't hang — the new call does the
+         // real work.
+         if (this._routeChangeResolve) {
+            this._routeChangeResolve();
+            this._routeChangeResolve = null;
+         }
       }
 
-      this.routeChangeTimeout = setTimeout(async () => {
-         try {
-            const path = window.location.pathname;
-            const routeContainersFlag = await this.renderRoutesComponentsInPage();
+      // Resolve only AFTER the debounced route handling finishes, so a caller
+      // that awaits this (e.g. _performNavigation) sees slice.router.activeRoute
+      // already updated before it emits router:change. (Previously the awaited
+      // promise resolved the instant the timer was scheduled, so router:change
+      // fired ~10ms before activeRoute was set.)
+      return new Promise((resolve) => {
+         this._routeChangeResolve = resolve;
+         this.routeChangeTimeout = setTimeout(async () => {
+            try {
+               const path = window.location.pathname;
+               const routeContainersFlag = await this.renderRoutesComponentsInPage();
 
-            if (routeContainersFlag) {
-               return;
-            }
+               if (routeContainersFlag) {
+                  return;
+               }
 
-            const { route, params } = this.matchRoute(path);
-            if (route) {
-               await this.handleRoute(route, params);
+               const { route, params } = this.matchRoute(path);
+               if (route) {
+                  await this.handleRoute(route, params);
+               }
+            } catch (error) {
+               slice.logger.error('Router', `Route change failed for ${window.location.pathname}`, error);
+            } finally {
+               this._routeChangeResolve = null;
+               resolve();
             }
-         } catch (error) {
-            slice.logger.error('Router', `Route change failed for ${window.location.pathname}`, error);
-         }
-      }, 10);
+         }, 10);
+      });
    }
 
    /**

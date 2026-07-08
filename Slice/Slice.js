@@ -316,7 +316,26 @@ export default class Slice {
             return null;
          }
 
+         // Dev guard: update() called during init() runs BEFORE the component is
+         // registered, so the framework's update() wrapper (serialization +
+         // liveness) isn't installed yet and the call misbehaves silently. Warn
+         // instead. Restored right after init() so registerComponent →
+         // installUpdate wraps the real method, not this guard.
+         let _rawUpdate = null;
+         if (typeof componentInstance.update === 'function') {
+            _rawUpdate = componentInstance.update;
+            componentInstance.update = function (...args) {
+               slice.logger.logWarning(
+                  componentInstance.constructor?.name || 'Component',
+                  'update() was called during init() (before registration). Run your render logic directly from init(); the update() wrapper (serialization + liveness) is not active until the component is registered.'
+               );
+               return _rawUpdate.apply(this, args);
+            };
+         }
+
          if (componentInstance.init) await componentInstance.init();
+
+         if (_rawUpdate) componentInstance.update = _rawUpdate;
 
          if (slice.debuggerConfig.enabled && isVisual) {
             this.debugger.attachDebugMode(componentInstance);
@@ -547,6 +566,20 @@ async function init() {
         window.slice.leakInspector = new LeakInspectorModule();
        await window.slice.leakInspector.init();
        document.body.appendChild(window.slice.leakInspector);
+    }
+
+    // ContextManager delivers setState → watch through EventManager, so context
+    // reactivity requires events. We don't auto-enable events (in a production
+    // build EventManager is only bundled when events.enabled was true, so it may
+    // not have shipped) nor throw (a boot-time throw would take down the whole
+    // app, inconsistent with how "EventManager disabled" is handled below). Log a
+    // loud error and continue; `slice build` hard-fails on this same misconfig so
+    // a broken bundle never ships.
+    if (sliceConfig.context?.enabled && !sliceConfig.events?.enabled) {
+       window.slice.logger.logError(
+          'Slice',
+          'context.enabled requires events.enabled — ContextManager reactivity (setState → watch/bind) is delivered through EventManager. With events disabled, watchers will not fire. Set "events": { "enabled": true } in sliceConfig.json.'
+       );
     }
 
     if (sliceConfig.events?.enabled) {
