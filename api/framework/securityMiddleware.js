@@ -46,7 +46,7 @@ export function securityMiddleware(options = {}) {
       });
     }
 
-    // 2. Permitir acceso a assets públicos (según sliceConfig.publicFolders)
+    // 2. Permitir acceso a assets públicos (servidos desde src/public/)
     if (allowPublicAssets) {
       const isPublicAsset = publicPaths.some(publicPath => 
         requestPath.startsWith(publicPath)

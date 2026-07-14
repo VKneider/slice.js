@@ -110,10 +110,6 @@
         "enabled": { "type": "boolean" }
       }
     },
-    "publicFolders": {
-      "type": "array",
-      "items": { "type": "string" }
-    },
     "server": {
       "type": "object",
       "additionalProperties": true,

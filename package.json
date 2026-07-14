@@ -1,6 +1,6 @@
 {
   "name": "slicejs-web-framework",
-  "version": "3.5.4",
+  "version": "4.0.0",
   "description": "",
   "engines": {
     "node": ">=20"
@@ -26,11 +26,14 @@
   "exports": {
     ".": "./Slice/Slice.js",
     "./api/framework/express.js": "./api/framework/express.js",
-    "./api/framework/server.js": "./api/framework/server.js"
+    "./api/framework/server.js": "./api/framework/server.js",
+    "./api/framework/devDepsOptimizer.js": "./api/framework/devDepsOptimizer.js"
   },
   "types": "./types/index.d.ts",
   "dependencies": {
     "compression": "^1.8.1",
+    "es-module-lexer": "^2.3.0",
+    "esbuild": "^0.28.1",
     "express": "^4.19.2"
   },
   "devDependencies": {
