@@ -311,40 +311,27 @@ export default class Slice {
          if (componentIds.id && isVisual) componentInstance.id = componentIds.id;
          if (componentIds.sliceId) componentInstance.sliceId = componentIds.sliceId;
 
-         if (!this.controller.verifyComponentIds(componentInstance)) {
-            this.logger.logError('Slice', `Error registering instance ${componentName} ${componentInstance.sliceId}`);
-            return null;
-         }
+          if (!this.controller.verifyComponentIds(componentInstance)) {
+             this.logger.logError('Slice', `Error registering instance ${componentName} ${componentInstance.sliceId}`);
+             return null;
+          }
 
-         // Dev guard: update() called during init() runs BEFORE the component is
-         // registered, so the framework's update() wrapper (serialization +
-         // liveness) isn't installed yet and the call misbehaves silently. Warn
-         // instead. Restored right after init() so registerComponent →
-         // installUpdate wraps the real method, not this guard.
-         let _rawUpdate = null;
-         if (typeof componentInstance.update === 'function') {
-            _rawUpdate = componentInstance.update;
-            componentInstance.update = function (...args) {
-               slice.logger.logWarning(
-                  componentInstance.constructor?.name || 'Component',
-                  'update() was called during init() (before registration). Run your render logic directly from init(); the update() wrapper (serialization + liveness) is not active until the component is registered.'
-               );
-               return _rawUpdate.apply(this, args);
-            };
-         }
+          // Register before init so the component is visible in activeComponents
+          // during init(). This lets slice.router.navigate() work from inside
+          // init() without the Router creating a duplicate instance (the Router
+          // finds the existing component via getComponent). Calling update()
+          // from init() is safe because installUpdate already wrapped it.
+          this.controller.registerComponent(componentInstance);
 
-         if (componentInstance.init) await componentInstance.init();
+          if (componentInstance.init) await componentInstance.init();
 
-         if (_rawUpdate) componentInstance.update = _rawUpdate;
+          if (slice.debuggerConfig.enabled && isVisual) {
+             this.debugger.attachDebugMode(componentInstance);
+          }
 
-         if (slice.debuggerConfig.enabled && isVisual) {
-            this.debugger.attachDebugMode(componentInstance);
-         }
-
-         this.controller.registerComponent(componentInstance);
-         if (isVisual) {
-            this.controller.registerComponentsRecursively(componentInstance);
-         }
+          if (isVisual) {
+             this.controller.registerComponentsRecursively(componentInstance);
+          }
 
          this.logger.logInfo('Slice', `Instance ${componentInstance.sliceId} created`);
          return componentInstance;
@@ -457,77 +444,19 @@ async function init() {
         }
      }
 
-    // 5. Create Slice instance and set resolved mode
-    window.slice = new Slice(sliceConfig, frameworkClasses);
-    window.slice._mode = resolvedMode;
-    window.slice.setPublicEnv(envResult?.env || {});
-
-     const createBundlingInitError = (step, error) => {
-        const detail = error instanceof Error ? error.message : String(error);
-        return new Error(`Bundling V2 initialization failed (${step}): ${detail}`, { cause: error });
-     };
-
-     // Initialize bundles before building components.
-     // Only in production — dev mode loads each component individually from source.
-     // bundleConfigJson was already fetched above (step 2); reuse it.
-     if (resolvedMode === 'production' && bundleConfigJson) {
-        window.slice.controller.bundleConfig = bundleConfigJson;
-     }
-
-     if (resolvedMode === 'production' && window.slice.controller.bundleConfig) {
-        const config = window.slice.controller.bundleConfig;
-        if (!window.__SLICE_SHARED_DEPS__ || typeof window.__SLICE_SHARED_DEPS__ !== 'object') {
-           window.__SLICE_SHARED_DEPS__ = {};
-        }
-        const criticalFile = config?.bundles?.critical?.file;
-        if (criticalFile) {
-           try {
-              await window.slice.controller.loadBundle('critical');
-           } catch (error) {
-              throw createBundlingInitError(`critical bundle "${criticalFile}"`, error);
-           }
-        }
-
-        const routeBundles = config?.routeBundles || {};
-        const initialPath = window.location.pathname || '/';
-        const bundlesForRoute = routeBundles[initialPath] || [];
-
-        const loadRouteBundles = async () => {
-           for (const bundleName of bundlesForRoute) {
-              if (bundleName === 'critical') continue;
-              const bundleInfo = config?.bundles?.routes?.[bundleName];
-              if (!bundleInfo?.file) continue;
-              await window.slice.controller.loadBundle(bundleName);
-           }
-        };
-
-        const preloadRouteBundles = () => {
-           loadRouteBundles().catch((error) => {
-              window.slice?.logger?.error('Slice', `Idle route preload failed for "${initialPath}"`, error);
-           });
-        };
-
-        const safePreload = () => {
-           try {
-              preloadRouteBundles();
-           } catch (error) {
-              window.slice?.logger?.error('Slice', 'Error in route preload callback', error);
-           }
-        };
-
-        if (typeof requestIdleCallback === 'function') {
-           requestIdleCallback(() => safePreload());
-        } else {
-           setTimeout(() => safePreload(), 0);
-        }
-     }
+     // 5. Create Slice instance and set resolved mode
+     window.slice = new Slice(sliceConfig, frameworkClasses);
+     window.slice._mode = resolvedMode;
+     window.slice.setPublicEnv(envResult?.env || {});
 
    slice.paths.structuralComponentFolderPath = '/Slice/Components/Structural';
 
-    if (sliceConfig.logger.enabled) {
-       const LoggerModule = window.slice.frameworkClasses?.Logger
-         || await window.slice.getClass(`${slice.paths.structuralComponentFolderPath}/Logger/Logger.js`);
-       window.slice.logger = new LoggerModule();
+   // Logger must be available before bundle loading — Controller internally calls
+   // slice.logger.* methods during loadBundle/registerBundle.
+   if (sliceConfig.logger.enabled) {
+      const LoggerModule = window.slice.frameworkClasses?.Logger
+        || await window.slice.getClass(`${slice.paths.structuralComponentFolderPath}/Logger/Logger.js`);
+      window.slice.logger = new LoggerModule();
    } else {
       const noop = () => {};
       window.slice.logger = {
@@ -535,6 +464,66 @@ async function init() {
          logError: noop, logWarning: noop, logInfo: noop,
       };
    }
+
+      const createBundlingInitError = (step, error) => {
+         const detail = error instanceof Error ? error.message : String(error);
+         return new Error(`Bundling V2 initialization failed (${step}): ${detail}`, { cause: error });
+      };
+
+      // Initialize bundles before building components.
+      // Only in production — dev mode loads each component individually from source.
+      // bundleConfigJson was already fetched above (step 2); reuse it.
+      if (resolvedMode === 'production' && bundleConfigJson) {
+         window.slice.controller.bundleConfig = bundleConfigJson;
+      }
+
+      if (resolvedMode === 'production' && window.slice.controller.bundleConfig) {
+         const config = window.slice.controller.bundleConfig;
+         if (!window.__SLICE_SHARED_DEPS__ || typeof window.__SLICE_SHARED_DEPS__ !== 'object') {
+            window.__SLICE_SHARED_DEPS__ = {};
+         }
+         const criticalFile = config?.bundles?.critical?.file;
+         if (criticalFile) {
+            try {
+               await window.slice.controller.loadBundle('critical');
+            } catch (error) {
+               throw createBundlingInitError(`critical bundle "${criticalFile}"`, error);
+            }
+         }
+
+         const routeBundles = config?.routeBundles || {};
+         const initialPath = window.location.pathname || '/';
+         const bundlesForRoute = routeBundles[initialPath] || [];
+
+         const loadRouteBundles = async () => {
+            for (const bundleName of bundlesForRoute) {
+               if (bundleName === 'critical') continue;
+               const bundleInfo = config?.bundles?.routes?.[bundleName];
+               if (!bundleInfo?.file) continue;
+               await window.slice.controller.loadBundle(bundleName);
+            }
+         };
+
+         const preloadRouteBundles = () => {
+            loadRouteBundles().catch((error) => {
+               window.slice?.logger?.error('Slice', `Idle route preload failed for "${initialPath}"`, error);
+            });
+         };
+
+         const safePreload = () => {
+            try {
+               preloadRouteBundles();
+            } catch (error) {
+               window.slice?.logger?.error('Slice', 'Error in route preload callback', error);
+            }
+         };
+
+         if (typeof requestIdleCallback === 'function') {
+            requestIdleCallback(() => safePreload());
+         } else {
+            setTimeout(() => safePreload(), 0);
+         }
+      }
 
     if (sliceConfig.debugger.enabled) {
         const DebuggerModule = window.slice.frameworkClasses?.Debugger
