@@ -466,6 +466,11 @@ export default class Router {
       const componentName = route.parentRoute ? route.parentRoute.component : route.component;
       const sliceId = `route-${componentName}`;
 
+      if (!targetElement) {
+         slice.logger.logError('Router', `Cannot render route "${route?.path ?? componentName}": no #app element in the document`);
+         return;
+      }
+
       const existingComponent = slice.controller.getComponent(sliceId);
 
       if (slice.loading) {
@@ -486,6 +491,18 @@ export default class Router {
                params,
                sliceId: sliceId,
             });
+
+            // build() returns null whenever the component could not be produced
+            // (not registered, a resource fetch failed or was aborted, init()
+            // threw). Appending null raises "parameter 1 is not of type 'Node'",
+            // which buries the real cause. Report it and keep the current view.
+            if (!component) {
+               slice.logger.logError(
+                  'Router',
+                  `Cannot render route "${route?.path ?? componentName}": slice.build('${componentName}') returned null`
+               );
+               return;
+            }
 
             targetElement.innerHTML = '';
             targetElement.appendChild(component);

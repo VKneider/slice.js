@@ -50,8 +50,21 @@ export default class ThemeManager {
     * @returns {Promise<void>}
     */
    async loadThemeCSS(themeName) {
-      let themeContent =
-         localStorage.getItem(`sliceTheme-${themeName}`) || (await slice.controller.fetchText(themeName, 'theme'));
+      let themeContent = localStorage.getItem(`sliceTheme-${themeName}`);
+
+      if (!themeContent) {
+         try {
+            themeContent = await slice.controller.fetchText(themeName, 'theme');
+         } catch (error) {
+            // A theme that fails to fetch must not abort framework init.
+            // applyTheme() is awaited from StylesManager.init(), which runs
+            // inside Slice.js init() — letting this throw leaves the runtime
+            // half-built (no slice.router). An unstyled app is recoverable;
+            // no app at all is not. fetchText already logged the cause.
+            slice.logger.logError('ThemeManager', `Failed to load theme: ${themeName}`, error);
+            return;
+         }
+      }
 
       if (!themeContent) {
          slice.logger.logError('ThemeManager', `Failed to load theme: ${themeName}`);

@@ -707,7 +707,16 @@ test('Slice init fails fast with contextual error on invalid Bundling V2 contrac
 
       const sliceModuleUrl = new URL(`../Slice.js?fail-fast-test=${Date.now()}`, import.meta.url).href;
 
-      await import(sliceModuleUrl);
+      // Failing fast means the failure propagates: a rejected import stops
+      // consumers from running against a runtime that has no router and no
+      // registered components. Previously init() logged and resolved anyway,
+      // so the first symptom a developer saw was an unrelated TypeError
+      // further downstream rather than this contextual error.
+      await assert.rejects(
+         () => import(sliceModuleUrl),
+         /Bundling V2 initialization failed/,
+         'a failed init must reject the module import, not resolve a half-built runtime'
+      );
 
       assert.ok(
          loggedMessages.some((message) => /Bundling V2 initialization failed/i.test(message)),

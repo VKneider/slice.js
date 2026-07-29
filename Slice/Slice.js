@@ -680,8 +680,31 @@ async function init() {
    await window.slice.router.init();
 }
 
- try {
-   await init();
-} catch (initError) {
-   console.error('[Slice.js] Initialization failed:', initError);
- }
+// Booting requires a DOM. Under node — where this module is imported for the
+// Slice class alone (see Slice/tests) — there is nothing to initialize, so skip
+// it rather than starting an init() that can only fail.
+if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+   // Exposed so callers that cannot rely on module import order — test
+   // harnesses, embedders, anything loaded via a plain <script> — have a real
+   // readiness signal. It settles exactly when init() does. Note that
+   // `window.slice` and `slice.build` exist well before init() finishes, so
+   // checking for those is NOT a readiness test; await this (or check
+   // `slice.router`) instead.
+   window.__SLICE_READY__ = init();
+
+   try {
+      await window.__SLICE_READY__;
+      if (window.slice) window.slice.initError = null;
+   } catch (initError) {
+      // Deliberately not swallowed. A half-initialized runtime (no
+      // slice.router, no registered components) makes every downstream call
+      // fail with its own unrelated-looking TypeError — "Cannot read
+      // properties of undefined (reading 'afterEach')", "appendChild:
+      // parameter 1 is not of type 'Node'" — each of which hides this, the
+      // actual cause. Record it, then rethrow so that importing this module
+      // fails loudly and on the real error.
+      if (window.slice) window.slice.initError = initError;
+      console.error('[Slice.js] Initialization failed:', initError);
+      throw initError;
+   }
+}
