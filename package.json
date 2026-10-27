@@ -28,6 +28,7 @@
     ".": "./Slice/Slice.js",
     "./api/framework/express.js": "./api/framework/express.js",
     "./api/framework/server.js": "./api/framework/server.js",
+    "./api/framework/seo.js": "./api/framework/seo.js",
     "./api/framework/devDepsOptimizer.js": "./api/framework/devDepsOptimizer.js"
   },
   "types": "./types/index.d.ts",
