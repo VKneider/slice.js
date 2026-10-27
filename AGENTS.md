@@ -24,8 +24,8 @@ local de `api/`).
   `build-singleton.test.js`, `destroy-cascade.test.js`). DOM-less paths (Services, registry, build
   orchestration) run the **real** code this way — no mocks of the logic under test. Reserve a browser
   harness for genuine DOM behavior.
-- **E2e destroy lifecycle tests** live in `slice_visual_library/src/Components/Visual/Destroy.spec.js` (Playwright, 20 tests). They cover `destroyComponent`, `destroyByContainer`, and `destroyByPattern` against the real `activeComponents` in a browser. These are the browser e2e counterpart of the unit tests in `slice.js/Slice/tests/destroy-cascade.test.js`.
-- The framework repo (`slice.js`) only has node:unit tests. Any test that needs a real DOM (events, visual rendering, destroy with `querySelectorAll`) must be written in `slice_visual_library`.
+- **E2e destroy lifecycle tests** live in `slicejs-components/src/Components/Visual/Destroy.spec.js` (Playwright, 20 tests). They cover `destroyComponent`, `destroyByContainer`, and `destroyByPattern` against the real `activeComponents` in a browser. These are the browser e2e counterpart of the unit tests in `slice.js/Slice/tests/destroy-cascade.test.js`.
+- The framework repo (`slice.js`) only has node:unit tests. Any test that needs a real DOM (events, visual rendering, destroy with `querySelectorAll`) must be written in `slicejs-components`.
 
 ## Cleanup / destroy model (non-obvious)
 - `destroyComponent(parent)` cascades to nested **Visual** children via `childrenIndex`. `childrenIndex`

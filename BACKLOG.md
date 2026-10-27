@@ -71,6 +71,6 @@ if (runMode === 'production') {
 |---|---|
 | **slice.js** (framework core) | Items 1-5 y 7 implementados ✅ |
 | **slicejs_docs** (docs site) | Sitemap desactualizado |
-| **slicejs_visual_library** (componentes) | Sitemap desactualizado |
+| **slicejs-components** (componentes) | Sitemap desactualizado |
 | **portfolio** (demo/portfolio) | Sitemap desactualizado |
 | **slicejs-cli** (CLI tool) | Sin incidencias reportadas |

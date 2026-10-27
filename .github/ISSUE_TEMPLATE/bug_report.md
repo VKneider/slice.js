@@ -21,7 +21,7 @@ What should have happened.
 ## Environment
 - Browser/Node version:
 - OS:
-- slice.js_visual_library version:
+- slicejs-components version:
 
 ## Screenshots / Console output
 If applicable.
