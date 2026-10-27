@@ -4,11 +4,13 @@ import fsp from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import { createDevDepsOptimizer, MODULES_PREFIX } from '../framework/devDepsOptimizer.js';
+import { fileURLToPath } from 'node:url';
 
 // projectRoot for esbuild resolution: this framework package's own root, whose
 // node_modules contains es-module-lexer (used here as a real ESM package to
-// bundle). Two dirs up from api/tests/.
-const projectRoot = new URL('../../', import.meta.url).pathname;
+// bundle). Two dirs up from api/tests/. `new URL(...).pathname` yields `/C:/…`
+// on Windows and esbuild then cannot resolve anything from it.
+const projectRoot = fileURLToPath(new URL('../../', import.meta.url));
 
 test('rewriteBareImports rewrites bare specifiers to the virtual endpoint', async () => {
   const opt = createDevDepsOptimizer({ projectRoot, enabled: true });
