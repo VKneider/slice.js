@@ -17,7 +17,8 @@
     "slice:start": "node ./node_modules/slicejs-cli/client.js start",
     "format": "prettier --write \"**/*.js\"",
     "run": "node ./node_modules/slicejs-cli/client.js dev",
-    "slice:modify": "node ./node_modules/slicejs-cli/client.js modify"
+    "slice:modify": "node ./node_modules/slicejs-cli/client.js modify",
+    "test:server": "node --test api/framework/*.test.js"
   },
   "keywords": [],
   "author": "",

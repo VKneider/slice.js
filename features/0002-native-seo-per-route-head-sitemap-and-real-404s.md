@@ -147,7 +147,7 @@ and the localhost rules below.
 | `sitemap` | boolean | `true` | `/sitemap.xml` generated at startup |
 | `robotsTxt` | `false` or `{ allow?, disallow?, sitemap? }` | `{ sitemap: true }` | `/robots.txt` |
 
-Precedence, highest first: **`routes.js` inline `meta`** (the code that defines the route knows its
+Precedence, highest first: **`routes.js` inline `metadata`** (the code that defines the route knows its
 params) → `routes[path]` → `defaults` → derived. Short fields (`image`, `title`) win over nested
 `openGraph`/`twitter` only where the nested object is absent — the nested form is the explicit one.
 
@@ -187,7 +187,7 @@ export default [
   {
     path: '/login',
     component: 'LoginPage',
-    meta: {
+    metadata: {
       title: 'Sign in',
       description: 'Sign in to your workspace.',
       image: '/og/login-4f2a91c3d8.png',
@@ -195,7 +195,7 @@ export default [
       robots: false            // never indexed, never in the sitemap
     }
   },
-  { path: '/dashboard', component: 'Dashboard', meta: { title: 'Dashboard', robots: false } }
+  { path: '/dashboard', component: 'Dashboard', metadata: { title: 'Dashboard', robots: false } }
 ];
 ```
 
@@ -217,7 +217,7 @@ Four things this example pins down:
    canonical `/login`; otherwise every redirect target becomes a duplicate URL. Same for `#hash`.
 3. **A login page is a policy decision.** `robots: false` is the safe default for app routes; keep it
    indexable only when the page is a marketing surface.
-4. **The image is content, not wiring.** It lives with the route (`meta.image` or `seo.json`), must
+4. **The image is content, not wiring.** It lives with the route (`metadata.image` or `seo.json`), must
    exist under `public/` (the static mount serves it), and the module only turns it into an absolute
    `og:image` + `twitter:image` with `alt`.
 
@@ -298,10 +298,11 @@ await start({ port: 3001 });                   // mounts the terminal, then list
 `start()` mounts the SEO-aware fallback last (feature 0001). Apps with no `start()` — serverless
 exports, supertest — mount it by hand: `app.use(sliceFallback({ seo: { manifest: './seo.json' } }))`.
 
-At startup, once: read the manifest → render each route's HTML (shell + `<title>`, description,
-canonical, `og:*`, `twitter:*`, robots, JSON-LD) → gzip + brotli + ETag → `Map`. A request is a
-lookup, an `If-None-Match` check and one write, exactly like the pages the framework already serves
-(the precompute rule in `slicejs-components/AGENTS.md`).
+At startup, once: read **two** sources — `routes.js` (the route set, the only answer to "is this
+path a page?") and `seo.json` (the metadata for each one) — then render each route's HTML (shell +
+`<title>`, description, canonical, `og:*`, `twitter:*`, robots, JSON-LD) → gzip + brotli + ETag →
+`Map`. A request is a lookup, an `If-None-Match` check and one write, exactly like the pages the
+framework already serves (the precompute rule in `slicejs-components/AGENTS.md`).
 
 - Known route → `200`, its own head, its own canonical.
 - Unknown path → **the same shell with `404`** and no fabricated canonical (this is what removes the
@@ -314,10 +315,10 @@ lookup, an `If-None-Match` check and one write, exactly like the pages the frame
 
 ### Client
 
-Route entries accept `meta`:
+Route entries accept `metadata`:
 
 ```js
-{ path: '/docs/${section}/${page}', component: 'App', meta: { title: '…', description: '…' } }
+{ path: '/docs/${section}/${page}', component: 'App', metadata: { title: '…', description: '…' } }
 ```
 
 and the Router keeps `document.title` (and the description) in sync on navigation — replacing the
@@ -326,7 +327,7 @@ after a client-side navigation when someone forgets an entry.
 
 ### Drift guard
 
-`slice seo check` (CLI) compares `routes.js` ↔ manifest ↔ sitemap and fails on: a route with no meta,
+`slice seo check` (CLI) compares `routes.js` ↔ manifest ↔ sitemap and fails on: a route with no metadata,
 a manifest entry with no route, a sitemap URL that answers non-200. Runs in the app's CI, not in
 production.
 
@@ -338,7 +339,7 @@ production.
   are app concerns; the framework should consume a manifest.
 - **Generate the manifest inside the framework from `routes.js` only**: rejected as the primary path.
   It cannot know descriptions, sections, `lastmod` or JSON-LD, so every app would end up extending it
-  anyway. Inline `meta` is a convenience for small apps; the manifest stays the contract.
+  anyway. inline `metadata` is a convenience for small apps; the manifest stays the contract.
 - **Full SSR / prerender the article HTML**: out of scope here (see below), but this module is the
   natural base for it.
 
@@ -352,7 +353,7 @@ production.
   builder, origin resolution (`SLICE_ORIGIN` → option → file → dev localhost → error), and the JSON
   Schema that powers `$schema` autocomplete.
 - Wiring into `sliceFallback({ seo })` (depends on feature 0001).
-- Router: `meta` on routes → `document.title`/description on navigation.
+- Router: `metadata` on routes → `document.title`/description on navigation.
 - `slice seo check` (strict, CI) and the `slice doctor` row (friendly, local) — both on the same
   validator.
 - Docs + skill updates.
@@ -370,7 +371,7 @@ production.
 
 ## Compatibility and risk
 
-- Public API: new module + new `meta` field on routes. Additive; apps that never mount `seo` behave
+- Public API: new module + new `metadata` field on routes. Additive; apps that never mount `seo` behave
   exactly as today.
 - **Manifest is public API**: version it (`version: 1`), reject unknown versions loudly at startup.
 - **Opinionated JSON-LD**: ship defaults (`WebSite` for `/`, `BreadcrumbList` when the path has
@@ -392,12 +393,12 @@ production.
 - Unit tests (`api/framework/seo.test.js`, pure): head injection per field, escaping of `& < > "`,
   JSON-LD serialization with a `</script>` payload, `canonical` defaulting to `origin + path`,
   `robots: false` → noindex + excluded from the sitemap, `titleTemplate` with and without `%s`,
-  `og:image:width/height` read from a local file, precedence (inline `meta` > route > defaults),
+  `og:image:width/height` read from a local file, precedence (inline `metadata` > route > defaults),
   sitemap builder (sorted, escaped, `lastmod`), unknown manifest version rejected.
 - Browser/e2e tests: `@server` spec asserting the RAW HTML (no JS) of two routes differs, an unknown
   path answers 404 with the shell, `/sitemap.xml` matches the manifest, repeated requests do no work
   (latency < 2 ms after warm-up).
-- Product check (Conclave): mount it in its `api/index.js`; its `/p/:id` style routes with a dynamic
+- Product check (Conclave): mount it in its `api/index.js`; its `/p/${id}` style routes with a dynamic
   manifest is the interesting case.
 - Artifact/release check: the dependency graph — importing `api/framework/seo.js` must not pull the
   browser runtime into the server bundle (and vice versa).
@@ -405,7 +406,7 @@ production.
 ## Documentation impact
 
 - Framework docs pages: new `markdown/project-architecture/server-entrypoint.md` section (or a
-  dedicated `seo.md`); `slice-config.md` if the options move to config; mention `meta` in
+  dedicated `seo.md`); `slice-config.md` if the options move to config; mention `metadata` in
   `getting-started/routing.md`.
 - Component docs: none.
 - Skill / agent guidance: yes — "a SPA needs a per-route head; use the `seo` module, do not hand-roll
@@ -414,7 +415,7 @@ production.
 
 ## Open questions
 
-- [x] Manifest path vs inline `meta` in `routes.js`: both, precedence documented (inline wins).
+- [x] Manifest path vs inline `metadata` in `routes.js`: both, precedence documented (inline wins).
 - [x] `origin` naming: kept, mapped to Next's `metadataBase` / Astro's `site` in the docs.
 - [x] Does `seo()` own the terminal fallback? No — it is an option of the terminal
       (`sliceFallback({ seo })`), which `start()` mounts.
@@ -422,8 +423,8 @@ production.
       app did not ask for.
 - [ ] Sitemap generated in memory at startup, or written to `public/` at build time (static hosting
       friendliness) — or both?
-- [ ] Param routes (`/p/:id`): accept the router's `:param` syntax as a pattern key in v1 (literal
-      wins, then longest pattern), or wait for function-based `meta: (params) => …`?
+- [ ] Param routes (`/p/${id}`): accept the router's `${param}` syntax as a pattern key in v1 (literal
+      wins, then longest pattern), or wait for function-based `metadata: (params) => …`?
 - [ ] Do the short fields (`image`) and the nested `openGraph` coexist, or do we drop the shorthand?
       (Suggested: coexist, nested wins — already in the contract, needs a test.)
 - [ ] Ship the JSON Schema (`$schema`) with the module, or only publish it on the docs site?
@@ -448,7 +449,7 @@ production.
 - 2026-10-27 - Auth-route example added, which pinned down three rules: canonical ignores `?query`
   and `#hash` (one URL per page, not per redirect target); `robots: false` is metadata, **not**
   access control — the prerendered shell is public, gating is middleware before the terminal; and the
-  OG image is route content (`meta.image` / `seo.json`), never server wiring.
+  OG image is route content (`metadata.image` / `seo.json`), never server wiring.
 - 2026-10-27 - Remote `image` URLs allowed (https absolute), with the consequences spelled out:
   dimensions cannot be read from a remote file so they must be declared, signed/expiring URLs are
   rejected as a design error (the platform caches the preview), and offline checks report a remote URL

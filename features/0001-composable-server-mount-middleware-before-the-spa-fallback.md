@@ -2,7 +2,7 @@
 id: "0001"
 title: "Composable server: mount middleware before the SPA fallback"
 repo: "slice.js"
-status: proposed
+status: in-progress
 area: framework
 priority: high
 created: 2026-10-27
@@ -90,7 +90,9 @@ export default app;
    is the last line.*
 3. **`sliceFallback(options)` is exported for the case where there is no `start()`**: exporting a
    ready app for a serverless adapter, or driving it from a test harness (supertest). Only then does
-   the app close the chain by hand; mounting it when `start()` will also mount it is a development
+   the app close the chain by hand — `app.use(sliceFallback(opts))` **and**
+   `app.use(sliceErrorHandler(opts))`, because Express only routes an error to middleware registered
+   after the one that threw. Mounting the fallback when `start()` will also mount it is a development
    warning, not a crash.
 4. **Options that shape the terminal live on the factory** (`seo`, `fallback`), because they describe
    the app, not the lifecycle. `start()` reads them; it does not take a second copy.
@@ -215,3 +217,19 @@ will also mount it is a development warning; mounting it twice is what the warni
   framework listens internally" is only partly true: `start()` already owns the listen. The actual
   blocker is that the terminal fallback is registered inside the factory, so user middleware can
   never run. Direction: export `sliceFallback`, keep `start()`/the template backward compatible.
+- 2026-10-27 - Implemented (server side). `api/framework/server.js` now exports `sliceFallback()` and
+  `sliceErrorHandler()`; the factory registers nothing terminal and returns `{ app, start }`;
+  `start({ port, host, signals })` mounts the fallback last (skipping it when the app already did),
+  registers `SIGINT`/`SIGTERM` once with a graceful close, and throws on a second call. Two things
+  the code review caught that the design had missed: the `/api` JSON 404 had to move out of the
+  factory (it swallowed every API router added afterwards), and the development `.html`/`.css`
+  carve-outs belong in the fallback so every app inherits them. `api/index.js` is the 6-line
+  template; `api/framework/server.test.js` adds 11 contract tests (Express 4 and 5). Still open: the
+  `project-architecture/server-entrypoint.md` docs page and migrating `slicejs-components` off its
+  ~700-line fork (the acceptance test).
+- 2026-10-27 - Validated against the production consumer: `pnpm verify:conclave` is green
+  (`/api/status`, the local runtime bytes, **the app shell**, `/slice-env.json`), which is the proof
+  that `start()` auto-mounts the fallback for an app whose `api/index.js` never names it. The
+  framework's own `api/tests/dev-server-external.test.js` fails on Windows for an unrelated reason
+  (`EPERM` on `fs.symlinkSync`, plus a `pathname` that yields `C:\C:\…`); it only exercises
+  pre-routing middleware, so it is unaffected by this change and passes on Linux.

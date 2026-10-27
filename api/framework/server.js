@@ -12,10 +12,121 @@ import { createPublicEnvProvider } from './publicEnvResolver.js';
 import { createDevDepsOptimizer } from './devDepsOptimizer.js';
 import { createPrecompressedStatic } from './precompressedStatic.js';
 
-export function createSliceServer(options = {}) {
+// ── Shared runtime context ─────────────────────────────────────────
+// `createSliceServer` and the standalone `sliceFallback` must agree on where the
+// app lives and which folder it serves, without one having to call the other.
+
+function resolveRuntimeContext(options = {}) {
   const projectRoot = options.projectRoot || process.cwd();
-  const runMode = process.env.NODE_ENV === 'production' ? 'production' : 'development';
+  const runMode = options.mode || (process.env.NODE_ENV === 'production' ? 'production' : 'development');
   const folderDeployed = runMode === 'production' ? 'dist' : 'src';
+  return { projectRoot, runMode, folderDeployed };
+}
+
+/** Component URL prefixes, from sliceConfig. Used by the development carve-outs. */
+function readComponentPrefixes(projectRoot) {
+  for (const folder of ['src', 'dist']) {
+    const file = path.join(projectRoot, folder, 'sliceConfig.json');
+    if (!fs.existsSync(file)) continue;
+    try {
+      const config = JSON.parse(fs.readFileSync(file, 'utf8'));
+      return Object.values(config.paths?.components || {})
+        .map((entry) => entry?.path)
+        .filter(Boolean);
+    } catch {
+      // unreadable config: fall through to "no prefixes" (no carve-out, as before)
+    }
+  }
+  return [];
+}
+
+/**
+ * True for `/Components/<Category>/<Name>/<Name>.css` when the component's `.js`
+ * exists but it has no stylesheet. JS-only Visual components (MultiRoute,
+ * DemoButton…) legitimately ship no CSS, and a 404 there makes `slice.build`
+ * return null in development.
+ */
+function isComponentWithoutStylesheet(pathname, projectRoot, folderDeployed, prefixes) {
+  if (!pathname.endsWith('.css') || pathname.includes('..')) return false;
+  if (!prefixes.some((prefix) => pathname.startsWith(`${prefix}/`))) return false;
+  const file = path.join(projectRoot, folderDeployed, pathname);
+  return !fs.existsSync(file) && fs.existsSync(file.replace(/\.css$/, '.js'));
+}
+
+/**
+ * The terminal middleware: everything the app did not answer lands here.
+ *
+ * Mounted by `start()` — and exported so an app that never calls `start()` (a
+ * serverless adapter, a supertest harness) can close the chain by hand. It must
+ * be the last middleware; mounting it twice is harmless (the first one ends the
+ * response) but pointless, and `start()` skips it when it is already there.
+ */
+export function sliceFallback(options = {}) {
+  const { projectRoot, runMode, folderDeployed } = resolveRuntimeContext(options);
+  const isDev = runMode === 'development';
+  const shellPath = path.join(projectRoot, folderDeployed, 'App', 'index.html');
+  const prefixes = options.componentPrefixes || readComponentPrefixes(projectRoot);
+
+  const sendShell = (req, res) => {
+    res.setHeader('Cache-Control', 'no-cache');
+    res.sendFile(shellPath, (error) => {
+      if (!error) return;
+      if (res.headersSent) return;
+      console.error(`[SPA Fallback] Error sending ${shellPath}:`, error);
+      res.status(500).send('<h1>500 - Internal Server Error</h1><p>Could not serve application file</p>');
+    });
+  };
+
+  const fallback = (req, res, next) => {
+    if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+
+    const pathname = decodeURI(req.path).replace(/\/+$/, '') || '/';
+
+    // Unknown /api paths answer JSON, never the shell. This used to live in the
+    // factory, where it swallowed every API router the app mounted afterwards.
+    if (pathname === '/api' || pathname.startsWith('/api/')) {
+      return res.status(404).json({ error: 'API route not found', path: req.originalUrl });
+    }
+
+    if (isDev) {
+      // Development serves components unbundled: the framework fetches
+      // `<Component>.html` and `.css` over HTTP, and a JS-only component has
+      // neither. A 404 here makes `slice.build` return null and the page dies.
+      if (pathname.endsWith('.html')) return sendShell(req, res);
+      if (isComponentWithoutStylesheet(pathname, projectRoot, folderDeployed, prefixes)) {
+        res.status(200);
+        res.setHeader('Content-Type', 'text/css; charset=utf-8');
+        res.setHeader('Cache-Control', 'no-store');
+        return res.end('/* component ships no stylesheet */');
+      }
+    }
+
+    return sendShell(req, res);
+  };
+
+  fallback.__sliceFallback = true;
+  return fallback;
+}
+
+/**
+ * The error handler that has to sit after the fallback (Express only routes an
+ * error to middleware registered later in the stack). Exported for the same
+ * no-`start()` case as `sliceFallback`.
+ */
+export function sliceErrorHandler(options = {}) {
+  const { runMode } = resolveRuntimeContext(options);
+  return (error, req, res, next) => {
+    console.error('[Server Error]', error.stack || error.message || error);
+    if (res.headersSent) return next(error);
+    res.status(error.status || 500).json({
+      error: 'Internal Server Error',
+      message: runMode === 'production' ? 'An unexpected error occurred' : error.message
+    });
+  };
+}
+
+export function createSliceServer(options = {}) {
+  const { projectRoot, runMode, folderDeployed } = resolveRuntimeContext(options);
 
   let sliceConfig = {};
   try {
@@ -35,7 +146,7 @@ export function createSliceServer(options = {}) {
     frameworkVersion = 'unknown';
   }
 
-  const PORT = process.env.PORT || sliceConfig.server?.port || 3001;
+  const PORT = options.port ?? process.env.PORT ?? sliceConfig.server?.port ?? 3001;
 
   const publicEnvProvider = createPublicEnvProvider({
     mode: runMode,
@@ -338,74 +449,88 @@ export function createSliceServer(options = {}) {
   // SEO: robots.txt & sitemap.xml
   // ==============================================
 
-  app.get('/robots.txt', (req, res) => {
-    res.sendFile(resolveDeployedFile('robots.txt'));
-  });
+  // `sendFile` on a missing artifact routes to the error handler and answers
+  // 500; the files are optional, so a missing one is a 404.
+  const sendDeployedFile = (res, fileName) => {
+    const file = resolveDeployedFile(fileName);
+    if (!fs.existsSync(file)) return res.status(404).send(`${fileName} not found`);
+    return res.sendFile(file);
+  };
 
-  app.get('/sitemap.xml', (req, res) => {
-    res.sendFile(resolveDeployedFile('sitemap.xml'));
-  });
-
-  // ==============================================
-  // API 404 — las rutas /api/* irreconocibles devuelven JSON, no HTML
-  // ==============================================
-
-  app.use('/api', (req, res) => {
-    res.status(404).json({ error: 'API route not found', path: req.originalUrl });
-  });
+  app.get('/robots.txt', (req, res) => sendDeployedFile(res, 'robots.txt'));
+  app.get('/sitemap.xml', (req, res) => sendDeployedFile(res, 'sitemap.xml'));
 
   // ==============================================
-  // SPA FALLBACK
+  // FIN DEL STACK — el fallback y el error handler los monta start()
   // ==============================================
+  // Nothing terminal is registered here on purpose: a catch-all placed inside
+  // the factory makes every `app.use()` the app adds afterwards dead code.
+  // `sliceFallback()` owns "nobody answered" (shell, dev carve-outs, /api 404).
 
-  app.get('*', (req, res) => {
-    const indexPath = path.join(projectRoot, folderDeployed, 'App', 'index.html');
-    res.sendFile(indexPath, (err) => {
-      if (err) {
-        console.error(`[SPA Fallback] Error sending ${indexPath}:`, err);
-        res.status(500).send(`<h1>500 - Internal Server Error</h1><p>Could not serve application file</p>`);
+  let started = false;
+
+  const hasFallbackMounted = () => {
+    // Express 4 exposes `app._router`; Express 5 exposes `app.router` (and keeps
+    // `_router`). On 4 the public getter throws when accessed, so both are read
+    // defensively: worst case the answer is "not mounted" and the fallback is
+    // added once more, which is harmless (the first one ends the response).
+    let stack = [];
+    try {
+      stack = app._router?.stack || [];
+    } catch {
+      stack = [];
+    }
+    if (!stack.length) {
+      try {
+        stack = app.router?.stack || [];
+      } catch {
+        stack = [];
       }
+    }
+    return stack.some((layer) => layer?.handle?.__sliceFallback === true);
+  };
+
+  /**
+   * Finishes the app and starts listening.
+   * @param {{ port?: number, host?: string, signals?: boolean }} [startOptions]
+   * @returns {import('http').Server}
+   */
+  function start(startOptions = {}) {
+    if (started) throw new Error('Slice server: start() was already called');
+    started = true;
+
+    const { port = PORT, host, signals = true } = startOptions;
+
+    if (!hasFallbackMounted()) {
+      app.use(sliceFallback(options));
+      app.use(sliceErrorHandler(options));
+    }
+
+    if (port !== 0 && Number(port) !== Number(PORT)) {
+      console.warn(
+        `[slice] starting on port ${port}, but the security middleware was configured for ${PORT}. ` +
+        'Pass `port` to createSliceServer() as well, or set PORT, if the local app is refused.'
+      );
+    }
+
+    const server = app.listen(port, host, () => {
+      console.log('🔒 Security middleware: active (zero-config, automatic)');
+      console.log(`🚀 Slice.js server running on port ${server.address()?.port ?? port}`);
     });
-  });
 
-  // ==============================================
-  // ERROR HANDLER CENTRALIZADO
-  // ==============================================
-
-  app.use((err, req, res, next) => {
-    console.error('[Server Error]', err.stack || err.message || err);
-    if (res.headersSent) return next(err);
-    res.status(err.status || 500).json({
-      error: 'Internal Server Error',
-      message: process.env.NODE_ENV === 'production' ? 'An unexpected error occurred' : err.message
-    });
-  });
-
-  // ==============================================
-  // INICIO DEL SERVIDOR
-  // ==============================================
-
-  function startServer() {
-    const server = app.listen(PORT, () => {
-      console.log(`🔒 Security middleware: active (zero-config, automatic)`);
-      console.log(`🚀 Slice.js server running on port ${PORT}`);
-    });
-
-    process.on('SIGINT', () => {
-      console.log('\n🛑 Slice server stopped');
-      process.exit(0);
-    });
-
-    process.on('SIGTERM', () => {
-      console.log('\n🛑 Server terminated');
-      process.exit(0);
-    });
+    if (signals) {
+      const shutdown = (label) => () => {
+        console.log(label);
+        const force = setTimeout(() => process.exit(0), 5000);
+        force.unref?.();
+        server.close(() => process.exit(0));
+      };
+      process.once('SIGINT', shutdown('\n🛑 Slice server stopped'));
+      process.once('SIGTERM', shutdown('\n🛑 Server terminated'));
+    }
 
     return server;
   }
 
-  return {
-    app,
-    start: startServer
-  };
+  return { app, start };
 }
