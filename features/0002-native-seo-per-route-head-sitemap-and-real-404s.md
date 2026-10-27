@@ -2,7 +2,7 @@
 id: "0002"
 title: "Native SEO: per-route head, sitemap and real 404s"
 repo: "slice.js"
-status: proposed
+status: planned
 area: framework
 priority: medium
 created: 2026-10-27
@@ -150,6 +150,30 @@ and the localhost rules below.
 Precedence, highest first: **`routes.js` inline `metadata`** (the code that defines the route knows its
 params) → `routes[path]` → `defaults` → derived. Short fields (`image`, `title`) win over nested
 `openGraph`/`twitter` only where the nested object is absent — the nested form is the explicit one.
+
+#### Param routes (v1)
+
+`routes` keys accept the router's `${param}` syntax. Matching: a literal key wins, then the longest
+pattern. A pattern provides **static** metadata, and the canonical is always the real requested path.
+
+```json
+{
+  "routes": {
+    "/producto/${id}": {
+      "title": "Producto",
+      "description": "Ficha de producto.",
+      "image": "/og/producto.png"
+    }
+  }
+}
+```
+
+- `/producto/42` takes the pattern's title, description and image; its canonical is
+  `origin + /producto/42`, never the pattern.
+- A pattern cannot be enumerated, so it never enters `sitemap.xml`. A concrete list of URLs can be
+  added later without changing the manifest shape.
+- Per-instance metadata (a title built from the param) needs `metadata: (params) => …` in
+  `routes.js`: **v2**. That is also why inline route metadata outranks the manifest.
 
 #### Images: local path or remote URL
 
@@ -308,8 +332,11 @@ framework already serves (the precompute rule in `slicejs-components/AGENTS.md`)
 - Unknown path → **the same shell with `404`** and no fabricated canonical (this is what removes the
   soft 404; the client router already renders its own NotFound).
 - `robots: false` → `200` + `noindex`.
-- `/sitemap.xml` and `/robots.txt` → generated from the manifest at startup: only indexable routes,
-  sorted, escaped, `lastmod` from the manifest. Drift becomes impossible by construction.
+- `/sitemap.xml` and `/robots.txt` are **build artifacts committed to `public/`**: `slice seo
+  sitemap` writes them from the manifest (only indexable routes, sorted, escaped, `lastmod` from the
+  manifest), the build runs it, and the server serves the files statically. Nothing is generated at
+  startup and nothing can drift into a 404: `slice seo check` compares the committed file against the
+  manifest and fails on any difference (same pattern as the docs repo's sitemap guard).
 - Escaping is part of the contract: `&`, `<`, `>`, `"` in a title must not break the `<head>` (the
   first implementation shipped an `escapeHtml` that replaced every entity with itself).
 
@@ -421,14 +448,17 @@ production.
       (`sliceFallback({ seo })`), which `start()` mounts.
 - [x] JSON-LD defaults: none in v1 (only what the manifest declares), so nothing is injected that the
       app did not ask for.
-- [ ] Sitemap generated in memory at startup, or written to `public/` at build time (static hosting
-      friendliness) — or both?
-- [ ] Param routes (`/p/${id}`): accept the router's `${param}` syntax as a pattern key in v1 (literal
-      wins, then longest pattern), or wait for function-based `metadata: (params) => …`?
-- [ ] Do the short fields (`image`) and the nested `openGraph` coexist, or do we drop the shorthand?
-      (Suggested: coexist, nested wins — already in the contract, needs a test.)
-- [ ] Ship the JSON Schema (`$schema`) with the module, or only publish it on the docs site?
-- [ ] Add a `--check-remote` HEAD probe for remote images? (Default off: CI must stay offline.)
+- [x] Sitemap: **committed file in `public/`, written at build time** (`slice seo sitemap`), served
+      statically, with `seo check` failing on drift. Chosen over in-memory generation so a static
+      host works and the file is reviewable in the PR.
+- [x] Param routes: **pattern keys in v1**, using the router's `${param}` syntax (a literal wins,
+      then the longest pattern). The canonical is the real requested path, never the pattern.
+      `metadata: (params) => …` stays for v2.
+- [x] Short fields and nested `openGraph` **coexist**; the nested object wins. Needs the test.
+- [x] JSON Schema ships **with the module** (editor autocomplete offline, same source `seo check`
+      uses).
+- [x] Remote images: `--check-remote` is opt-in, and the CLI **prompts** for it when it runs in a
+      TTY; non-interactive runs (CI) default to off and never hang.
 
 ## Decision log
 
@@ -454,3 +484,4 @@ production.
   dimensions cannot be read from a remote file so they must be declared, signed/expiring URLs are
   rejected as a design error (the platform caches the preview), and offline checks report a remote URL
   as *not verified* instead of passing it.
+- 2026-10-27 - Decisions closed with the product owner and promoted to planned: the sitemap is a **committed build artifact in public/** with a drift guard in seo check (not in-memory); param routes are pattern keys using \ in v1 with the canonical taken from the real path; short and nested social fields coexist; the JSON Schema ships with the module; --check-remote is opt-in and only prompts in a TTY.
