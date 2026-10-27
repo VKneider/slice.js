@@ -19,6 +19,7 @@ import {
   loadSeoManifest,
   matchPathPattern,
   normalizeOrigin,
+  pickRouteEntry,
   renderHead,
   resolveMetadata,
   routePaths
@@ -167,6 +168,20 @@ const encodeSeoPage = (html) => {
   };
 };
 
+/**
+ * Resolve a manifest (or image manifest) path. A relative path is tried at the
+ * project root first (small apps keep `seo.json` there), then inside the
+ * deployed `public/` folder, which is where generated artifacts live.
+ */
+function resolveSeoFile(projectRoot, folderDeployed, file) {
+  const candidates = [
+    path.resolve(projectRoot, file),
+    path.join(projectRoot, folderDeployed, 'public', file),
+    path.join(projectRoot, folderDeployed, file)
+  ];
+  return candidates.find((candidate) => fs.existsSync(candidate)) || candidates[0];
+}
+
 async function loadRouteDefinitions(projectRoot, folderDeployed) {
   const candidates = [
     path.join(projectRoot, folderDeployed, 'routes.js'),
@@ -199,8 +214,18 @@ export async function prepareSeo(options = {}) {
 
   const manifest = typeof config.manifest === 'object'
     ? config.manifest
-    : loadSeoManifest(path.resolve(projectRoot, config.manifest || 'seo.json'));
+    : loadSeoManifest(resolveSeoFile(projectRoot, folderDeployed, config.manifest || 'seo.json'));
   if (!manifest) return null;
+
+  // Social cards are generated after the manifest (they need a browser), so the
+  // app points at that file instead of inlining 70 image paths. An entry that
+  // declares its own image always wins.
+  const imageManifest = typeof config.images === 'object'
+    ? config.images
+    : config.images
+      ? loadSeoManifest(resolveSeoFile(projectRoot, folderDeployed, config.images))
+      : null;
+  const cards = imageManifest?.images || {};
 
   const port = options.port || process.env.PORT || 3001;
   const origin = normalizeOrigin(config.origin)
@@ -222,6 +247,20 @@ export async function prepareSeo(options = {}) {
 
   const render = (pathname, routeMetadata) => {
     const meta = resolveMetadata({ pathname, routeMetadata, manifest, origin });
+
+    // Precedence: an image declared on the route entry wins, then the generated
+    // card, then `defaults.image` (the generic banner). Comparing against the raw
+    // entry keeps the framework from guessing where the image came from.
+    const explicitImage = pickRouteEntry(pathname, manifest)?.entry?.image;
+    const card = cards[pathname];
+    if (card && !explicitImage && !routeMetadata?.image) {
+      meta.image = /^https?:\/\//i.test(card.path) ? card.path : `${origin}${card.path}`;
+      meta.imageWidth = card.width ?? null;
+      meta.imageHeight = card.height ?? null;
+      meta.imageType = card.type || null;
+      meta.imageAlt = meta.imageAlt || meta.title;
+    }
+
     return encodeSeoPage(injectHead(shell, renderHead(meta, { siteName, locale })));
   };
 

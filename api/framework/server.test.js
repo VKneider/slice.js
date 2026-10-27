@@ -301,8 +301,7 @@ test('seo: robots:false is noindex but still 200', async (t) => {
   assert.match(await response.text(), /name="robots" content="noindex, nofollow"/);
 });
 
-test('seo: in development the origin falls back to localhost', async (t) => {
-  const project = makeSeoProject();
+test('seo: in development the origin falls back to localhost', async (t) => {  const project = makeSeoProject();
   // A manifest without origin is valid in dev: the canonical points at the dev
   // server so the metadata is still inspectable.
   const manifestPath = path.join(project.root, 'seo.json');
@@ -336,5 +335,75 @@ test('seo: in development the origin falls back to localhost', async (t) => {
 
   const html = await (await get(base, '/pricing')).text();
   assert.match(html, /rel="canonical" href="http:\/\/localhost:\d+\/pricing"/);
+});
+
+test('seo: a separate image manifest fills in the social card', async (t) => {
+  const project = makeSeoProject();
+  // The generated layout: the manifest and the cards live under public/, so a
+  // relative path must resolve inside the deployed folder, not the project root.
+  fs.mkdirSync(path.join(project.root, 'dist', 'public', 'og'), { recursive: true });
+  fs.renameSync(
+    path.join(project.root, 'seo.json'),
+    path.join(project.root, 'dist', 'public', 'seo.json')
+  );
+  fs.writeFileSync(
+    path.join(project.root, 'dist', 'public', 'og', 'manifest.json'),
+    JSON.stringify({
+      images: {
+        '/pricing': { path: '/og/pricing-abc123.png', width: 1200, height: 630, type: 'image/png' }
+      }
+    })
+  );
+
+  const instance = createSliceServer({
+    projectRoot: project.root,
+    mode: 'production',
+    port: 0,
+    seo: { manifest: 'seo.json', images: 'og/manifest.json' }
+  });
+  const server = await instance.start({ port: 0, signals: false });
+  t.after(() => {
+    server.close();
+    fs.rmSync(project.root, { recursive: true, force: true });
+  });
+  const base = `http://127.0.0.1:${server.address().port}`;
+
+  const html = await (await get(base, '/pricing')).text();
+  assert.match(html, /property="og:image" content="https:\/\/acme.dev\/og\/pricing-abc123.png"/);
+  assert.match(html, /property="og:image:width" content="1200"/);
+  assert.match(html, /property="og:image:type" content="image\/png"/);
+
+  // A route the image manifest does not know about keeps the generic head.
+  const other = await (await get(base, '/')).text();
+  assert.doesNotMatch(other, /og\/pricing-abc123/);
+});
+
+test('seo: an explicit image on the route wins over the image manifest', async (t) => {
+  const project = makeSeoProject();
+  fs.mkdirSync(path.join(project.root, 'dist', 'public', 'og'), { recursive: true });
+  const manifest = JSON.parse(fs.readFileSync(path.join(project.root, 'seo.json'), 'utf8'));
+  manifest.routes['/pricing'].image = '/images/explicit.png';
+  fs.writeFileSync(path.join(project.root, 'seo.json'), JSON.stringify(manifest));
+  fs.writeFileSync(
+    path.join(project.root, 'dist', 'public', 'og', 'manifest.json'),
+    JSON.stringify({ images: { '/pricing': { path: '/og/generated.png' } } })
+  );
+
+  const instance = createSliceServer({
+    projectRoot: project.root,
+    mode: 'production',
+    port: 0,
+    seo: { manifest: 'seo.json', images: 'dist/public/og/manifest.json' }
+  });
+  const server = await instance.start({ port: 0, signals: false });
+  t.after(() => {
+    server.close();
+    fs.rmSync(project.root, { recursive: true, force: true });
+  });
+  const base = `http://127.0.0.1:${server.address().port}`;
+
+  const html = await (await get(base, '/pricing')).text();
+  assert.match(html, /property="og:image" content="https:\/\/acme.dev\/images\/explicit.png"/);
+  assert.doesNotMatch(html, /og\/generated\.png/);
 });
 
