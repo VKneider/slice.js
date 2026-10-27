@@ -2,7 +2,7 @@
 id: "0002"
 title: "Native SEO: per-route head, sitemap and real 404s"
 repo: "slice.js"
-status: planned
+status: in-progress
 area: framework
 priority: medium
 created: 2026-10-27
@@ -484,4 +484,5 @@ production.
   dimensions cannot be read from a remote file so they must be declared, signed/expiring URLs are
   rejected as a design error (the platform caches the preview), and offline checks report a remote URL
   as *not verified* instead of passing it.
-- 2026-10-27 - Decisions closed with the product owner and promoted to planned: the sitemap is a **committed build artifact in public/** with a drift guard in seo check (not in-memory); param routes are pattern keys using \ in v1 with the canonical taken from the real path; short and nested social fields coexist; the JSON Schema ships with the module; --check-remote is opt-in and only prompts in a TTY.
+- 2026-10-27 - Decisions closed with the product owner and promoted to `planned`: the sitemap is a **committed build artifact in `public/`** with a drift guard in `seo check` (not in-memory); param routes are pattern keys using `${param}` in v1 with the canonical taken from the real path; short and nested social fields coexist; the JSON Schema ships with the module; `--check-remote` is opt-in and only prompts in a TTY.
+- 2026-10-27 - Implementation started with the pure core (`api/framework/seo.js` + 12 tests): pattern matching with the router's `${param}` syntax (literal wins, then the longest pattern; canonical from the real path), metadata precedence (defaults -> manifest -> inline), head rendering with escaping, JSON-LD that cannot close its own script tag, shell injection that removes the tags the module owns, the sitemap builder (literal + indexable only), and `validateSeoManifest()` as the single validator for `seo check` and `slice doctor`. 123 framework tests. Still open: wiring into `sliceFallback`, the build-time sitemap command, Router titles, docs.
