@@ -11,6 +11,18 @@ import {
 import { createPublicEnvProvider } from './publicEnvResolver.js';
 import { createDevDepsOptimizer } from './devDepsOptimizer.js';
 import { createPrecompressedStatic } from './precompressedStatic.js';
+import { pathToFileURL } from 'node:url';
+import { createHash } from 'node:crypto';
+import zlib from 'node:zlib';
+import {
+  injectHead,
+  loadSeoManifest,
+  matchPathPattern,
+  normalizeOrigin,
+  renderHead,
+  resolveMetadata,
+  routePaths
+} from './seo.js';
 
 // ── Shared runtime context ─────────────────────────────────────────
 // `createSliceServer` and the standalone `sliceFallback` must agree on where the
@@ -60,12 +72,15 @@ function isComponentWithoutStylesheet(pathname, projectRoot, folderDeployed, pre
  * serverless adapter, a supertest harness) can close the chain by hand. It must
  * be the last middleware; mounting it twice is harmless (the first one ends the
  * response) but pointless, and `start()` skips it when it is already there.
+ *
+ * `options.seo` is the **prepared** context from `prepareSeo()`, not the config.
  */
 export function sliceFallback(options = {}) {
   const { projectRoot, runMode, folderDeployed } = resolveRuntimeContext(options);
   const isDev = runMode === 'development';
   const shellPath = path.join(projectRoot, folderDeployed, 'App', 'index.html');
   const prefixes = options.componentPrefixes || readComponentPrefixes(projectRoot);
+  const seo = options.seo?.resolve ? options.seo : null;
 
   const sendShell = (req, res) => {
     res.setHeader('Cache-Control', 'no-cache');
@@ -75,6 +90,31 @@ export function sliceFallback(options = {}) {
       console.error(`[SPA Fallback] Error sending ${shellPath}:`, error);
       res.status(500).send('<h1>500 - Internal Server Error</h1><p>Could not serve application file</p>');
     });
+  };
+
+  /** Precomputed HTML, or the shell: same encoding dance either way. */
+  const sendRendered = (req, res, page, status) => {
+    res.status(status);
+    res.setHeader('Cache-Control', status === 200 ? 'no-cache' : 'no-store');
+    if (page.etag) {
+      res.setHeader('ETag', page.etag);
+      if (req.headers['if-none-match'] === page.etag) return res.status(304).end();
+    }
+
+    const accept = String(req.headers['accept-encoding'] || '');
+    let body = page.html;
+    if (page.br && /\bbr\b/.test(accept)) {
+      res.setHeader('Content-Encoding', 'br');
+      body = page.br;
+    } else if (page.gzip && /\bgzip\b/.test(accept)) {
+      res.setHeader('Content-Encoding', 'gzip');
+      body = page.gzip;
+    }
+
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Vary', 'Accept-Encoding');
+    res.setHeader('Content-Length', String(body.length));
+    return res.end(body);
   };
 
   const fallback = (req, res, next) => {
@@ -101,11 +141,137 @@ export function sliceFallback(options = {}) {
       }
     }
 
+    // With SEO configured the route set is known, so this is also where the
+    // 200-vs-404 decision happens.
+    if (seo) {
+      const { status, page } = seo.resolve(pathname);
+      return sendRendered(req, res, page, status);
+    }
+
     return sendShell(req, res);
   };
 
   fallback.__sliceFallback = true;
   return fallback;
+}
+
+const encodeSeoPage = (html) => {
+  const raw = Buffer.from(html, 'utf8');
+  return {
+    html: raw,
+    gzip: zlib.gzipSync(raw, { level: 9 }),
+    br: zlib.brotliCompressSync(raw, {
+      params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 9 }
+    }),
+    etag: `W/"${createHash('sha1').update(raw).digest('base64url')}"`
+  };
+};
+
+async function loadRouteDefinitions(projectRoot, folderDeployed) {
+  const candidates = [
+    path.join(projectRoot, folderDeployed, 'routes.js'),
+    path.join(projectRoot, 'src', 'routes.js')
+  ];
+  for (const candidate of candidates) {
+    if (!fs.existsSync(candidate)) continue;
+    const module = await import(pathToFileURL(candidate).href);
+    const routes = module.default ?? module.routes ?? [];
+    return (Array.isArray(routes) ? routes : []).map((route) => ({
+      path: String(route?.path ?? '').replace(/\/+$/, '') || '/',
+      metadata: route?.metadata || {}
+    })).filter((route) => route.path);
+  }
+  return [];
+}
+
+/**
+ * Reads the manifest and `routes.js`, renders every literal route once and
+ * returns the resolver `sliceFallback` uses. Async because `routes.js` is an
+ * ESM import — `start()` awaits it, so the first request never pays for it.
+ *
+ * `config` is the `seo` block from `createSliceServer({ seo })`: a JSON path (or
+ * an already-loaded object) plus an optional origin override.
+ */
+export async function prepareSeo(options = {}) {
+  const { projectRoot, runMode, folderDeployed } = resolveRuntimeContext(options);
+  const config = options.seo || {};
+  if (!config || (typeof config === 'object' && !config.manifest && !config.routes)) return null;
+
+  const manifest = typeof config.manifest === 'object'
+    ? config.manifest
+    : loadSeoManifest(path.resolve(projectRoot, config.manifest || 'seo.json'));
+  if (!manifest) return null;
+
+  const port = options.port || process.env.PORT || 3001;
+  const origin = normalizeOrigin(config.origin)
+    || normalizeOrigin(process.env.SLICE_ORIGIN)
+    || normalizeOrigin(manifest.origin)
+    || (runMode === 'development' ? `http://localhost:${port}` : null);
+
+  if (!origin) {
+    throw new Error(
+      'seo: an absolute origin is required in production. Set seo.origin, SLICE_ORIGIN or seo.json origin.'
+    );
+  }
+
+  const shellPath = path.join(projectRoot, folderDeployed, 'App', 'index.html');
+  const shell = fs.readFileSync(shellPath, 'utf8');
+  const siteName = config.siteName || manifest.defaults?.siteName || null;
+  const locale = config.locale || manifest.defaults?.locale || null;
+  const routes = await loadRouteDefinitions(projectRoot, folderDeployed);
+
+  const render = (pathname, routeMetadata) => {
+    const meta = resolveMetadata({ pathname, routeMetadata, manifest, origin });
+    return encodeSeoPage(injectHead(shell, renderHead(meta, { siteName, locale })));
+  };
+
+  const pages = new Map();
+  const patterns = [];
+  for (const route of routes) {
+    if (/\$\{[^}]+\}/.test(route.path)) {
+      patterns.push(route);
+      continue;
+    }
+    pages.set(route.path, render(route.path, route.metadata));
+  }
+  // Longest pattern first so `/p/${id}/detail` wins over `/p/${id}`.
+  patterns.sort((a, b) => b.path.length - a.path.length);
+
+  const notFound = encodeSeoPage(injectHead(
+    shell,
+    '<title>Not found</title>\n    <meta name="robots" content="noindex, nofollow" />'
+  ));
+
+  // A `${param}` route cannot be enumerated, so it is rendered per path. The
+  // cache keeps repeated visits of the same product from recompressing.
+  const dynamicPages = new Map();
+  const DYNAMIC_LIMIT = 200;
+
+  return {
+    origin,
+    manifest,
+    routes,
+    prerendered: pages.size,
+    resolve(pathname) {
+      const exact = pages.get(pathname);
+      if (exact) return { status: 200, page: exact };
+
+      const dynamic = dynamicPages.get(pathname);
+      if (dynamic) return { status: 200, page: dynamic };
+
+      for (const route of patterns) {
+        if (!matchPathPattern(route.path, pathname)) continue;
+        const page = render(pathname, route.metadata);
+        if (dynamicPages.size >= DYNAMIC_LIMIT) {
+          dynamicPages.delete(dynamicPages.keys().next().value);
+        }
+        dynamicPages.set(pathname, page);
+        return { status: 200, page };
+      }
+
+      return { status: 404, page: notFound };
+    }
+  };
 }
 
 /**
@@ -491,18 +657,30 @@ export function createSliceServer(options = {}) {
   };
 
   /**
-   * Finishes the app and starts listening.
+   * Finishes the app and starts listening. Async because the SEO context is
+   * prepared (manifest read, `routes.js` imported, every literal route
+   * prerendered) before the first request can arrive.
    * @param {{ port?: number, host?: string, signals?: boolean }} [startOptions]
-   * @returns {import('http').Server}
+   * @returns {Promise<import('http').Server>}
    */
-  function start(startOptions = {}) {
+  async function start(startOptions = {}) {
     if (started) throw new Error('Slice server: start() was already called');
     started = true;
 
     const { port = PORT, host, signals = true } = startOptions;
 
+    let seo = null;
+    if (options.seo) {
+      seo = await prepareSeo({ ...options, port });
+      if (seo) {
+        console.log(`🔎 SEO: ${seo.prerendered} routes prerendered (${seo.origin})`);
+      } else {
+        console.warn('[slice] seo options were given but no manifest was found; SEO is off.');
+      }
+    }
+
     if (!hasFallbackMounted()) {
-      app.use(sliceFallback(options));
+      app.use(sliceFallback({ ...options, seo }));
       app.use(sliceErrorHandler(options));
     }
 

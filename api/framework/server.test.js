@@ -38,7 +38,7 @@ const makeProject = (mode, { shell = true } = {}) => {
 const boot = async (t, mode = 'production', options = {}) => {
   const { root, folder } = makeProject(mode);
   const instance = createSliceServer({ projectRoot: root, mode, port: 0, ...options });
-  const server = instance.start({ port: 0, signals: false });
+  const server = await instance.start({ port: 0, signals: false });
   await once(server, 'listening');
   const base = `http://127.0.0.1:${server.address().port}`;
 
@@ -57,7 +57,7 @@ test('middleware added between the factory and start() runs before the fallback'
   const { app, start } = createSliceServer({ projectRoot: root, mode: 'production', port: 0 });
   app.get('/health', (req, res) => res.json({ ok: true }));
 
-  const server = start({ port: 0, signals: false });
+  const server = await start({ port: 0, signals: false });
   await once(server, 'listening');
   t.after(() => {
     server.close();
@@ -82,7 +82,7 @@ test('a middleware that touches every page response is not skipped', async (t) =
     next();
   });
 
-  const server = start({ port: 0, signals: false });
+  const server = await start({ port: 0, signals: false });
   await once(server, 'listening');
   t.after(() => {
     server.close();
@@ -105,7 +105,7 @@ test('start() mounts the fallback when the app mounted none', async (t) => {
 
 test('start() twice is an error', async (t) => {
   const { start } = await boot(t);
-  assert.throws(() => start({ port: 0, signals: false }), /already called/);
+  await assert.rejects(start({ port: 0, signals: false }), /already called/);
 });
 
 test('an /api router added after the factory still wins over the JSON 404', async (t) => {
@@ -113,7 +113,7 @@ test('an /api router added after the factory still wins over the JSON 404', asyn
   const instance = createSliceServer({ projectRoot: project.root, mode: 'production', port: 0 });
   instance.app.get('/api/hooks', (req, res) => res.json({ hook: true }));
 
-  const server = instance.start({ port: 0, signals: false });
+  const server = await instance.start({ port: 0, signals: false });
   await once(server, 'listening');
   t.after(() => {
     server.close();
@@ -205,3 +205,136 @@ test('sliceFallback can be mounted by hand for an app that never calls start()',
     message: 'An unexpected error occurred'
   });
 });
+
+// ── SEO ──────────────────────────────────────────────────────────────
+// With a manifest the fallback knows the route set, so it owns the 200-vs-404
+// decision and serves prerendered HTML with that route's head.
+
+const makeSeoProject = () => {
+  const project = makeProject('production');
+  const routes = [
+    "  { path: '/', metadata: { title: 'Home' } },",
+    "  { path: '/pricing', metadata: { title: 'Pricing' } },",
+    "  { path: '/private', metadata: { robots: false } },",
+    "  { path: '/producto/${id}' }"
+  ].join('\n');
+  fs.writeFileSync(
+    path.join(project.root, 'dist', 'routes.js'),
+    `export default [\n${routes}\n];\n`
+  );
+  fs.writeFileSync(path.join(project.root, 'seo.json'), JSON.stringify({
+    version: 1,
+    origin: 'https://acme.dev',
+    defaults: { titleTemplate: '%s | Acme', description: 'Acme.' },
+    routes: {
+      '/': { title: 'Home', titleTemplate: '%s' },
+      '/pricing': { title: 'Pricing', description: 'Plans.' },
+      '/private': { title: 'Private', robots: false },
+      '/producto/${id}': { title: 'Producto' }
+    }
+  }));
+  return project;
+};
+
+const bootSeo = async (t) => {
+  const project = makeSeoProject();
+  const instance = createSliceServer({
+    projectRoot: project.root,
+    mode: 'production',
+    port: 0,
+    seo: { manifest: 'seo.json' }
+  });
+  const server = await instance.start({ port: 0, signals: false });
+  t.after(() => {
+    server.close();
+    fs.rmSync(project.root, { recursive: true, force: true });
+  });
+  return { base: `http://127.0.0.1:${server.address().port}`, ...instance };
+};
+
+test('seo: a known route gets its own head and a 304 on the second visit', async (t) => {
+  const { base } = await bootSeo(t);
+
+  const response = await get(base, '/pricing');
+  assert.equal(response.status, 200);
+  const html = await response.text();
+  assert.match(html, /<title>Pricing \| Acme<\/title>/);
+  assert.match(html, /<link rel="canonical" href="https:\/\/acme.dev\/pricing" \/>/);
+  assert.match(html, /property="og:url" content="https:\/\/acme.dev\/pricing"/);
+
+  const etag = response.headers.get('etag');
+  assert.ok(etag);
+  const again = await get(base, '/pricing', { headers: { 'If-None-Match': etag } });
+  assert.equal(again.status, 304);
+});
+
+test('seo: an unknown path is a real 404 with no fabricated canonical', async (t) => {
+  const { base } = await bootSeo(t);
+
+  const response = await get(base, '/nope');
+  assert.equal(response.status, 404);
+  const html = await response.text();
+  assert.match(html, /noindex, nofollow/);
+  assert.doesNotMatch(html, /rel="canonical"/);
+  assert.equal(response.headers.get('cache-control'), 'no-store');
+  assert.match(html, /id="app"/, 'the shell still boots the client router');
+});
+
+test('seo: a ${param} route uses the pattern metadata and the real canonical', async (t) => {
+  const { base } = await bootSeo(t);
+
+  const response = await get(base, '/producto/42');
+  assert.equal(response.status, 200);
+  const html = await response.text();
+  assert.match(html, /<title>Producto \| Acme<\/title>/);
+  assert.match(html, /rel="canonical" href="https:\/\/acme.dev\/producto\/42"/);
+
+  // The arbitrary instance is not a page of its own.
+  assert.equal((await get(base, '/producto/42/detalle')).status, 404);
+});
+
+test('seo: robots:false is noindex but still 200', async (t) => {
+  const { base } = await bootSeo(t);
+
+  const response = await get(base, '/private');
+  assert.equal(response.status, 200);
+  assert.match(await response.text(), /name="robots" content="noindex, nofollow"/);
+});
+
+test('seo: in development the origin falls back to localhost', async (t) => {
+  const project = makeSeoProject();
+  // A manifest without origin is valid in dev: the canonical points at the dev
+  // server so the metadata is still inspectable.
+  const manifestPath = path.join(project.root, 'seo.json');
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+  delete manifest.origin;
+  fs.writeFileSync(manifestPath, JSON.stringify(manifest));
+
+  // The dev server reads src/, so the shell and the routes have to exist there.
+  fs.mkdirSync(path.join(project.root, 'src', 'App'), { recursive: true });
+  fs.copyFileSync(
+    path.join(project.root, 'dist', 'App', 'index.html'),
+    path.join(project.root, 'src', 'App', 'index.html')
+  );
+  fs.writeFileSync(
+    path.join(project.root, 'src', 'routes.js'),
+    "export default [{ path: '/pricing', metadata: { title: 'Pricing' } }];\n"
+  );
+
+  const instance = createSliceServer({
+    projectRoot: project.root,
+    mode: 'development',
+    port: 0,
+    seo: { manifest: 'seo.json' }
+  });
+  const server = await instance.start({ port: 0, signals: false });
+  t.after(() => {
+    server.close();
+    fs.rmSync(project.root, { recursive: true, force: true });
+  });
+  const base = `http://127.0.0.1:${server.address().port}`;
+
+  const html = await (await get(base, '/pricing')).text();
+  assert.match(html, /rel="canonical" href="http:\/\/localhost:\d+\/pricing"/);
+});
+
