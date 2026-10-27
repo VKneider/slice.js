@@ -2,7 +2,7 @@
 id: "0002"
 title: "Native SEO: per-route head, sitemap and real 404s"
 repo: "slice.js"
-status: in-progress
+status: done
 area: framework
 priority: medium
 created: 2026-10-27
@@ -515,3 +515,4 @@ production.
 - 2026-10-27 - `slice seo sitemap` and `slice seo check` implemented in the CLI (`commands/seo/`). `sitemap` reads `seo.json`, validates it with the framework validator, refuses a localhost origin, and writes `src/public/sitemap.xml` (+ `robots.txt` only when the manifest has `robotsTxt`) through `writeFileConfirmed()`: unchanged files are not rewritten, an existing different file asks first (default no), `--yes` skips, and no TTY means fail with a message instead of hanging. `check` validates, cross-checks `routes.js`, and fails (exit 1) when the committed sitemap drifted. 10 tests. The framework now also exports `./api/framework/seo.js` as a package entry so apps and the CLI share one implementation.
 
 - 2026-10-27 - Sitemap handover prepared and proven. `buildSitemap()` in the framework now emits the same multi-line format as the parser (one field per line, so a `<lastmod>` change is a one-line diff), and running the real `slice seo sitemap` against slicejs-components reports `unchanged`: the committed file is byte-identical, so switching generators costs zero churn. `slice seo check` runs green on the app (74 routes cross-checked, only description-length warnings) and both commands are wired into the docs CI, gated on the installed framework shipping `api/framework/seo.js` — until 4.1 is published the parser keeps writing the identical sitemap, so there is no drift window and no red pipeline. Removing the parser writer is a one-line follow-up at release.
+- 2026-10-27 - Done. Per-route head, real 404s, `noindex`, `${param}` routes, origin resolution, the committed sitemap (parser now, CLI ready and byte-identical), the router titles from `routes.js` metadata, the mismatch warning, the docs page and the skill are all in place. `slicejs-components` runs entirely on it: `api/seo.js` (the adapter) is deleted, `_titleByRoute` and its `beforeEach` guard are deleted, `seo.json` is the generated manifest, and the served `<head>` is identical to the old server tag for tag. Remaining follow-up at release: delete the parser sitemap writer once slicejs-web-framework 4.1 is the installed version (the CI step flips on by itself).

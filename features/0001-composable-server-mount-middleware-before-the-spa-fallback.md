@@ -2,7 +2,7 @@
 id: "0001"
 title: "Composable server: mount middleware before the SPA fallback"
 repo: "slice.js"
-status: in-progress
+status: done
 area: framework
 priority: high
 created: 2026-10-27
@@ -233,3 +233,4 @@ will also mount it is a development warning; mounting it twice is what the warni
   framework's own `api/tests/dev-server-external.test.js` fails on Windows for an unrelated reason
   (`EPERM` on `fs.symlinkSync`, plus a `pathname` that yields `C:\C:\…`); it only exercises
   pre-routing middleware, so it is unaffected by this change and passes on Linux.
+- 2026-10-27 - Done. `slicejs-components` migrated: `api/index.js` is 25 lines, the 700-line fork and the two copied framework files are deleted (−780 lines), and the app serves the framework server with identical output. `sliceFallback`/`sliceErrorHandler` are exported for the no-`start()` case, the `/api` JSON 404 and the dev carve-outs live in the fallback, and 18 contract/SEO tests cover the seam. Docs page published (`project-architecture/server-entrypoint`) and the skill updated.
