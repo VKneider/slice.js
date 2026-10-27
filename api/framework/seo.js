@@ -329,6 +329,25 @@ export function validateSeoManifest(manifest, options = {}) {
       );
       if (!matches) add(warnings, `metadata entry has no route: ${key}`);
     }
+
+    // The client applies `routes.js` metadata on every navigation (the Router's
+    // `updateTitles`, on by default). If that title differs from what the server
+    // sends for the same path, the tab title changes after hydration — and a
+    // crawler that runs JS sees the shorter one. Catch it here, not in production.
+    const origin = normalizeOrigin(manifest.origin) || '';
+    for (const route of (Array.isArray(routes) ? routes : [])) {
+      const pathname = typeof route === 'string' ? route : route?.path;
+      const metadata = typeof route === 'object' ? route?.metadata : null;
+      if (!pathname || !metadata?.title) continue;
+      const served = resolveMetadata({ pathname, manifest, origin });
+      const client = resolveMetadata({ pathname, manifest: {}, origin, routeMetadata: metadata });
+      if (served.title && client.title && served.title !== client.title) {
+        add(
+          warnings,
+          `route title differs from seo.json: ${pathname} ("${metadata.title}" vs "${served.title}")`
+        );
+      }
+    }
   }
 
   return { errors, warnings };

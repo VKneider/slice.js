@@ -20,6 +20,7 @@ export default class Slice {
       this.debuggerConfig = sliceConfig.debugger;
       this.loadingConfig = sliceConfig.loading;
       this.eventsConfig = sliceConfig.events;
+   this.routerConfig = sliceConfig.router;
 
       // Default to production until init() resolves the actual mode.
       // Safe to call isProduction() before init() completes.

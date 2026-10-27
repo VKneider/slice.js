@@ -1,3 +1,5 @@
+import { applyRouteMetadata } from './applyRouteMetadata.js';
+
 /**
  * @typedef {Object} RouteConfig
  * @property {string} path
@@ -461,6 +463,14 @@ export default class Router {
     * @returns {Promise<void>}
     */
    async handleRoute(route, params) {
+      // Titles are on by default: without this, a SPA keeps the first page's
+      // title while the user navigates. `sliceConfig.router.updateTitles: false`
+      // opts out; a `router:change` listener still wins, because this runs
+      // before the event.
+      if (slice.routerConfig?.updateTitles !== false) {
+         applyRouteMetadata(route?.metadata);
+      }
+
       const targetElement = document.querySelector('#app');
 
       const componentName = route.parentRoute ? route.parentRoute.component : route.component;

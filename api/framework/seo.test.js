@@ -192,3 +192,31 @@ test('validation cross-checks routes.js both ways', () => {
   assert.ok(warnings.some((message) => /route has no metadata: \/about/.test(message)));
   assert.ok(warnings.some((message) => /metadata entry has no route: \/ghost/.test(message)));
 });
+
+test('validation warns when routes.js and seo.json disagree on a title', () => {
+  const { warnings } = validateSeoManifest(
+    {
+      version: 1,
+      origin: ORIGIN,
+      defaults: { titleTemplate: '%s | Acme' },
+      routes: { '/pricing': { title: 'Pricing' } }
+    },
+    // The client has no manifest, so it renders "Pricing"; the server sends
+    // "Pricing | Acme". The tab title would change after hydration.
+    { routes: [{ path: '/pricing', metadata: { title: 'Pricing' } }] }
+  );
+  assert.ok(warnings.some((message) => /route title differs from seo\.json: \/pricing/.test(message)));
+});
+
+test('validation stays quiet when the route repeats the manifest title', () => {
+  const { warnings } = validateSeoManifest(
+    {
+      version: 1,
+      origin: ORIGIN,
+      defaults: { titleTemplate: '%s | Acme' },
+      routes: { '/pricing': { title: 'Pricing' } }
+    },
+    { routes: [{ path: '/pricing', metadata: { title: 'Pricing', titleTemplate: '%s | Acme' } }] }
+  );
+  assert.equal(warnings.filter((message) => /title differs/.test(message)).length, 0);
+});

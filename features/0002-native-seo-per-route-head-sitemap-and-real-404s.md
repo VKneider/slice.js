@@ -336,21 +336,42 @@ framework already serves (the precompute rule in `slicejs-components/AGENTS.md`)
   sitemap` writes them from the manifest (only indexable routes, sorted, escaped, `lastmod` from the
   manifest), the build runs it, and the server serves the files statically. Nothing is generated at
   startup and nothing can drift into a 404: `slice seo check` compares the committed file against the
-  manifest and fails on any difference (same pattern as the docs repo's sitemap guard).
+  manifest and fails on any difference (same pattern as the docs repo's sitemap guard). The command
+  never overwrites silently — see the file-writing rule in `slicejs-cli/features/0002`.
 - Escaping is part of the contract: `&`, `<`, `>`, `"` in a title must not break the `<head>` (the
   first implementation shipped an `escapeHtml` that replaced every entity with itself).
 
 ### Client
 
-Route entries accept `metadata`:
+Route entries accept `metadata`, and the Router applies it to the head by default:
 
 ```js
-{ path: '/docs/${section}/${page}', component: 'App', metadata: { title: '…', description: '…' } }
+// src/routes.js
+{ path: '/pricing', component: 'Pricing', metadata: { title: 'Pricing', description: 'Plans.' } }
 ```
 
-and the Router keeps `document.title` (and the description) in sync on navigation — replacing the
-`App._titleByRoute` map every app writes today, which is also how a title degrades to `Slice.js`
-after a client-side navigation when someone forgets an entry.
+```json
+// src/sliceConfig.json  (only to opt out)
+{ "router": { "updateTitles": false } }
+```
+
+Why on by default, and what keeps it safe:
+
+- **A SPA that keeps the first page's title is broken in every app**, and the failure is invisible
+  until someone shares a link or reads a tab. Making it opt-in means most apps never get it.
+- **Only what the route declares** is touched. No `metadata.title` → the server's title survives.
+- **`canonical` and `robots` are never written client-side**: crawlers do not run this code, so
+  rewriting them here could only desync the SPA from the HTML that was served.
+- **A `router:change` listener still wins**, because `handleRoute` applies the metadata before the
+  event: metadata is the default, the listener is the escape hatch.
+- **The one real risk is caught, not hidden**: if `routes.js` and `seo.json` disagree on a title, the
+  client would replace the richer server title after hydration. `validateSeoManifest()` (used by
+  `slice seo check` and `slice doctor`) compares both and warns with the route and both values.
+- **Guards are not the place for this.** `beforeEach` is for decisions (auth, redirects); it also runs
+  for navigations that get cancelled or redirected, and it forces every app to re-implement the
+  description and the template. The Router already sees every match.
+- This replaces the `App._titleByRoute` map an app writes today (and the "title degrades to
+  `Slice.js` after a client-side navigation" bug that comes with forgetting an entry).
 
 ### Drift guard
 
@@ -488,3 +509,5 @@ production.
 - 2026-10-27 - Implementation started with the pure core (`api/framework/seo.js` + 12 tests): pattern matching with the router's `${param}` syntax (literal wins, then the longest pattern; canonical from the real path), metadata precedence (defaults -> manifest -> inline), head rendering with escaping, JSON-LD that cannot close its own script tag, shell injection that removes the tags the module owns, the sitemap builder (literal + indexable only), and `validateSeoManifest()` as the single validator for `seo check` and `slice doctor`. 123 framework tests. Still open: wiring into `sliceFallback`, the build-time sitemap command, Router titles, docs.
 
 - 2026-10-27 - Wiring landed. `prepareSeo()` reads the manifest, imports `routes.js` (the route set), resolves the origin (config -> `SLICE_ORIGIN` -> manifest -> `http://localhost:<port>` in development, hard error in production), prerenders every literal route once (html + gzip + br + ETag) and returns a resolver. `sliceFallback({ seo })` serves the prerendered page, renders `${param}` routes per path with a 200-entry cache, and answers `404` + `noindex` with no canonical for anything else. `start()` is async now and awaits the preparation before listening — the template already used `await start()`. 5 HTTP tests (per-route head + 304, real 404, param canonical, `robots: false`, dev localhost origin); 128 framework tests and `verify:conclave` green. A JS manifest is passed as an object by the app (`seo: { ...config }`); the framework does not import arbitrary config files. Still open: the build-time sitemap command + drift guard, Router titles, docs.
+
+- 2026-10-27 - Router titles shipped **on by default** (`sliceConfig.router.updateTitles: false` to opt out) after review: the flag-off version was safer but invisible, and a SPA that keeps the first title is broken in every app. `applyRouteMetadata()` only touches declared fields, never `canonical`/`robots`, and a `router:change` listener still wins. The one real risk — `routes.js` and `seo.json` disagreeing on a title, so hydration replaces the richer server title — became a **warning in `validateSeoManifest()`** (route + both values), which `seo check` and `slice doctor` surface. 137 framework tests.
