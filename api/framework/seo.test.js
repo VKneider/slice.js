@@ -154,7 +154,11 @@ test('the sitemap lists literal indexable routes only, sorted and escaped', () =
   const xml = buildSitemap({ manifest: data, origin: ORIGIN });
 
   assert.match(xml, /^<\?xml version="1.0" encoding="UTF-8"\?>/);
-  assert.match(xml, /<loc>https:\/\/acme.dev\/a<\/loc><lastmod>2026-10-22<\/lastmod><priority>0.7<\/priority>/);
+  assert.match(xml, /<loc>https:\/\/acme.dev\/a<\/loc>/);
+  assert.match(xml, /<lastmod>2026-10-22<\/lastmod>/);
+  assert.match(xml, /<priority>0.7<\/priority>/);
+  // One field per line, so a <lastmod> change is a one-line diff.
+  assert.match(xml, /  <url>\n {4}<loc>https:\/\/acme\.dev\/a<\/loc>\n/);
   assert.ok(xml.indexOf('/a</loc>') < xml.indexOf('/z</loc>'), 'sorted by URL');
   assert.doesNotMatch(xml, /private|hidden|producto/);
   assert.throws(() => buildSitemap({ manifest: data, origin: '/relative' }), /absolute origin/);

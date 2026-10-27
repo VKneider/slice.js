@@ -235,17 +235,21 @@ export function buildSitemap({ manifest, origin }) {
     if (entry?.noindex) continue;
 
     const loc = `${base}${key === '/' ? '/' : key}`;
-    const parts = [`<loc>${xmlEscape(loc)}</loc>`];
-    if (entry?.sitemap?.lastmod || entry?.lastmod) {
-      parts.push(`<lastmod>${xmlEscape(entry.sitemap?.lastmod || entry.lastmod)}</lastmod>`);
-    }
-    if (entry?.sitemap?.changefreq || entry?.changefreq) {
-      parts.push(`<changefreq>${xmlEscape(entry.sitemap?.changefreq || entry.changefreq)}</changefreq>`);
-    }
-    if (entry?.sitemap?.priority || entry?.priority) {
-      parts.push(`<priority>${xmlEscape(entry.sitemap?.priority || entry.priority)}</priority>`);
-    }
-    urls.push({ loc, body: `  <url>${parts.join('')}</url>` });
+    const sitemap = entry?.sitemap && typeof entry.sitemap === 'object' ? entry.sitemap : {};
+    const lastmod = sitemap.lastmod || entry?.lastmod;
+    const changefreq = sitemap.changefreq || entry?.changefreq;
+    const priority = sitemap.priority || entry?.priority;
+
+    // One field per line: a <lastmod> update is a one-line diff in review.
+    const block = [
+      '  <url>',
+      `    <loc>${xmlEscape(loc)}</loc>`,
+      lastmod ? `    <lastmod>${xmlEscape(lastmod)}</lastmod>` : '',
+      changefreq ? `    <changefreq>${xmlEscape(changefreq)}</changefreq>` : '',
+      priority ? `    <priority>${xmlEscape(priority)}</priority>` : '',
+      '  </url>'
+    ].filter(Boolean);
+    urls.push({ loc, body: block.join('\n') });
   }
 
   urls.sort((a, b) => a.loc.localeCompare(b.loc));
