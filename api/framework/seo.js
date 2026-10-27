@@ -78,6 +78,22 @@ const absolute = (value, origin) => {
   return `${origin}${raw.startsWith('/') ? '' : '/'}${raw}`;
 };
 
+const IMAGE_TYPES = {
+  png: 'image/png',
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  webp: 'image/webp',
+  avif: 'image/avif',
+  gif: 'image/gif'
+};
+
+/** `og:image:type` from the file extension, when it is a known one. */
+const imageTypeFromUrl = (url) => {
+  if (!url) return null;
+  const extension = String(url).split('?')[0].split('#')[0].split('.').pop()?.toLowerCase();
+  return IMAGE_TYPES[extension] || null;
+};
+
 const robotsDirectives = (robots) => {
   if (robots === false) return 'noindex, nofollow';
   if (!robots || typeof robots !== 'object') return 'index, follow';
@@ -117,6 +133,7 @@ export function resolveMetadata({ pathname, routeMetadata, manifest = {}, origin
     imageAlt: merged.imageAlt ?? merged.openGraph?.images?.[0]?.alt ?? finalTitle,
     imageWidth: merged.imageWidth ?? merged.openGraph?.images?.[0]?.width ?? null,
     imageHeight: merged.imageHeight ?? merged.openGraph?.images?.[0]?.height ?? null,
+    imageType: merged.imageType ?? imageTypeFromUrl(image),
     openGraph: merged.openGraph || {},
     twitter: merged.twitter || {},
     jsonLd: merged.jsonLd ?? null,
@@ -157,6 +174,7 @@ export function renderHead(meta, { siteName = null, locale = null } = {}) {
     tags.push(`<meta property="og:image" content="${escapeHtml(meta.image)}" />`);
     if (meta.imageWidth) tags.push(`<meta property="og:image:width" content="${escapeHtml(meta.imageWidth)}" />`);
     if (meta.imageHeight) tags.push(`<meta property="og:image:height" content="${escapeHtml(meta.imageHeight)}" />`);
+    if (meta.imageType) tags.push(`<meta property="og:image:type" content="${escapeHtml(meta.imageType)}" />`);
     if (meta.imageAlt) tags.push(`<meta property="og:image:alt" content="${escapeHtml(meta.imageAlt)}" />`);
   }
 

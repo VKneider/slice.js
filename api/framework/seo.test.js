@@ -104,6 +104,7 @@ test('the head escapes everything it interpolates', () => {
   assert.match(head, /property="og:site_name" content="Acme"/);
   assert.match(head, /name="twitter:card" content="summary_large_image"/);
   assert.match(head, /property="og:image" content="https:\/\/acme.dev\/images\/banner.png"/);
+  assert.match(head, /property="og:image:type" content="image\/png"/);
 });
 
 test('JSON-LD gets a context and cannot close its own script tag', () => {

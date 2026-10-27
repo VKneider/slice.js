@@ -463,8 +463,23 @@ export function createSliceServer(options = {}) {
 
   // Middleware personalizado para archivos de bundles con MIME types correctos
   app.use('/bundles/', (req, res, next) => {
-    if (req.path.endsWith('.js')) {
-      const filePath = path.join(projectRoot, folderDeployed, 'bundles', req.path);
+    if (req.path.endsWith('.js') || req.path.endsWith('.mjs')) {
+      const cleanedPath = req.path.replace(/^\//, '');
+      let filePath = path.join(projectRoot, folderDeployed, 'bundles', cleanedPath);
+
+      // Bundler v2 emits this import relative to /bundles even when the source
+      // file lives under Components/AppComponents/ComponentsPage. Without this,
+      // a production build 404s on a module it imported itself.
+      if (cleanedPath === 'documentationRoutes.generated.js' || cleanedPath === 'docsIndex.js') {
+        filePath = path.join(
+          projectRoot,
+          folderDeployed,
+          'Components',
+          'AppComponents',
+          'ComponentsPage',
+          cleanedPath
+        );
+      }
       console.log(`📂 Processing bundle: ${req.path} -> ${filePath}`);
 
       if (fs.existsSync(filePath)) {
