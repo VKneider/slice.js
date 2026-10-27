@@ -82,3 +82,49 @@ jobs:
       # copy, not a stale dist/).
       - name: Verify Conclave against this checkout
         run: node scripts/verify-app.mjs --app "$GITHUB_WORKSPACE/.app" --replace
+
+  template:
+    name: Template contract (packed candidate)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Checkout the CLI that scaffolds projects
+        uses: actions/checkout@v4
+        with:
+          repository: vkneider/slicejs-cli
+          token: ${{ secrets.CLI_TOKEN || github.token }}
+          path: .cli
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install the CLI under test
+        working-directory: .cli
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Chromium
+        working-directory: .cli
+        run: pnpm exec playwright install --with-deps chromium
+
+      # The tarball is what users install: packing it here also proves the
+      # artifact is complete before a release.
+      - name: Pack the candidate
+        run: |
+          TARBALL=$(npm pack --silent --pack-destination "$RUNNER_TEMP" | tail -n1)
+          echo "SLICE_TEMPLATE_TARBALL=$RUNNER_TEMP/$TARBALL" >> "$GITHUB_ENV"
+
+      # init → install the candidate over the published one → apply its template
+      # → build → boot → render in Chromium. Catches a starter that compiles but
+      # renders nothing because its components were never installed.
+      - name: Init, build, boot and render the candidate template
+        working-directory: .cli
+        env:
+          SLICE_INIT_E2E: '1'
+        run: node --test tests/init-e2e.test.js
