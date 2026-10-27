@@ -18,7 +18,9 @@
     "format": "prettier --write \"**/*.js\"",
     "run": "node ./node_modules/slicejs-cli/client.js dev",
     "slice:modify": "node ./node_modules/slicejs-cli/client.js modify",
-    "test:server": "node --test api/framework/*.test.js api/tests/*.test.js"
+    "test:server": "node --test api/framework/*.test.js api/tests/*.test.js",
+    "check:pack": "node scripts/check-pack.mjs",
+    "verify:app": "node scripts/verify-app.mjs"
   },
   "keywords": [],
   "author": "",

@@ -19,6 +19,12 @@ local de `api/`).
 
 ## Testing
 - Run: `node --test Slice/tests/*.test.js` (the package `test` script is intentionally unset).
+- **CI lives in `.github/workflows/ci.yml`**: runtime/server/SEO tests, `scripts/check-pack.mjs`, and a
+  Conclave job. Locally, the two scripts are the fast equivalents:
+  - `node scripts/check-pack.mjs` — what `npm pack` would ship (no tests, proposals or local tooling).
+  - `node scripts/verify-app.mjs --app ../conclave --replace` — points an app at this checkout,
+    builds with the app's own CLI, boots it, and asserts `/Slice/Slice.js` is this source. Use
+    `--replace` only on a disposable checkout; in the workspace the link already exists.
 - The real `Controller` imports a browser-absolute `'/Components/components.js'`, so to load it under
   node use the resolve hook in **`Slice/tests/fixtures/real-runtime-loader.mjs`** (see
   `build-singleton.test.js`, `destroy-cascade.test.js`). DOM-less paths (Services, registry, build

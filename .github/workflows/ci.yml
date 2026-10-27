@@ -1,0 +1,84 @@
+name: CI
+
+# Two gates:
+#  - framework: the runtime and server suites, on every change.
+#  - conclave: the production app still builds and boots on the candidate
+#    framework. Conclave is the only product that exercises the real runtime,
+#    build pipeline and server, so it is the cheapest proof that a framework
+#    change is safe outside the unit tests.
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+  schedule:
+    # Weekly: catches a published dependency or a Conclave change breaking the
+    # framework even when nothing landed here.
+    - cron: '0 7 * * 1'
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  framework:
+    name: Framework tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Quoted globs: the runner's shell must not expand them (Node resolves them),
+      # so the Windows and CI runs execute the same set.
+      - name: Runtime, server and SEO tests
+        run: node --test "Slice/tests/*.test.js" "api/framework/*.test.js" "api/tests/*.test.js"
+
+      # The tarball is what users install; `.npmignore` decides its contents.
+      - name: Pack contents
+        run: node scripts/check-pack.mjs
+
+  conclave:
+    name: Conclave builds and boots
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Checkout Conclave
+        uses: actions/checkout@v4
+        with:
+          repository: vkneider/conclave
+          # The default token can read a public repository; set CONCLAVE_TOKEN if
+          # it is private.
+          token: ${{ secrets.CONCLAVE_TOKEN || github.token }}
+          path: .app
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Conclave dependencies
+        working-directory: .app
+        run: pnpm install --frozen-lockfile
+
+      # Points the app at this checkout, builds with the app's own CLI, boots its
+      # server and checks that /Slice/Slice.js is this source (not a registry
+      # copy, not a stale dist/).
+      - name: Verify Conclave against this checkout
+        run: node scripts/verify-app.mjs --app "$GITHUB_WORKSPACE/.app" --replace

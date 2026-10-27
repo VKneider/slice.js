@@ -27,3 +27,12 @@ package-lock.json
 # Ignorar otros archivos innecesarios
 *.md
 *.log
+
+# Tests, proposals and local tooling are not part of the package
+Slice/tests/
+api/tests/
+features/
+.opencode/
+scripts/
+tests/
+.github/
