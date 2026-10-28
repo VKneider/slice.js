@@ -694,7 +694,7 @@ export function createSliceServer(options = {}) {
     // `_router`). On 4 the public getter throws when accessed, so both are read
     // defensively: worst case the answer is "not mounted" and the fallback is
     // added once more, which is harmless (the first one ends the response).
-    let stack = [];
+    let stack;
     try {
       stack = app._router?.stack || [];
     } catch {
