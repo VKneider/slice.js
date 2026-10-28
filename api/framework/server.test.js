@@ -463,3 +463,34 @@ test('bundles: a precompressed bundle config is not cached either', async (t) =>
   assert.equal(response.headers.get('cache-control'), 'no-cache, no-store, must-revalidate');
   assert.match(response.headers.get('content-type'), /json/);
 });
+
+test('bundles: the plain config and the /dist mirror are no-store as well', async (t) => {
+  const { base, root } = await boot(t, 'production');
+  const bundles = path.join(root, 'dist', 'bundles');
+  fs.mkdirSync(bundles, { recursive: true });
+  fs.writeFileSync(path.join(bundles, 'bundle.config.json'), JSON.stringify({ production: true }));
+  fs.writeFileSync(path.join(bundles, 'slice-bundle.critical.js'), 'export const SLICE_BUNDLE_META = {};');
+
+  const config = await get(base, '/bundles/bundle.config.json');
+  assert.equal(config.status, 200);
+  assert.equal(config.headers.get('cache-control'), 'no-cache, no-store, must-revalidate');
+
+  const mirror = await get(base, '/dist/bundles/slice-bundle.critical.js');
+  assert.equal(mirror.status, 200);
+  assert.equal(mirror.headers.get('cache-control'), 'no-cache, no-store, must-revalidate');
+});
+
+test('bundles: the no-store policy does not leak into public assets', async (t) => {
+  const { base, root } = await boot(t, 'production');
+  const publicDir = path.join(root, 'dist', 'public');
+  fs.mkdirSync(publicDir, { recursive: true });
+  const css = 'body { color: #111; }';
+  fs.writeFileSync(path.join(publicDir, 'app.css'), css);
+  fs.writeFileSync(path.join(publicDir, 'app.css.br'), brotliCompressSync(Buffer.from(css)));
+
+  const response = await get(base, '/app.css', { headers: { 'Accept-Encoding': 'br' } });
+
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get('content-encoding'), 'br');
+  assert.notEqual(response.headers.get('cache-control'), 'no-cache, no-store, must-revalidate');
+});

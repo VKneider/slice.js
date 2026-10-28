@@ -491,6 +491,17 @@ export function createSliceServer(options = {}) {
     app.use('/Components', (req, res) => res.status(404).send('Not found'));
   }
 
+  // Bundles are unversioned build output: never cache them. Set before every
+  // handler that can answer a bundle (precompressed, the .js handler, static
+  // files and the /dist mirror) so the policy cannot depend on which one wins.
+  const noStoreBundlePaths = ['/bundles/', '/dist/bundles/'];
+  app.use(noStoreBundlePaths, (req, res, next) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    next();
+  });
+
   // Serve precompressed .br/.gz siblings (from `slice build --compress`) when the
   // client accepts them. Mounted before the bundle handler and static serves so
   // it wins, and its Content-Encoding makes the runtime `compression` middleware
@@ -498,7 +509,7 @@ export function createSliceServer(options = {}) {
   if (runMode === 'production') {
     const distRoot = path.join(projectRoot, folderDeployed);
     app.use(createPrecompressedStatic([path.join(distRoot, 'public'), distRoot], {
-      noStorePrefixes: ['/bundles/']
+      noStorePrefixes: noStoreBundlePaths
     }));
   }
 
@@ -527,9 +538,6 @@ export function createSliceServer(options = {}) {
         try {
           const fileContent = fs.readFileSync(filePath, 'utf8');
           res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
-          res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-          res.setHeader('Pragma', 'no-cache');
-          res.setHeader('Expires', '0');
           console.log(`✅ Serving bundle: ${req.path} (${fileContent.length} bytes, ${Buffer.byteLength(fileContent, 'utf8')} bytes UTF-8)`);
           return res.send(fileContent);
         } catch (error) {
