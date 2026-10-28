@@ -494,3 +494,50 @@ test('bundles: the no-store policy does not leak into public assets', async (t) 
   assert.equal(response.headers.get('content-encoding'), 'br');
   assert.notEqual(response.headers.get('cache-control'), 'no-cache, no-store, must-revalidate');
 });
+
+test('translator: the configured dictionaries folder is served from dist, not the shell', async (t) => {
+  const { root, folder } = makeProject('production');
+  fs.writeFileSync(path.join(root, folder, 'sliceConfig.json'), JSON.stringify({
+    paths: { components: { Visual: { path: '/Components/Visual' } } },
+    translator: { enabled: true, defaultLocale: 'es', path: '/locales' }
+  }));
+  fs.mkdirSync(path.join(root, folder, 'locales'), { recursive: true });
+  fs.writeFileSync(path.join(root, folder, 'locales', 'es.json'), JSON.stringify({ lab: { tagline: 'app completa' } }));
+
+  const { start } = createSliceServer({ projectRoot: root, mode: 'production', port: 0 });
+  const server = await start({ port: 0, signals: false });
+  await once(server, 'listening');
+  t.after(() => {
+    server.close();
+    fs.rmSync(root, { recursive: true, force: true });
+  });
+  const base = `http://127.0.0.1:${server.address().port}`;
+
+  const dictionary = await get(base, '/locales/es.json');
+  assert.equal(dictionary.status, 200);
+  assert.match(dictionary.headers.get('content-type'), /application\/json/);
+  assert.deepEqual(await dictionary.json(), { lab: { tagline: 'app completa' } });
+
+  const cached = await get(base, '/locales/es.json');
+  assert.match(cached.headers.get('cache-control'), /max-age=300/);
+});
+
+test('translator: no dictionary mount when the translator is off', async (t) => {
+  const { root, folder } = makeProject('production');
+  fs.mkdirSync(path.join(root, folder, 'locales'), { recursive: true });
+  fs.writeFileSync(path.join(root, folder, 'locales', 'es.json'), JSON.stringify({ lab: { tagline: 'app completa' } }));
+
+  const { start } = createSliceServer({ projectRoot: root, mode: 'production', port: 0 });
+  const server = await start({ port: 0, signals: false });
+  await once(server, 'listening');
+  t.after(() => {
+    server.close();
+    fs.rmSync(root, { recursive: true, force: true });
+  });
+  const base = `http://127.0.0.1:${server.address().port}`;
+
+  // Without the translator the path is just another SPA route: the shell, never the JSON.
+  const response = await get(base, '/locales/es.json');
+  assert.match(response.headers.get('content-type'), /text\/html/);
+  assert.match(await response.text(), /id="app"/);
+});

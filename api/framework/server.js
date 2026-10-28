@@ -54,6 +54,26 @@ function readComponentPrefixes(projectRoot) {
 }
 
 /**
+ * Folder holding the translator dictionaries, from the deployed config (`translator.path`,
+ * `/locales` by default). Null when the translator is off or the path is unusable, so no
+ * extra mount is added. `slice build` copies `src/<path>` into `dist/<path>`; without this
+ * mount production answers the SPA shell for every dictionary and the runtime shows keys.
+ */
+function readTranslatorFolder(projectRoot, folderDeployed) {
+  const file = path.join(projectRoot, folderDeployed, 'sliceConfig.json');
+  if (!fs.existsSync(file)) return null;
+  try {
+    const translator = JSON.parse(fs.readFileSync(file, 'utf8')).translator;
+    if (!translator?.enabled) return null;
+    const value = typeof translator.path === 'string' && translator.path.trim() ? translator.path : '/locales';
+    const folder = value.replace(/^\/+|\/+$/g, '');
+    return folder && !folder.includes('..') ? folder : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * True for `/Components/<Category>/<Name>/<Name>.css` when the component's `.js`
  * exists but it has no stylesheet. JS-only Visual components (MultiRoute,
  * DemoButton…) legitimately ship no CSS, and a 404 there makes `slice.build`
@@ -652,6 +672,19 @@ export function createSliceServer(options = {}) {
     });
     app.use('/bundles/', express.static(path.join(projectRoot, folderDeployed, 'bundles')));
     app.use('/dist/', express.static(path.join(projectRoot, 'dist')));
+  }
+
+  // Translator dictionaries (`translator.path`, `/locales` by default): app data copied
+  // into dist by `slice build`. Mounted in both modes so the path is explicit; without it
+  // production answered the SPA shell for every dictionary and the runtime showed keys.
+  const translatorFolder = readTranslatorFolder(projectRoot, folderDeployed);
+  if (translatorFolder) {
+    app.use(
+      `/${translatorFolder}`,
+      express.static(path.join(projectRoot, folderDeployed, translatorFolder), {
+        setHeaders: (res) => res.setHeader('Cache-Control', 'public, max-age=300, stale-while-revalidate=86400')
+      })
+    );
   }
 
   // ==============================================
