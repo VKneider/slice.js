@@ -403,3 +403,13 @@ construction.
 - 2026-10-28 — Phases 3–4 (framework): `slice.router.path` / `href()`, `RouteInfo.locale` / `url`,
   `navigate(path, { locale })`, prefix routing in `translator/localePath.js` (pure, shared with the
   server for phase 5). With `routing`, the URL decides the locale.
+- 2026-10-28 — Integration proof in `slicejs-lab` (Spanish default, English fallback, no routing):
+  marked shell texts, `key()` props for SideMenu/Breadcrumbs/Button/ToolTip, ES/EN switch, saved
+  choice and `translator:change`. `tests/translator.e2e.mjs` boots the dev server and drives
+  Chromium (`pnpm test:lab:e2e`).
+- 2026-10-28 — Found in that proof and fixed: production did not serve the dictionaries.
+  `api/framework/server.js` now mounts `translator.path` from `dist` (the build already copies
+  `src/locales`), so the runtime stops showing keys in `slice start`; two tests cover the mount and
+  the opt-out. The dev server and the standalone harness hid this.
+- 2026-10-28 — Library adoption stays in slicejs-components 0007, and phase 5 (multilingual SEO) and
+  the CLI commands remain pending; docs state both limits.
