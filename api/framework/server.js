@@ -497,7 +497,9 @@ export function createSliceServer(options = {}) {
   // skip re-compressing. Production only (dist holds the precompressed files).
   if (runMode === 'production') {
     const distRoot = path.join(projectRoot, folderDeployed);
-    app.use(createPrecompressedStatic([path.join(distRoot, 'public'), distRoot]));
+    app.use(createPrecompressedStatic([path.join(distRoot, 'public'), distRoot], {
+      noStorePrefixes: ['/bundles/']
+    }));
   }
 
   // Middleware personalizado para archivos de bundles con MIME types correctos

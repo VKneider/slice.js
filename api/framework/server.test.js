@@ -14,6 +14,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { once } from 'node:events';
+import { brotliCompressSync } from 'node:zlib';
 import {
   createSliceServer,
   sliceFallback,
@@ -407,3 +408,58 @@ test('seo: an explicit image on the route wins over the image manifest', async (
   assert.doesNotMatch(html, /og\/generated\.png/);
 });
 
+
+// Bundles are unversioned: they must never be cached, whether the `/bundles/`
+// handler serves them or a `--compress` build's .br/.gz sibling does. The
+// precompressed handler runs first, so a missing policy there silently
+// reintroduces heuristic caching for the whole bundle graph.
+test('bundles: the plain bundle keeps the no-store policy', async (t) => {
+  const { base, root } = await boot(t, 'production');
+  const bundles = path.join(root, 'dist', 'bundles');
+  fs.mkdirSync(bundles, { recursive: true });
+  fs.writeFileSync(path.join(bundles, 'slice-bundle.critical.js'), 'export const SLICE_BUNDLE_META = {};');
+
+  const response = await get(base, '/bundles/slice-bundle.critical.js');
+
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get('content-type'), /javascript/);
+  assert.equal(response.headers.get('cache-control'), 'no-cache, no-store, must-revalidate');
+  assert.match(await response.text(), /SLICE_BUNDLE_META/);
+});
+
+test('bundles: a precompressed bundle is served with the same no-store policy', async (t) => {
+  const { base, root } = await boot(t, 'production');
+  const bundles = path.join(root, 'dist', 'bundles');
+  fs.mkdirSync(bundles, { recursive: true });
+  const source = 'export const SLICE_BUNDLE_META = { size: 1 };';
+  const file = path.join(bundles, 'slice-bundle.critical.js');
+  fs.writeFileSync(file, source);
+  fs.writeFileSync(`${file}.br`, brotliCompressSync(Buffer.from(source)));
+
+  const response = await get(base, '/bundles/slice-bundle.critical.js', {
+    headers: { 'Accept-Encoding': 'br' }
+  });
+
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get('content-encoding'), 'br');
+  assert.equal(response.headers.get('cache-control'), 'no-cache, no-store, must-revalidate');
+  assert.match(await response.text(), /SLICE_BUNDLE_META/);
+});
+
+test('bundles: a precompressed bundle config is not cached either', async (t) => {
+  const { base, root } = await boot(t, 'production');
+  const bundles = path.join(root, 'dist', 'bundles');
+  fs.mkdirSync(bundles, { recursive: true });
+  const config = JSON.stringify({ production: true, bundles: {} });
+  const file = path.join(bundles, 'bundle.config.json');
+  fs.writeFileSync(file, config);
+  fs.writeFileSync(`${file}.br`, brotliCompressSync(Buffer.from(config)));
+
+  const response = await get(base, '/bundles/bundle.config.json', {
+    headers: { 'Accept-Encoding': 'br' }
+  });
+
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get('cache-control'), 'no-cache, no-store, must-revalidate');
+  assert.match(response.headers.get('content-type'), /json/);
+});

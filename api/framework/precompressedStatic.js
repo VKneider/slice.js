@@ -43,10 +43,14 @@ function preferredEncodings(acceptEncoding) {
 /**
  * @param {string[]} roots Absolute directories to resolve `req.path` against,
  *   in priority order (e.g. [dist/public, dist]).
+ * @param {{ noStorePrefixes?: string[] }} [options] Path prefixes that must not
+ *   be cached. Bundles are unversioned, so they keep the same no-store policy
+ *   the `/bundles/` handler applies when it serves them itself.
  * @returns {import('express').RequestHandler}
  */
-export function createPrecompressedStatic(roots = []) {
+export function createPrecompressedStatic(roots = [], options = {}) {
   const resolvedRoots = roots.filter(Boolean).map((r) => path.resolve(r));
+  const noStorePrefixes = options.noStorePrefixes || [];
 
   return function precompressedStatic(req, res, next) {
     if (req.method !== 'GET' && req.method !== 'HEAD') return next();
@@ -78,6 +82,11 @@ export function createPrecompressedStatic(roots = []) {
             res.setHeader('Content-Type', contentType);
             res.setHeader('Content-Encoding', enc);
             res.setHeader('Vary', 'Accept-Encoding');
+            if (noStorePrefixes.some((prefix) => req.path.startsWith(prefix))) {
+              res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+              res.setHeader('Pragma', 'no-cache');
+              res.setHeader('Expires', '0');
+            }
             return res.send(fs.readFileSync(encodedPath));
           }
         } catch {
