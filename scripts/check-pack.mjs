@@ -21,7 +21,7 @@ const REQUIRED = [
   'sliceConfig.schema.json'
 ];
 
-const FORBIDDEN = /^(Slice\/tests|api\/tests|features|tests|\.opencode|\.github|scripts|node_modules)\//;
+const FORBIDDEN = /^(Slice\/tests|api\/tests|features|tests|\.opencode|\.github|scripts|node_modules)\/|\.test\.js$/;
 
 const result = spawnSync('npm', ['pack', '--dry-run', '--json', '--ignore-scripts'], {
   cwd: ROOT,

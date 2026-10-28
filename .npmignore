@@ -31,6 +31,7 @@ package-lock.json
 # Tests, proposals and local tooling are not part of the package
 Slice/tests/
 api/tests/
+api/framework/*.test.js
 features/
 .opencode/
 scripts/
