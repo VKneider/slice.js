@@ -21,6 +21,7 @@ export default class Slice {
       this.loadingConfig = sliceConfig.loading;
       this.eventsConfig = sliceConfig.events;
    this.routerConfig = sliceConfig.router;
+      this.translatorConfig = sliceConfig.translator;
 
       // Default to production until init() resolves the actual mode.
       // Safe to call isProduction() before init() completes.
@@ -360,6 +361,17 @@ export default class Slice {
    }
 
    /**
+    * Translate a key with slice.translator (shortcut of `slice.translator.t`).
+    * Returns the key itself when the translator is off or the key is missing.
+    * @param {string} key
+    * @param {Object} [params]
+    * @returns {string}
+    */
+   t(key, params) {
+      return this.translator ? this.translator.t(key, params) : String(key ?? '');
+   }
+
+   /**
     * Attach HTML template to a component instance.
     * @param {HTMLElement} componentInstance
     * @returns {void}
@@ -367,6 +379,22 @@ export default class Slice {
    attachTemplate(componentInstance) {
       this.controller.loadTemplateToComponent(componentInstance);
    }
+}
+
+/**
+ * `/en/pricing` → `/pricing` when `translator.routing` is on and `en` is a configured locale.
+ * @param {string} pathname
+ * @param {Object} [translatorConfig]
+ * @returns {string}
+ */
+function stripLocalePrefix(pathname, translatorConfig) {
+   const routing = translatorConfig?.routing;
+   if (!translatorConfig?.enabled || (routing !== 'prefix' && routing !== 'prefix-except-default')) return pathname;
+   const locales = [translatorConfig.defaultLocale, ...(translatorConfig.locales || [])]
+      .filter((locale) => typeof locale === 'string')
+      .map((locale) => locale.toLowerCase());
+   const match = /^\/([^/]+)(\/.*)?$/.exec(pathname);
+   return match && locales.includes(match[1].toLowerCase()) ? match[2] || '/' : pathname;
 }
 
 async function loadConfig() {
@@ -493,7 +521,9 @@ async function init() {
          }
 
          const routeBundles = config?.routeBundles || {};
-         const initialPath = window.location.pathname || '/';
+         // Route bundles are keyed by app path: drop a locale prefix (`/en/pricing`) when
+         // the translator puts the locale in the URL. (The translator is not created yet.)
+         const initialPath = stripLocalePrefix(window.location.pathname || '/', sliceConfig.translator);
          const bundlesForRoute = routeBundles[initialPath] || [];
 
          const loadRouteBundles = async () => {
@@ -525,6 +555,14 @@ async function init() {
             setTimeout(() => safePreload(), 0);
          }
       }
+
+   // Translator: created once the logger and the critical bundle are in, so its dictionaries
+   // download while the rest of the runtime starts. Always present (with `enabled: false` it loads nothing
+   // and `slice.t()` returns the key), so translated code runs in any app.
+   const TranslatorModule = window.slice.frameworkClasses?.Translator
+      || await window.slice.getClass(`${slice.paths.structuralComponentFolderPath}/Translator/Translator.js`);
+   window.slice.translator = new TranslatorModule(sliceConfig.translator);
+   const translatorReady = window.slice.translator.init();
 
     if (sliceConfig.debugger.enabled) {
         const DebuggerModule = window.slice.frameworkClasses?.Debugger
@@ -673,7 +711,8 @@ async function init() {
       });
    }
 
-   const [, routesModule] = await Promise.all([stylesInitPromise, routesModulePromise]);
+   // The first route renders with its dictionaries loaded (no keys on the first paint).
+   const [, routesModule] = await Promise.all([stylesInitPromise, routesModulePromise, translatorReady]);
    const routes = routesModule.default;
     const RouterModule = window.slice.frameworkClasses?.Router
        || await window.slice.getClass(`${slice.paths.structuralComponentFolderPath}/Router/Router.js`);

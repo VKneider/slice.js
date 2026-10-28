@@ -730,6 +730,10 @@ export default class Controller {
       // que un update() llamado dentro de init() corra sin envolver. (RFC §3.6)
       this.installUpdate(component);
 
+      // Componentes que no pasan por setComponentProps: una asignación posterior de un
+      // marker (`el.label = slice.translator.key(...)`) también se resuelve.
+      slice.translator?.prepareClass?.(component.constructor);
+
       // 🚀 OPTIMIZACIÓN: Actualizar índice inverso de hijos
       if (parent) {
          if (!this.childrenIndex.has(parent.sliceId)) {
@@ -877,6 +881,10 @@ export default class Controller {
       }
 
       component.innerHTML = template.innerHTML;
+      // Translate the template's `data-t` now, while the component is still detached, so
+      // init() reads translated text and the first paint has no keys. (The document
+      // observer skips these elements later: they are already up to date.)
+      slice.translator?.apply?.(component);
       return component;
    }
 
@@ -961,6 +969,12 @@ export default class Controller {
       // registrado como su propia instancia -> refresco. (RFC §3.8 — autodetección)
       const isRefresh = !!component.sliceId && this.activeComponents.get(component.sliceId) === component;
 
+      // slice.translator: los setters de `static props` resuelven markers de key() (una
+      // vez por clase), y la validación ve los textos que recibirá el componente.
+      const translator = slice.translator;
+      translator?.prepareClass?.(ComponentClass);
+      const checkedProps = translator?.resolveProps ? translator.resolveProps(props) : props;
+
       // Defaults: solo en build. En refresco NO, para no pisar valores ya modificados.
       if (ComponentClass.props && !isRefresh) {
          this.applyDefaultProps(component, ComponentClass.props, props);
@@ -968,14 +982,16 @@ export default class Controller {
 
       // Validar solo en desarrollo. En refresco (patch parcial) no se exige `required`.
       if (ComponentClass.props && !slice.isProduction()) {
-         this.validatePropsInDevelopment(ComponentClass, props, componentName, { checkRequired: !isRefresh });
+         this.validatePropsInDevelopment(ComponentClass, checkedProps, componentName, { checkRequired: !isRefresh });
       }
 
       // Aplicar props. En build reseteamos el backing field para forzar el setter
       // (primer render). En refresco NO lo reseteamos, así los diff-guards cortan.
+      // Un marker de key() llega como texto; el translator lo recuerda para reasignarlo
+      // al cambiar de idioma.
       for (const prop in props) {
          if (!isRefresh) component[`_${prop}`] = null;
-         component[prop] = props[prop];
+         component[prop] = translator?.propValue ? translator.propValue(component, prop, props[prop]) : props[prop];
       }
    }
 
@@ -1001,7 +1017,9 @@ export default class Controller {
       Object.entries(staticProps).forEach(([prop, config]) => {
          if (config.default !== undefined && !(prop in (providedProps || {}))) {
             component[`_${prop}`] = null;
-            component[prop] = config.default;
+            component[prop] = slice.translator?.propValue
+               ? slice.translator.propValue(component, prop, config.default)
+               : config.default;
          }
       });
    }
@@ -1180,6 +1198,9 @@ export default class Controller {
          if (slice.events) {
             slice.events.cleanupComponent(sliceId);
          }
+
+         // Olvidar los watch() y los props con markers del translator
+         slice.translator?.forget?.(component);
 
          // 🚀 Limpiar del índice de hijos
          this.childrenIndex.delete(sliceId);

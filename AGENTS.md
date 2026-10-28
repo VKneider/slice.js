@@ -46,6 +46,21 @@ local de `api/`).
   The JS property alone (`component.sliceId = ...`) is invisible to CSS attribute selectors.
 - Full rationale: the docs `project-architecture/service-patterns.md`.
 
+## slice.translator (feature 0003, phases 1–2)
+- `Slice/Components/Structural/Translator/`: `Translator.js` (the class), and pure helpers
+  `messages.js` (lookup, plurals, interpolation), `markers.js` (`key()` markers), `dom.js` (`data-t`
+  rules, reused by the CLI). Helpers must not import each other: the CLI bundler inlines only the
+  helpers a Structural component imports directly.
+- Always created in `init()` (disabled → `t()` returns the key), so it is part of the core bundle.
+- Texts are *marked*: `data-t` / `data-t-*` anywhere in the document are translated by one
+  `MutationObserver`; templates are translated in `loadTemplateToComponent` (before `init()`).
+  Props: `setComponentProps` resolves `key()` markers and `static props` setters are wrapped once per
+  class; `destroyComponent` calls `translator.forget()`. No `localeChanged()` hook.
+- URLs (phases 3–4): `localePath.js` (pure prefix rules). The Router never reads
+  `window.location.pathname` for matching without `_appPath()`; use `slice.router.path` /
+  `slice.router.href()` in components. With `routing` on, the URL decides the locale.
+- Unit tests: `Slice/tests/translator*.test.js`. DOM behaviour needs a browser (see the library).
+
 ## Conventions
 - `id`, `sliceId`, `singleton` are **reserved build directives** — stripped from props before setters
   run; never expose them as component props.

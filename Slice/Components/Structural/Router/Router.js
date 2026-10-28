@@ -13,11 +13,13 @@ import { applyRouteMetadata } from './applyRouteMetadata.js';
 
 /**
  * @typedef {Object} RouteInfo
- * @property {string} path
+ * @property {string} path      the app path, without locale prefix
  * @property {string} component
  * @property {Object} params
  * @property {Object} query
  * @property {Object} metadata
+ * @property {string|null} locale  the locale of this navigation (null without slice.translator)
+ * @property {string} url       what the address bar shows (`/en/pricing` with routing)
  */
 
 /**
@@ -46,6 +48,8 @@ export default class Router {
    constructor(routes) {
       this.routes = routes;
       this.activeRoute = null;
+      /** @type {Object|null} metadata of the route being shown */
+      this.activeMetadata = null;
       this.pathToRouteMap = this.createPathToRouteMap(routes);
 
       // O(1) case-insensitive lookup for static routes, so a miss on the exact map
@@ -123,6 +127,54 @@ export default class Router {
    }
 
    // ============================================
+   // URL API — the router is the only reader of the URL
+   // ============================================
+
+   /**
+    * The current app path: `window.location.pathname` without the locale prefix
+    * (`/en/pricing` → `/pricing`). Components compare this with their routes instead of
+    * reading `window.location` themselves.
+    * @returns {string}
+    */
+   get path() {
+      return this._appPath(window.location.pathname);
+   }
+
+   /**
+    * The URL to put in an `<a href>` for an app path: `/pricing` → `/en/pricing` when the
+    * locale is in the URL, `/pricing` otherwise. `{ locale }` links to another language.
+    * External URLs, fragments and relative paths are returned as given.
+    * @param {string} path
+    * @param {{ locale?: string }} [options]
+    * @returns {string}
+    */
+   href(path, options = {}) {
+      const translator = slice.translator;
+      return typeof translator?.localizePath === 'function' ? translator.localizePath(path, options.locale) : path;
+   }
+
+   /**
+    * @param {string} url
+    * @returns {string}
+    */
+   _appPath(url) {
+      const translator = slice.translator;
+      return typeof translator?.splitPath === 'function' ? translator.splitPath(url).path : url;
+   }
+
+   /**
+    * The locale a navigation lands in and the URL it shows.
+    * @param {string} appPath
+    * @param {string|null} [locale]
+    * @returns {{ locale: string|null, url: string }}
+    */
+   _localeAndUrl(appPath, locale = null) {
+      const translator = slice.translator;
+      const active = translator?.enabled ? locale || translator.locale : null;
+      return { locale: active, url: this.href(appPath, active ? { locale: active } : {}) };
+   }
+
+   // ============================================
    // NAVIGATION GUARDS API
    // ============================================
 
@@ -168,23 +220,30 @@ export default class Router {
     * @param {string|null} [requestedPath]
     * @returns {RouteInfo}
     */
-   _createRouteInfo(route, params = {}, requestedPath = null) {
+   _createRouteInfo(route, params = {}, requestedPath = null, locale = undefined) {
+      const path = route ? requestedPath || route.fullPath || route.path : requestedPath || '/404';
+      const where = this._localeAndUrl(path, locale);
+
       if (!route) {
          return {
-            path: requestedPath || '/404',
+            path,
             component: 'NotFound',
             params: {},
             query: this._parseQueryParams(),
             metadata: {},
+            locale: where.locale,
+            url: where.url,
          };
       }
 
       return {
-         path: requestedPath || route.fullPath || route.path,
+         path,
          component: route.parentRoute ? route.parentRoute.component : route.component,
          params: params,
          query: this._parseQueryParams(),
          metadata: route.metadata || {},
+         locale: where.locale,
+         url: where.url,
       };
    }
 
@@ -317,8 +376,12 @@ export default class Router {
 
    /**
     * Navigate to a route path (guards run automatically).
+    *
+    * `path` is an app path (`/pricing`); the active locale is added to the URL when the
+    * translator has `routing`. `{ locale: 'en' }` navigates to another language: its
+    * dictionaries load before the URL changes, so the new page renders translated.
     * @param {string} path
-    * @param {{ replace?: boolean }} [options] - `{ replace: true }` replaces history instead of pushing.
+    * @param {{ replace?: boolean, locale?: string }} [options] - `{ replace: true }` replaces history instead of pushing.
     * @returns {Promise<void>}
     */
    async navigate(path, options = {}, legacyOptions) {
@@ -341,7 +404,23 @@ export default class Router {
     * @returns {Promise<void>}
     */
    async _navigateWithGuards(path, options, redirectChain) {
-      const currentPath = window.location.pathname;
+      const currentPath = this.path;
+      const translator = slice.translator;
+
+      // A path given with a prefix (`/en/pricing`) is the app path in that locale.
+      const split = typeof translator?.splitPath === 'function' ? translator.splitPath(path) : { locale: null, path };
+      path = split.path;
+      let targetLocale = options.locale || split.locale || null;
+      if (targetLocale && translator?.enabled) {
+         try {
+            targetLocale = await translator.preload(targetLocale);
+         } catch (error) {
+            slice.logger.logError('Router', `Cannot navigate to "${path}" in "${targetLocale}"`, error);
+            return;
+         }
+      } else {
+         targetLocale = null;
+      }
 
       // Detectar loops infinitos: si ya visitamos esta ruta en la cadena de redirecciones
       if (redirectChain.includes(path)) {
@@ -361,14 +440,17 @@ export default class Router {
 
       // Obtener información de ruta destino
       const { route: toRoute, params: toParams } = this.matchRoute(path);
-      const to = this._createRouteInfo(toRoute, toParams, path);
+      const to = this._createRouteInfo(toRoute, toParams, path, targetLocale);
 
       // EJECUTAR BEFORE EACH GUARD
       const guardResult = await this._executeBeforeEachGuard(to, from);
 
       // Si el guard redirige
       if (guardResult && guardResult.path) {
-         return this._navigateWithGuards(guardResult.path, guardResult.options || {}, [...redirectChain, path]);
+         // A guard redirect stays in the language the user was going to.
+         const redirectOptions = { ...(guardResult.options || {}) };
+         if (targetLocale && !redirectOptions.locale) redirectOptions.locale = targetLocale;
+         return this._navigateWithGuards(guardResult.path, redirectOptions, [...redirectChain, path]);
       }
 
       // Si el guard cancela la navegación (next(false))
@@ -380,9 +462,15 @@ export default class Router {
       // No hay redirección - continuar con la navegación normal
       // Usar replace o push según las opciones
       if (options.replace) {
-         window.history.replaceState({}, path, window.location.origin + path);
+         window.history.replaceState({}, path, window.location.origin + to.url);
       } else {
-         window.history.pushState({}, path, window.location.origin + path);
+         window.history.pushState({}, path, window.location.origin + to.url);
+      }
+
+      // Without routing the locale is not in the URL: switch it here. With routing,
+      // onRouteChange() follows the URL (dictionaries are already loaded).
+      if (targetLocale && !translator?.routing && targetLocale !== translator.locale) {
+         await translator.setLocale(targetLocale);
       }
 
       await this._performNavigation(to, from);
@@ -435,7 +523,8 @@ export default class Router {
          this._routeChangeResolve = resolve;
          this.routeChangeTimeout = setTimeout(async () => {
             try {
-               const path = window.location.pathname;
+               await this._followUrlLocale();
+               const path = this.path;
                const routeContainersFlag = await this.renderRoutesComponentsInPage();
 
                if (routeContainersFlag) {
@@ -457,6 +546,36 @@ export default class Router {
    }
 
    /**
+    * With `routing`, the URL decides the locale: back/forward from `/en/x` to `/x`, or a
+    * navigation to another language, switches it before the route renders. An URL without
+    * the prefix "prefix" requires gets it (replaceState).
+    * @returns {Promise<void>}
+    */
+   async _followUrlLocale() {
+      const translator = slice.translator;
+      if (!translator?.routing) return;
+      const urlLocale = translator.localeOfUrl(window.location.pathname);
+      if (urlLocale && urlLocale !== translator.locale) {
+         try {
+            await translator.setLocale(urlLocale);
+         } catch (error) {
+            slice.logger.logError('Router', `Could not switch to "${urlLocale}" from the URL`, error);
+         }
+      }
+      translator.syncUrl();
+   }
+
+   /**
+    * Write a route's metadata (title, description) to the document. `{ "t": "key" }`
+    * fields are translated with slice.translator.
+    * @param {Object|null} metadata
+    * @returns {void}
+    */
+   applyMetadata(metadata) {
+      applyRouteMetadata(metadata);
+   }
+
+   /**
     * Build or update the active route component.
     * @param {RouteConfig} route
     * @param {Object} params
@@ -467,8 +586,10 @@ export default class Router {
       // title while the user navigates. `sliceConfig.router.updateTitles: false`
       // opts out; a `router:change` listener still wins, because this runs
       // before the event.
+      // Kept so slice.translator can re-apply it (translated) after a locale change.
+      this.activeMetadata = route?.metadata ?? null;
       if (slice.routerConfig?.updateTitles !== false) {
-         applyRouteMetadata(route?.metadata);
+         this.applyMetadata(this.activeMetadata);
       }
 
       const targetElement = document.querySelector('#app');
@@ -535,7 +656,7 @@ export default class Router {
     * @returns {Promise<void>}
     */
    async loadInitialRoute() {
-      const path = window.location.pathname;
+      const path = this.path;
       const { route, params } = this.matchRoute(path);
 
       // Para la carga inicial, también ejecutar guards
@@ -753,6 +874,9 @@ export default class Router {
     * @returns {RouteMatch}
     */
    matchRoute(path) {
+      // Routes are declared without locale: drop a known prefix ('/en/about' -> '/about'),
+      // and the query / hash, which never take part in matching.
+      path = this._appPath(String(path || '/')).split(/[?#]/)[0] || '/';
       // Normalize a trailing slash ('/about/' -> '/about'); keep root '/' as-is.
       path = path.length > 1 ? path.replace(/\/+$/, '') : path;
       // Exact match first (fast path), then a case-insensitive match on static paths

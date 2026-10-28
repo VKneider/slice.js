@@ -9,14 +9,24 @@
  * Crawlers do not run this code, so rewriting them client-side could only
  * desync the SPA from the HTML that was actually served.
  *
+ * Any field may be `{ t: 'key', params? }` instead of a string: it is translated
+ * with `slice.t()` (feature 0003), so the title follows the active locale.
+ *
  * @param {Object|null} metadata route metadata (`metadata.title`, ...)
  * @param {Document|null} doc injectable for tests
+ * @param {(key: string, params?: Object) => string} [translate] injectable for tests
  * @returns {void}
  */
-export function applyRouteMetadata(metadata, doc = typeof document !== 'undefined' ? document : null) {
+export function applyRouteMetadata(
+   metadata,
+   doc = typeof document !== 'undefined' ? document : null,
+   translate = defaultTranslate
+) {
    if (!doc || !metadata || typeof metadata !== 'object') return;
 
-   const { title, titleTemplate, description } = metadata;
+   const title = resolveText(metadata.title, translate);
+   const titleTemplate = resolveText(metadata.titleTemplate, translate);
+   const description = resolveText(metadata.description, translate);
 
    if (title) {
       const next = titleTemplate && titleTemplate !== '%s'
@@ -36,4 +46,24 @@ export function applyRouteMetadata(metadata, doc = typeof document !== 'undefine
          meta.setAttribute('content', description);
       }
    }
+}
+
+/**
+ * `{ t: 'key', params? }` → the translated text; anything else is returned as is.
+ * @param {unknown} value
+ * @param {(key: string, params?: Object) => string} translate
+ * @returns {any}
+ */
+export function resolveText(value, translate) {
+   if (value && typeof value === 'object' && typeof /** @type {any} */ (value).t === 'string') {
+      const { t: key, params } = /** @type {{ t: string, params?: Object }} */ (value);
+      return translate(key, params);
+   }
+   return value;
+}
+
+/** @param {string} key @param {Object} [params] */
+function defaultTranslate(key, params) {
+   const s = /** @type {any} */ (globalThis).slice;
+   return typeof s?.t === 'function' ? s.t(key, params) : key;
 }

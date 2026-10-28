@@ -190,6 +190,7 @@ export default class EventManager {
       const framework = {
          'router:change': { description: 'Router navigated to a new route', payload: null },
          'context:__created': { description: 'A context was created', payload: { name: 'string', state: 'object' } },
+         'translator:change': { description: 'The active locale changed', payload: { locale: 'string', previous: 'string' } },
       };
       for (const [name, def] of Object.entries(framework)) {
          if (!this.registry.has(name)) this.registry.set(name, def);

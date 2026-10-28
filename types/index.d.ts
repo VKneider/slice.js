@@ -11,11 +11,16 @@ export interface RouteConfig {
 }
 
 export interface RouteInfo {
+  /** The app path, without locale prefix: '/pricing'. */
   path: string;
   component: string;
   params: Record<string, string>;
   query: Record<string, string>;
   metadata: Record<string, unknown>;
+  /** The locale of this navigation (null without slice.translator). */
+  locale: string | null;
+  /** What the address bar shows: '/en/pricing' with routing, '/pricing' without. */
+  url: string;
 }
 
 export interface RouteMatch {
@@ -133,8 +138,86 @@ export interface SliceRouterApi {
   start(): Promise<void>;
   beforeEach(guard: (to: RouteInfo, from: RouteInfo, next: RouterNext) => void | Promise<void>): void;
   afterEach(guard: (to: RouteInfo, from: RouteInfo) => void): void;
-  navigate(path: string, redirectChain?: string[], options?: { replace?: boolean }): Promise<void>;
+  navigate(path: string, options?: { replace?: boolean; locale?: string }): Promise<void>;
+  /** @deprecated legacy signature */
+  navigate(path: string, redirectChain: string[], options?: { replace?: boolean; locale?: string }): Promise<void>;
+  /** Strips a known locale prefix before matching. */
   matchRoute(path: string): RouteMatch;
+  /** The current app path, without locale prefix. */
+  readonly path: string;
+  /** The URL for an app path in the active (or given) locale. */
+  href(path: string, options?: { locale?: string }): string;
+  /** Metadata of the route being shown (re-applied, translated, after a locale change). */
+  activeMetadata: Record<string, unknown> | null;
+  applyMetadata(metadata: Record<string, unknown> | null): void;
+}
+
+export type TranslatorParams = Record<string, string | number | TranslationKey>;
+
+/** A key reference for a component prop, from `slice.translator.key()`. */
+export interface TranslationKey {
+  readonly key: string;
+  readonly params?: Readonly<TranslatorParams>;
+}
+
+export interface TranslatorConfig {
+  enabled?: boolean;
+  defaultLocale?: string;
+  fallbackLocale?: string | null;
+  locales?: string[];
+  path?: string;
+  saveLocally?: boolean;
+  useBrowserLocale?: boolean;
+  routing?: false | 'prefix' | 'prefix-except-default';
+}
+
+export interface SliceTranslatorFormatApi {
+  number(value: number, options?: Intl.NumberFormatOptions): string;
+  currency(value: number, currency: string, options?: Intl.NumberFormatOptions): string;
+  percent(value: number, options?: Intl.NumberFormatOptions): string;
+  date(value: Date | number | string, options?: Intl.DateTimeFormatOptions): string;
+  time(value: Date | number | string, options?: Intl.DateTimeFormatOptions): string;
+  relative(value: number, unit: Intl.RelativeTimeFormatUnit, options?: Intl.RelativeTimeFormatOptions): string;
+  list(items: string[], options?: Intl.ListFormatOptions): string;
+}
+
+export interface SliceTranslatorApi {
+  readonly enabled: boolean;
+  /** The active locale, e.g. 'es'. */
+  readonly locale: string;
+  readonly locales: readonly string[];
+  readonly defaultLocale: string;
+  readonly fallbackLocale: string | null;
+  readonly format: SliceTranslatorFormatApi;
+  /** Translate a key; returns the key when it is missing (or the translator is off). */
+  t(key: string, params?: TranslatorParams): string;
+  has(key: string, locale?: string): boolean;
+  /** Merge messages; `{ defaults: true }` adds a layer the app's dictionaries always override. */
+  add(locale: string, messages: Record<string, unknown>, options?: { defaults?: boolean }): void;
+  /** Load `<path>/<locale>/<namespace>.json` for the active locale and the fallback. */
+  load(namespace: string): Promise<void>;
+  setLocale(locale: string): Promise<string>;
+  /** Load a locale's dictionaries without switching to it; resolves to the configured locale. */
+  preload(locale: string): Promise<string>;
+  readonly routing: false | 'prefix' | 'prefix-except-default';
+  /** '/en/pricing' → { locale: 'en', path: '/pricing' } (whole URL, locale null, without routing). */
+  splitPath(url: string): { locale: string | null; path: string };
+  /** The URL of an app path in a locale (default: the active one). */
+  localizePath(path: string, locale?: string): string;
+  /** The locale a URL stands for; null without routing. */
+  localeOfUrl(url: string): string | null;
+  /** Rewrite the address bar to the active locale (replaceState). */
+  syncUrl(): void;
+  /** A key reference for a component prop: resolved before the component sees it, refreshed on a locale change. */
+  key(key: string, params?: TranslatorParams): TranslationKey;
+  isKey(value: unknown): boolean;
+  resolve<T = unknown>(value: T): T;
+  /** Translate every `data-t` element under `root` (default: the document) right now. */
+  apply(root?: ParentNode): number;
+  /** Called after every locale change; with a component, until it is destroyed. Returns an unsubscribe function. */
+  watch(component: object, callback: (locale: string, previous: string) => void): () => void;
+  watch(callback: (locale: string, previous: string) => void): () => void;
+  forget(component: object): void;
 }
 
 export interface SlicePanelDebuggerApi {
@@ -175,6 +258,7 @@ export interface SliceFrameworkClasses {
   EventManagerDebugger?: new () => SlicePanelDebuggerApi;
   ContextManagerDebugger?: new () => SlicePanelDebuggerApi;
   ThemeManager?: new () => SliceThemeManagerApi;
+  Translator?: new (config?: TranslatorConfig) => SliceTranslatorApi;
   [key: string]: unknown;
 }
 
@@ -186,6 +270,7 @@ export interface SliceApi {
   router: SliceRouterApi;
   events: SliceEventManagerApi;
   context: SliceContextManagerApi;
+  translator: SliceTranslatorApi;
   debugger?: SliceDebuggerApi;
   eventsDebugger?: SlicePanelDebuggerApi;
   contextDebugger?: SlicePanelDebuggerApi;
@@ -202,6 +287,8 @@ export interface SliceApi {
   setTheme(themeName: string): Promise<void>;
   readonly theme: string | null;
   attachTemplate(componentInstance: HTMLElement): void;
+  /** Shortcut of `slice.translator.t()`. */
+  t(key: string, params?: TranslatorParams): string;
 }
 
 declare class Slice {

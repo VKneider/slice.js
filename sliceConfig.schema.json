@@ -103,6 +103,31 @@
         "defaultRoute": { "type": "string" }
       }
     },
+    "translator": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "slice.translator: dictionaries in <path>/<locale>.json, data-t in templates, slice.t() and slice.translator.key() in code.",
+      "properties": {
+        "enabled": { "type": "boolean", "description": "Off: slice.t() returns the key and nothing is loaded." },
+        "defaultLocale": { "type": "string", "minLength": 1 },
+        "fallbackLocale": { "type": ["string", "null"], "description": "Asked when the active locale lacks a key." },
+        "locales": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+        "path": { "type": "string", "description": "Where dictionaries are served from. Default /locales." },
+        "saveLocally": { "type": "boolean", "description": "Remember the user's choice in localStorage." },
+        "useBrowserLocale": { "type": "boolean", "description": "First visit: the browser's language when supported." },
+        "routing": {
+          "enum": [false, "prefix", "prefix-except-default"],
+          "description": "Locale in the URL (planned; phase 4 of feature 0003). false keeps it out of the URL."
+        },
+        "ui": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": { "enabled": { "type": "boolean" }, "shortcut": { "type": "string" } }
+        }
+      },
+      "if": { "properties": { "enabled": { "const": true } }, "required": ["enabled"] },
+      "then": { "required": ["defaultLocale"] }
+    },
     "loading": {
       "type": "object",
       "additionalProperties": true,
