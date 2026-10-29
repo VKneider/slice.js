@@ -15,8 +15,10 @@ import { pathToFileURL } from 'node:url';
 import { createHash } from 'node:crypto';
 import zlib from 'node:zlib';
 import {
+  buildTranslatorContext,
   injectHead,
   loadSeoManifest,
+  loadTranslatorDictionaries,
   matchPathPattern,
   normalizeOrigin,
   pickRouteEntry,
@@ -51,6 +53,20 @@ function readComponentPrefixes(projectRoot) {
     }
   }
   return [];
+}
+
+/** The `translator` block from the deployed config (`dist` wins in production). */
+function readTranslatorConfig(projectRoot, folderDeployed) {
+  for (const folder of [folderDeployed, 'src']) {
+    const file = path.join(projectRoot, folder, 'sliceConfig.json');
+    if (!fs.existsSync(file)) continue;
+    try {
+      return JSON.parse(fs.readFileSync(file, 'utf8')).translator || null;
+    } catch {
+      // unreadable config: SEO stays single-language, as before
+    }
+  }
+  return null;
 }
 
 /**
@@ -165,8 +181,12 @@ export function sliceFallback(options = {}) {
     // With SEO configured the route set is known, so this is also where the
     // 200-vs-404 decision happens.
     if (seo) {
-      const { status, page } = seo.resolve(pathname);
-      return sendRendered(req, res, page, status);
+      const result = seo.resolve(pathname);
+      if (result.location) {
+        res.setHeader('Cache-Control', 'public, max-age=3600');
+        return res.redirect(result.status, result.location);
+      }
+      return sendRendered(req, res, result.page, result.status);
     }
 
     return sendShell(req, res);
@@ -265,14 +285,28 @@ export async function prepareSeo(options = {}) {
   const locale = config.locale || manifest.defaults?.locale || null;
   const routes = await loadRouteDefinitions(projectRoot, folderDeployed);
 
-  const render = (pathname, routeMetadata) => {
-    const meta = resolveMetadata({ pathname, routeMetadata, manifest, origin });
+  // Multilingual SEO (translator feature 0003, phase 5). Without a translator this is
+  // one `null` locale and every rule below collapses to the old single-language path.
+  const translatorConfig = config.translator || readTranslatorConfig(projectRoot, folderDeployed);
+  const translator = buildTranslatorContext(
+    translatorConfig,
+    loadTranslatorDictionaries(projectRoot, folderDeployed, translatorConfig)
+  );
+  const locales = translator.enabled ? translator.locales : [null];
+  const ogLocaleConfig = manifest.locales && typeof manifest.locales === 'object' ? manifest.locales : {};
+
+  const render = (activeLocale, pathname, routeMetadata) => {
+    const translate = activeLocale
+      ? (key, params) => translator.t(activeLocale, key, params)
+      : null;
+    const url = translator.enabled ? translator.localize(pathname, activeLocale) : pathname;
+    const meta = resolveMetadata({ pathname, routeMetadata, manifest, origin, translate, url });
 
     // Precedence: an image declared on the route entry wins, then the generated
     // card, then `defaults.image` (the generic banner). Comparing against the raw
     // entry keeps the framework from guessing where the image came from.
     const explicitImage = pickRouteEntry(pathname, manifest)?.entry?.image;
-    const card = cards[pathname];
+    const card = cards[url] || cards[pathname];
     if (card && !explicitImage && !routeMetadata?.image) {
       meta.image = /^https?:\/\//i.test(card.path) ? card.path : `${origin}${card.path}`;
       meta.imageWidth = card.width ?? null;
@@ -281,7 +315,26 @@ export async function prepareSeo(options = {}) {
       meta.imageAlt = meta.imageAlt || meta.title;
     }
 
-    return encodeSeoPage(injectHead(shell, renderHead(meta, { siteName, locale })));
+    const alternates = translator.enabled && activeLocale
+      ? translator.locales
+        .map((code) => ({
+          hreflang: code,
+          href: `${origin}${translator.localize(pathname, code)}`
+        }))
+        .concat([{
+          hreflang: 'x-default',
+          href: `${origin}${translator.localize(pathname, translator.defaultLocale)}`
+        }])
+      : null;
+
+    const ogLocale = translator.enabled && activeLocale
+      ? (ogLocaleConfig[activeLocale]?.ogLocale || translator.ogLocale(activeLocale))
+      : locale;
+
+    const head = renderHead(meta, { siteName, locale: ogLocale, alternates });
+    return encodeSeoPage(injectHead(shell, head, translator.enabled && activeLocale
+      ? { lang: activeLocale, dir: translator.direction(activeLocale) }
+      : {}));
   };
 
   const pages = new Map();
@@ -291,44 +344,84 @@ export async function prepareSeo(options = {}) {
       patterns.push(route);
       continue;
     }
-    pages.set(route.path, render(route.path, route.metadata));
+    for (const activeLocale of locales) {
+      const url = translator.enabled ? translator.localize(route.path, activeLocale) : route.path;
+      pages.set(url, render(activeLocale, route.path, route.metadata));
+    }
   }
   // Longest pattern first so `/p/${id}/detail` wins over `/p/${id}`.
   patterns.sort((a, b) => b.path.length - a.path.length);
 
-  const notFound = encodeSeoPage(injectHead(
-    shell,
-    '<title>Not found</title>\n    <meta name="robots" content="noindex, nofollow" />'
-  ));
+  const notFound = new Map();
+  for (const activeLocale of locales) {
+    notFound.set(activeLocale, encodeSeoPage(injectHead(
+      shell,
+      '<title>Not found</title>\n    <meta name="robots" content="noindex, nofollow" />',
+      translator.enabled && activeLocale
+        ? { lang: activeLocale, dir: translator.direction(activeLocale) }
+        : {}
+    )));
+  }
 
   // A `${param}` route cannot be enumerated, so it is rendered per path. The
   // cache keeps repeated visits of the same product from recompressing.
   const dynamicPages = new Map();
   const DYNAMIC_LIMIT = 200;
 
+  /** The page for an app path in one locale: prerendered, cached dynamic, or 404. */
+  const settle = (appPath, activeLocale) => {
+    const url = translator.enabled ? translator.localize(appPath, activeLocale) : appPath;
+    const exact = pages.get(url);
+    if (exact) return { status: 200, page: exact };
+
+    const dynamic = dynamicPages.get(url);
+    if (dynamic) return { status: 200, page: dynamic };
+
+    for (const route of patterns) {
+      if (!matchPathPattern(route.path, appPath)) continue;
+      const page = render(activeLocale, appPath, route.metadata);
+      if (dynamicPages.size >= DYNAMIC_LIMIT) {
+        dynamicPages.delete(dynamicPages.keys().next().value);
+      }
+      dynamicPages.set(url, page);
+      return { status: 200, page };
+    }
+
+    return { status: 404, page: notFound.get(activeLocale) || notFound.get(null) };
+  };
+
   return {
     origin,
     manifest,
     routes,
+    translator,
     prerendered: pages.size,
     resolve(pathname) {
-      const exact = pages.get(pathname);
-      if (exact) return { status: 200, page: exact };
-
-      const dynamic = dynamicPages.get(pathname);
-      if (dynamic) return { status: 200, page: dynamic };
-
-      for (const route of patterns) {
-        if (!matchPathPattern(route.path, pathname)) continue;
-        const page = render(pathname, route.metadata);
-        if (dynamicPages.size >= DYNAMIC_LIMIT) {
-          dynamicPages.delete(dynamicPages.keys().next().value);
-        }
-        dynamicPages.set(pathname, page);
-        return { status: 200, page };
+      if (!translator.enabled || !translator.routing) {
+        return settle(pathname, translator.defaultLocale);
       }
 
-      return { status: 404, page: notFound };
+      const { locale: urlLocale, path: appPath } = translator.split(pathname);
+
+      if (urlLocale) {
+        // `/es/pricing` under "prefix-except-default": the canonical URL is `/pricing`.
+        if (translator.routing === 'prefix-except-default' && urlLocale === translator.defaultLocale) {
+          return { status: 301, location: appPath };
+        }
+        return settle(appPath, urlLocale);
+      }
+
+      // With "prefix" every page has a locale in the URL. `/` picks the default (the
+      // client may then apply the saved/browser choice); anything else is not a page,
+      // including an unknown prefix such as `/fr/...`.
+      if (translator.routing === 'prefix') {
+        if (pathname === '/') {
+          return { status: 302, location: translator.localize('/', translator.defaultLocale) };
+        }
+        return { status: 404, page: notFound.get(translator.defaultLocale) };
+      }
+
+      return settle(pathname, translator.defaultLocale);
     }
   };
 }
@@ -770,7 +863,8 @@ export function createSliceServer(options = {}) {
     if (options.seo) {
       seo = await prepareSeo({ ...options, port });
       if (seo) {
-        console.log(`🔎 SEO: ${seo.prerendered} routes prerendered (${seo.origin})`);
+        const localeCount = seo.translator?.enabled ? seo.translator.locales.length : 0;
+        console.log(`🔎 SEO: ${seo.prerendered} pages prerendered${localeCount ? ` (${localeCount} locales)` : ''} (${seo.origin})`);
       } else {
         console.warn('[slice] seo options were given but no manifest was found; SEO is off.');
       }

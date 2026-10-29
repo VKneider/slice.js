@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   buildSitemap,
+  buildTranslatorContext,
   injectHead,
   matchPathPattern,
   normalizeOrigin,
@@ -224,4 +225,153 @@ test('validation stays quiet when the route repeats the manifest title', () => {
     { routes: [{ path: '/pricing', metadata: { title: 'Pricing', titleTemplate: '%s | Acme' } }] }
   );
   assert.equal(warnings.filter((message) => /title differs/.test(message)).length, 0);
+});
+
+// -- Translator (feature 0003, phase 5) -------------------------------
+
+const ES = {
+  seo: { titleTemplate: '%s | Acme', description: 'Acme en espa�ol.' },
+  home: { title: 'Inicio' },
+  pricing: { title: 'Precios', description: 'Planes.' },
+  count: { one: '{count} plan', other: '{count} planes' }
+};
+const EN = {
+  seo: { titleTemplate: '%s | Acme', description: 'Acme in English.' },
+  home: { title: 'Home' },
+  pricing: { title: 'Pricing', description: 'Plans.' },
+  count: { one: '{count} plan', other: '{count} plans' }
+};
+
+const translatorContext = (routing = 'prefix-except-default') => buildTranslatorContext(
+  { enabled: true, defaultLocale: 'es', fallbackLocale: 'en', locales: ['es', 'en'], routing },
+  { es: ES, en: EN }
+);
+
+test('translator context: lookup, fallback, plurals and the key when missing', () => {
+  const translator = translatorContext();
+
+  assert.equal(translator.enabled, true);
+  assert.deepEqual(translator.locales, ['es', 'en']);
+  assert.equal(translator.t('es', 'pricing.title'), 'Precios');
+  assert.equal(translator.t('en', 'pricing.title'), 'Pricing');
+  // Missing in `es`, present in the fallback: the fallback answers, as in the browser.
+  assert.equal(translator.t('es', 'en.only'), 'en.only');
+  assert.equal(translator.t('es', 'count', { count: 3 }), '3 planes');
+  assert.equal(translator.t('es', 'count', { count: 1 }), '1 plan');
+  assert.equal(translator.t('es', 'nope.key'), 'nope.key');
+  assert.equal(translator.has('es', 'pricing.title'), true);
+  assert.equal(translator.has('es', 'nope.key'), false);
+});
+
+test('translator context: URLs follow the routing mode', () => {
+  const prefixed = translatorContext('prefix');
+  assert.equal(prefixed.localize('/pricing', 'es'), '/es/pricing');
+  assert.equal(prefixed.localize('/pricing', 'en'), '/en/pricing');
+  assert.deepEqual(prefixed.split('/en/pricing?x=1'), { locale: 'en', path: '/pricing?x=1' });
+
+  const exceptDefault = translatorContext('prefix-except-default');
+  assert.equal(exceptDefault.localize('/pricing', 'es'), '/pricing');
+  assert.equal(exceptDefault.localize('/pricing', 'en'), '/en/pricing');
+  assert.equal(exceptDefault.localeOf('/pricing'), 'es');
+  assert.equal(exceptDefault.localeOf('/en/pricing'), 'en');
+
+  const off = translatorContext(false);
+  assert.equal(off.localize('/pricing', 'en'), '/pricing');
+  assert.deepEqual(off.split('/en/pricing'), { locale: null, path: '/en/pricing' });
+});
+
+test('resolveMetadata resolves { t } fields and canonicalizes the localized URL', () => {
+  const translator = translatorContext();
+  const translated = {
+    title: { t: 'pricing.title' },
+    description: { t: 'pricing.description' },
+    titleTemplate: '%s | Acme'
+  };
+
+  const es = resolveMetadata({
+    pathname: '/pricing',
+    routeMetadata: translated,
+    manifest: {},
+    origin: ORIGIN,
+    translate: (key, params) => translator.t('es', key, params),
+    url: '/pricing'
+  });
+  assert.equal(es.title, 'Precios | Acme');
+  assert.equal(es.description, 'Planes.');
+  assert.equal(es.canonical, 'https://acme.dev/pricing');
+
+  const en = resolveMetadata({
+    pathname: '/pricing',
+    routeMetadata: translated,
+    manifest: {},
+    origin: ORIGIN,
+    translate: (key, params) => translator.t('en', key, params),
+    url: '/en/pricing'
+  });
+  assert.equal(en.title, 'Pricing | Acme');
+  assert.equal(en.canonical, 'https://acme.dev/en/pricing');
+});
+
+test('renderHead writes the hreflang alternates and injectHead sets lang/dir', () => {
+  const head = renderHead(
+    { title: 'Precios', robots: 'index, follow', openGraph: {}, twitter: {} },
+    {
+      locale: 'es_ES',
+      alternates: [
+        { hreflang: 'es', href: 'https://acme.dev/pricing' },
+        { hreflang: 'en', href: 'https://acme.dev/en/pricing' },
+        { hreflang: 'x-default', href: 'https://acme.dev/pricing' }
+      ]
+    }
+  );
+  assert.match(head, /property="og:locale" content="es_ES"/);
+  assert.match(head, /rel="alternate" hreflang="es" href="https:\/\/acme.dev\/pricing"/);
+  assert.match(head, /rel="alternate" hreflang="x-default" href="https:\/\/acme.dev\/pricing"/);
+
+  const html = injectHead('<html lang="en"><head><title>x</title></head><body></body></html>', '<title>y</title>', {
+    lang: 'es',
+    dir: 'rtl'
+  });
+  assert.match(html, /<html lang="es" dir="rtl">/);
+});
+
+test('buildSitemap emits one URL per locale, with alternates and x-default', () => {
+  const translator = translatorContext();
+  const sitemap = buildSitemap({
+    translator,
+    origin: ORIGIN,
+    manifest: {
+      version: 1,
+      origin: ORIGIN,
+      routes: {
+        '/': { title: 'Home' },
+        '/pricing': { title: 'Pricing' }
+      }
+    }
+  });
+
+  assert.match(sitemap, /xmlns:xhtml="http:\/\/www.w3.org\/1999\/xhtml"/);
+  assert.equal((sitemap.match(/<url>/g) || []).length, 4);
+  assert.match(sitemap, /<loc>https:\/\/acme.dev\/pricing<\/loc>/);
+  assert.match(sitemap, /<loc>https:\/\/acme.dev\/en\/pricing<\/loc>/);
+  assert.match(sitemap, /hreflang="en" href="https:\/\/acme.dev\/en\/pricing"/);
+  assert.match(sitemap, /hreflang="x-default" href="https:\/\/acme.dev\/pricing"/);
+});
+
+test('validateSeoManifest reports a { t } key missing in one locale', () => {
+  const translator = translatorContext();
+  const manifest = {
+    version: 1,
+    origin: ORIGIN,
+    defaults: { description: { t: 'seo.description' } },
+    routes: {
+      '/pricing': { title: { t: 'pricing.title' } },
+      '/missing': { title: { t: 'not.in.any.locale' } }
+    }
+  };
+
+  const result = validateSeoManifest(manifest, { translator });
+  assert.ok(result.errors.some((error) => /missing translation "not\.in\.any\.locale" for "es"/.test(error)));
+  assert.ok(result.errors.some((error) => /missing translation "not\.in\.any\.locale" for "en"/.test(error)));
+  assert.equal(result.errors.some((error) => /pricing\.title/.test(error)), false);
 });

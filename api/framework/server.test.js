@@ -541,3 +541,129 @@ test('translator: no dictionary mount when the translator is off', async (t) => 
   assert.match(response.headers.get('content-type'), /text\/html/);
   assert.match(await response.text(), /id="app"/);
 });
+
+// -- SEO + translator (feature 0003, phase 5) -------------------------
+// With translator.routing, the server prerenders every route once per locale,
+// strips/canonicalizes the prefix and answers an unknown prefix with a 404.
+
+const makeTranslatedSeoProject = () => {
+  const project = makeSeoProject();
+  const root = project.root;
+
+  fs.writeFileSync(path.join(root, 'dist', 'sliceConfig.json'), JSON.stringify({
+    paths: { components: { Visual: { path: '/Components/Visual' } } },
+    server: { port: 3001 },
+    translator: {
+      enabled: true,
+      defaultLocale: 'es',
+      fallbackLocale: 'en',
+      locales: ['es', 'en'],
+      path: '/locales',
+      routing: 'prefix-except-default'
+    }
+  }));
+
+  fs.mkdirSync(path.join(root, 'dist', 'locales'), { recursive: true });
+  fs.writeFileSync(path.join(root, 'dist', 'locales', 'es.json'), JSON.stringify({
+    seo: { titleTemplate: '%s | Acme', description: 'Acme en español.' },
+    home: { title: 'Inicio' },
+    pricing: { title: 'Precios', description: 'Planes.' },
+    product: { title: 'Producto' }
+  }));
+  fs.writeFileSync(path.join(root, 'dist', 'locales', 'en.json'), JSON.stringify({
+    seo: { titleTemplate: '%s | Acme', description: 'Acme in English.' },
+    home: { title: 'Home' },
+    pricing: { title: 'Pricing', description: 'Plans.' },
+    product: { title: 'Product' }
+  }));
+
+  // Titles come from the dictionaries, not from inline routes.js metadata.
+  fs.writeFileSync(
+    path.join(root, 'dist', 'routes.js'),
+    "export default [\n  { path: '/' },\n  { path: '/pricing' },\n  { path: '/private' },\n  { path: '/producto/${id}' }\n];\n"
+  );
+
+  fs.writeFileSync(path.join(root, 'seo.json'), JSON.stringify({
+    version: 1,
+    origin: 'https://acme.dev',
+    locales: { es: { ogLocale: 'es_ES' }, en: { ogLocale: 'en_US' } },
+    defaults: {
+      titleTemplate: { t: 'seo.titleTemplate' },
+      description: { t: 'seo.description' }
+    },
+    routes: {
+      '/': { title: { t: 'home.title' }, titleTemplate: '%s' },
+      '/pricing': { title: { t: 'pricing.title' }, description: { t: 'pricing.description' } },
+      '/private': { title: 'Private', robots: false },
+      '/producto/${id}': { title: { t: 'product.title' } }
+    }
+  }));
+
+  return project;
+};
+
+const bootTranslatedSeo = async (t) => {
+  const project = makeTranslatedSeoProject();
+  const instance = createSliceServer({
+    projectRoot: project.root,
+    mode: 'production',
+    port: 0,
+    seo: { manifest: 'seo.json' }
+  });
+  const server = await instance.start({ port: 0, signals: false });
+  t.after(() => {
+    server.close();
+    fs.rmSync(project.root, { recursive: true, force: true });
+  });
+  return { base: `http://127.0.0.1:${server.address().port}`, ...instance };
+};
+
+test('seo+translator: each locale is prerendered with its own head and alternates', async (t) => {
+  const { base } = await bootTranslatedSeo(t);
+
+  const esResponse = await get(base, '/pricing');
+  assert.equal(esResponse.status, 200);
+  const es = await esResponse.text();
+  assert.match(es, /<html lang="es" dir="ltr">/);
+  assert.match(es, /<title>Precios \| Acme<\/title>/);
+  assert.match(es, /<meta name="description" content="Planes\." \/>/);
+  assert.match(es, /rel="canonical" href="https:\/\/acme.dev\/pricing"/);
+  assert.match(es, /rel="alternate" hreflang="es" href="https:\/\/acme.dev\/pricing"/);
+  assert.match(es, /rel="alternate" hreflang="en" href="https:\/\/acme.dev\/en\/pricing"/);
+  assert.match(es, /rel="alternate" hreflang="x-default" href="https:\/\/acme.dev\/pricing"/);
+  assert.match(es, /property="og:locale" content="es_ES"/);
+
+  const enResponse = await get(base, '/en/pricing');
+  assert.equal(enResponse.status, 200);
+  const en = await enResponse.text();
+  assert.match(en, /<html lang="en" dir="ltr">/);
+  assert.match(en, /<title>Pricing \| Acme<\/title>/);
+  assert.match(en, /rel="canonical" href="https:\/\/acme.dev\/en\/pricing"/);
+  assert.match(en, /property="og:locale" content="en_US"/);
+});
+
+test('seo+translator: the default prefix is canonicalized and unknown prefixes are 404', async (t) => {
+  const { base } = await bootTranslatedSeo(t);
+
+  const canonical = await get(base, '/es/pricing', { redirect: 'manual' });
+  assert.equal(canonical.status, 301);
+  assert.equal(canonical.headers.get('location'), '/pricing');
+
+  const unknown = await get(base, '/fr/pricing');
+  assert.equal(unknown.status, 404);
+  assert.match(await unknown.text(), /noindex, nofollow/);
+});
+
+test('seo+translator: ${param} routes render per locale', async (t) => {
+  const { base } = await bootTranslatedSeo(t);
+
+  const es = await get(base, '/producto/42');
+  assert.equal(es.status, 200);
+  assert.match(await es.text(), /<title>Producto \| Acme<\/title>/);
+
+  const enResponse = await get(base, '/en/producto/42');
+  assert.equal(enResponse.status, 200);
+  const en = await enResponse.text();
+  assert.match(en, /<title>Product \| Acme<\/title>/);
+  assert.match(en, /rel="canonical" href="https:\/\/acme.dev\/en\/producto\/42"/);
+});

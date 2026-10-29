@@ -9,6 +9,18 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import {
+  IntlCache,
+  directionOf,
+  formatMessage,
+  lookup as lookupMessage
+} from '../../Slice/Components/Structural/Translator/messages.js';
+import {
+  localeOfUrl,
+  localizePath,
+  normalizeRouting,
+  splitLocalePath
+} from '../../Slice/Components/Structural/Translator/localePath.js';
 
 export const SEO_VERSION = 1;
 
@@ -39,6 +51,109 @@ export function matchPathPattern(pattern, pathname) {
 }
 
 const isPattern = (value) => /\$\{[^}]+\}/.test(String(value));
+
+/**
+ * The translator as the server needs it: which locales exist, how a URL carries one, and
+ * `t()` for `{ t: 'key' }` fields. Same lookup order as the browser (locale → fallback →
+ * the key itself), using the dictionaries the client already downloads.
+ *
+ * @param {object|null} config the `translator` block from sliceConfig.json
+ * @param {Record<string, object>} [dictionaries] locale → messages
+ */
+export function buildTranslatorContext(config, dictionaries = {}) {
+  const enabled = config?.enabled === true
+    && typeof config.defaultLocale === 'string'
+    && config.defaultLocale !== '';
+  const defaultLocale = enabled ? config.defaultLocale : null;
+  const declared = Array.isArray(config?.locales) ? config.locales : [];
+  const locales = enabled
+    ? [...new Set([defaultLocale, ...declared].filter((value) => typeof value === 'string' && value))]
+    : [];
+  const fallbackLocale = enabled
+    && typeof config.fallbackLocale === 'string'
+    && config.fallbackLocale !== defaultLocale
+    ? config.fallbackLocale
+    : null;
+  const routing = enabled ? normalizeRouting(config.routing) : false;
+  const intl = new IntlCache();
+
+  const entry = (locale, key) => {
+    const value = lookupMessage(dictionaries[locale], key);
+    if (value === undefined && fallbackLocale && locale !== fallbackLocale) {
+      return lookupMessage(dictionaries[fallbackLocale], key);
+    }
+    return value;
+  };
+
+  const t = (locale, key, params) => {
+    if (!enabled || typeof key !== 'string') return key;
+    const value = entry(locale, key);
+    if (value === undefined) return key;
+    return formatMessage(value, params, locale, intl) ?? key;
+  };
+
+  const localize = (pathname, locale) => (enabled
+    ? localizePath(pathname, locale || defaultLocale, { routing, defaultLocale })
+    : pathname);
+
+  return {
+    enabled,
+    routing,
+    defaultLocale,
+    fallbackLocale,
+    locales,
+    t,
+    has: (locale, key) => enabled && entry(locale, key) !== undefined,
+    localize,
+    split: (pathname) => (enabled && routing
+      ? splitLocalePath(pathname, locales)
+      : { locale: null, path: pathname }),
+    localeOf: (pathname) => (enabled
+      ? localeOfUrl(pathname, { routing, defaultLocale, locales })
+      : null),
+    direction: (locale) => directionOf(locale || defaultLocale || 'en'),
+    ogLocale: (locale) => String(locale || '').replace('-', '_')
+  };
+}
+
+/**
+ * Read `{ locale: messages }` from `<folderDeployed>/<translator.path>/<locale>.json`.
+ * Missing files are tolerated (the key shows, as in the browser); a malformed one is an
+ * error the server cannot silently ignore.
+ */
+export function loadTranslatorDictionaries(projectRoot, folderDeployed, config) {
+  if (config?.enabled !== true) return {};
+  const folder = String(config.path || '/locales').replace(/^\/+|\/+$/g, '') || 'locales';
+  const declared = [
+    config.defaultLocale,
+    ...(Array.isArray(config.locales) ? config.locales : []),
+    config.fallbackLocale
+  ].filter((value) => typeof value === 'string' && value);
+
+  const dictionaries = {};
+  for (const locale of [...new Set(declared)]) {
+    const file = path.join(projectRoot, folderDeployed, folder, `${locale}.json`);
+    if (!fs.existsSync(file)) continue;
+    try {
+      dictionaries[locale] = JSON.parse(fs.readFileSync(file, 'utf8'));
+    } catch (error) {
+      throw new Error(`seo: invalid translator dictionary ${locale}.json: ${error.message}`);
+    }
+  }
+  return dictionaries;
+}
+
+/**
+ * `{ t: 'key', params? }` → text. Anything else is returned untouched, so plain strings
+ * keep working in every locale. Exported for the server, the CLI and the tests.
+ */
+export function resolveSeoText(value, translate) {
+  if (value && typeof value === 'object' && typeof value.t === 'string') {
+    return translate ? translate(value.t, value.params) : value.t;
+  }
+  return value;
+}
+
 
 /**
  * The most specific manifest entry for a path: an exact key first, then the
@@ -105,13 +220,37 @@ const robotsDirectives = (robots) => {
 
 /**
  * Resolve one route's metadata: defaults -> manifest entry (literal or pattern)
- * -> inline `metadata` from routes.js (most specific, wins).
+ * -> inline `metadata` from routes.js (most specific, wins). With `translate`, every
+ * documented text field may be `{ t: 'key', params? }` (translator feature 0003).
  */
-export function resolveMetadata({ pathname, routeMetadata, manifest = {}, origin }) {
+export function resolveMetadata({ pathname, routeMetadata, manifest = {}, origin, translate = null, url = pathname }) {
   const merged = mergeDeep(
     mergeDeep(manifest.defaults || {}, pickRouteEntry(pathname, manifest)?.entry),
     routeMetadata
   );
+
+  if (translate) {
+    const text = (value) => resolveSeoText(value, translate);
+    merged.title = text(merged.title);
+    merged.titleTemplate = text(merged.titleTemplate);
+    merged.description = text(merged.description);
+    merged.imageAlt = text(merged.imageAlt);
+    if (merged.openGraph) {
+      merged.openGraph = {
+        ...merged.openGraph,
+        title: text(merged.openGraph.title),
+        description: text(merged.openGraph.description),
+        siteName: text(merged.openGraph.siteName)
+      };
+    }
+    if (merged.twitter) {
+      merged.twitter = {
+        ...merged.twitter,
+        title: text(merged.twitter.title),
+        description: text(merged.twitter.description)
+      };
+    }
+  }
 
   const title = merged.title ?? null;
   const template = merged.titleTemplate;
@@ -119,7 +258,7 @@ export function resolveMetadata({ pathname, routeMetadata, manifest = {}, origin
 
   const canonical = merged.canonical
     ? absolute(merged.canonical, origin)
-    : `${origin}${pathname === '/' ? '/' : pathname}`;
+    : `${origin}${url === '/' ? '/' : url}`;
 
   const image = absolute(merged.image ?? merged.openGraph?.image ?? merged.openGraph?.images?.[0]?.url, origin);
 
@@ -151,11 +290,17 @@ export function serializeJsonLd(list) {
 }
 
 /** The `<head>` block for one route. Pure: no shell, no injection. */
-export function renderHead(meta, { siteName = null, locale = null } = {}) {
+export function renderHead(meta, { siteName = null, locale = null, alternates = null } = {}) {
   const tags = [];
   if (meta.title) tags.push(`<title>${escapeHtml(meta.title)}</title>`);
   if (meta.description) tags.push(`<meta name="description" content="${escapeHtml(meta.description)}" />`);
   if (meta.canonical) tags.push(`<link rel="canonical" href="${escapeHtml(meta.canonical)}" />`);
+  if (Array.isArray(alternates)) {
+    for (const alternate of alternates) {
+      if (!alternate?.href || !alternate?.hreflang) continue;
+      tags.push(`<link rel="alternate" hreflang="${escapeHtml(alternate.hreflang)}" href="${escapeHtml(alternate.href)}" />`);
+    }
+  }
   tags.push(`<meta name="robots" content="${escapeHtml(meta.robots)}" />`);
 
   const ogType = meta.openGraph.type || 'website';
@@ -203,9 +348,28 @@ const OWNED_HEAD = [
   /<script\s+type="application\/ld\+json"[^>]*>[\s\S]*?<\/script>/gi
 ];
 
+/** Replace `<html lang|dir>` (or add them) in a shell. No-op when both are null. */
+export function setDocumentLanguage(html, { lang = null, dir = null } = {}) {
+  if (!lang && !dir) return String(html);
+  return String(html).replace(/<html\b([^>]*)>/i, (match, attributes) => {
+    let next = attributes;
+    if (lang) {
+      next = /\slang="/i.test(next)
+        ? next.replace(/\slang="[^"]*"/i, ` lang="${lang}"`)
+        : `${next} lang="${lang}"`;
+    }
+    if (dir) {
+      next = /\sdir="/i.test(next)
+        ? next.replace(/\sdir="[^"]*"/i, ` dir="${dir}"`)
+        : `${next} dir="${dir}"`;
+    }
+    return `<html${next}>`;
+  });
+}
+
 /** Replace this module's tags in a shell with the route's own block. */
-export function injectHead(html, headTags) {
-  let output = String(html);
+export function injectHead(html, headTags, options = {}) {
+  let output = setDocumentLanguage(html, options);
   for (const pattern of OWNED_HEAD) output = output.replace(pattern, '');
   const block = `    ${headTags}\n  `;
   if (/<\/head>/i.test(output)) return output.replace(/<\/head>/i, `${block}</head>`);
@@ -222,40 +386,64 @@ const xmlEscape = (value) => String(value ?? '')
 /**
  * `sitemap.xml` from the manifest. Only literal routes that are indexable and
  * not explicitly excluded: a `${param}` pattern cannot be enumerated.
+ *
+ * With a translator context and `routing`, every route appears once per locale and
+ * each `<url>` carries the `xhtml:link` alternates (plus `x-default`), so the
+ * sitemap and the `hreflang` in the head cannot disagree.
  */
-export function buildSitemap({ manifest, origin }) {
+export function buildSitemap({ manifest, origin, translator = null }) {
   const base = normalizeOrigin(origin);
   if (!base) throw new Error('seo: buildSitemap needs an absolute origin');
 
+  const active = translator?.enabled ? translator : null;
+  const locales = active ? active.locales : [null];
   const urls = [];
+
   for (const [key, entry] of Object.entries(manifest?.routes || {})) {
     if (isPattern(key)) continue;
     if (entry?.sitemap === false) continue;
     if (entry?.robots === false || entry?.robots?.index === false) continue;
     if (entry?.noindex) continue;
 
-    const loc = `${base}${key === '/' ? '/' : key}`;
+    const paths = locales.map((locale) => (active ? active.localize(key, locale) : key));
+    const alternates = active
+      ? locales
+        .map((locale, index) => ({
+          hreflang: locale,
+          href: `${base}${paths[index] === '/' ? '/' : paths[index]}`
+        }))
+        .concat([{
+          hreflang: 'x-default',
+          href: `${base}${active.localize(key, active.defaultLocale)}`
+        }])
+      : [];
+
     const sitemap = entry?.sitemap && typeof entry.sitemap === 'object' ? entry.sitemap : {};
     const lastmod = sitemap.lastmod || entry?.lastmod;
     const changefreq = sitemap.changefreq || entry?.changefreq;
     const priority = sitemap.priority || entry?.priority;
 
-    // One field per line: a <lastmod> update is a one-line diff in review.
-    const block = [
-      '  <url>',
-      `    <loc>${xmlEscape(loc)}</loc>`,
-      lastmod ? `    <lastmod>${xmlEscape(lastmod)}</lastmod>` : '',
-      changefreq ? `    <changefreq>${xmlEscape(changefreq)}</changefreq>` : '',
-      priority ? `    <priority>${xmlEscape(priority)}</priority>` : '',
-      '  </url>'
-    ].filter(Boolean);
-    urls.push({ loc, body: block.join('\n') });
+    for (const pathname of paths) {
+      const loc = `${base}${pathname === '/' ? '/' : pathname}`;
+      // One field per line: a <lastmod> update is a one-line diff in review.
+      const block = [
+        '  <url>',
+        `    <loc>${xmlEscape(loc)}</loc>`,
+        ...alternates.map((alternate) =>
+          `    <xhtml:link rel="alternate" hreflang="${xmlEscape(alternate.hreflang)}" href="${xmlEscape(alternate.href)}" />`),
+        lastmod ? `    <lastmod>${xmlEscape(lastmod)}</lastmod>` : '',
+        changefreq ? `    <changefreq>${xmlEscape(changefreq)}</changefreq>` : '',
+        priority ? `    <priority>${xmlEscape(priority)}</priority>` : '',
+        '  </url>'
+      ].filter(Boolean);
+      urls.push({ loc, body: block.join('\n') });
+    }
   }
 
   urls.sort((a, b) => a.loc.localeCompare(b.loc));
   return [
     '<?xml version="1.0" encoding="UTF-8"?>',
-    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"${active ? ' xmlns:xhtml="http://www.w3.org/1999/xhtml"' : ''}>`,
     ...urls.map((url) => url.body),
     '</urlset>',
     ''
@@ -281,12 +469,45 @@ export function validateSeoManifest(manifest, options = {}) {
     fileExists = (file) => fs.existsSync(file),
     publicDir = null,
     titleLimit = DEFAULT_TITLE_LIMIT,
-    descriptionLimit = DEFAULT_DESCRIPTION_LIMIT
+    descriptionLimit = DEFAULT_DESCRIPTION_LIMIT,
+    translator = null
   } = options;
 
   const errors = [];
   const warnings = [];
   const add = (list, message) => list.push(message);
+
+  /** `{ t: 'key' }` references in the fields a translator may fill. */
+  const keyRefsOf = (entry, where) => {
+    const refs = [];
+    const scan = (value, field) => {
+      if (value && typeof value === 'object' && !Array.isArray(value) && typeof value.t === 'string') {
+        refs.push({ key: value.t, where: `${where}.${field}` });
+      }
+    };
+    for (const field of ['title', 'titleTemplate', 'description', 'imageAlt']) scan(entry?.[field], field);
+    for (const group of ['openGraph', 'twitter']) {
+      for (const field of ['title', 'description', 'siteName']) scan(entry?.[group]?.[field], `${group}.${field}`);
+    }
+    return refs;
+  };
+
+  /**
+   * A `{ t }` key missing in one locale would ship the key as a title, so it blocks.
+   * The browser resolves the same way (locale → fallback → key).
+   */
+  const checkTranslations = (entry, where) => {
+    if (!translator?.enabled) return;
+    const refs = keyRefsOf(entry, where);
+    if (!refs.length) return;
+    for (const locale of translator.locales) {
+      for (const ref of refs) {
+        if (!translator.has(locale, ref.key)) {
+          add(errors, `missing translation "${ref.key}" for "${locale}" (${ref.where})`);
+        }
+      }
+    }
+  };
 
   if (!manifest || typeof manifest !== 'object') {
     return { errors: ['manifest is not an object'], warnings };
@@ -306,6 +527,7 @@ export function validateSeoManifest(manifest, options = {}) {
   }
 
   const seen = new Map();
+  checkTranslations(manifest.defaults, 'defaults');
   for (const [key, entry] of Object.entries(manifest.routes || {})) {
     if (!key.startsWith('/')) add(errors, `route key must start with "/": ${key}`);
     if (key.length > 1 && key.endsWith('/')) add(errors, `route key must not end with "/": ${key}`);
@@ -316,10 +538,12 @@ export function validateSeoManifest(manifest, options = {}) {
       continue;
     }
 
-    if (entry.title && String(entry.title).length > titleLimit) {
+    checkTranslations(entry, key);
+
+    if (typeof entry.title === 'string' && entry.title.length > titleLimit) {
       add(warnings, `title longer than ${titleLimit} chars: ${key}`);
     }
-    if (entry.description && String(entry.description).length > descriptionLimit) {
+    if (typeof entry.description === 'string' && entry.description.length > descriptionLimit) {
       add(warnings, `description longer than ${descriptionLimit} chars: ${key}`);
     }
 
@@ -360,7 +584,10 @@ export function validateSeoManifest(manifest, options = {}) {
     for (const route of (Array.isArray(routes) ? routes : [])) {
       const pathname = typeof route === 'string' ? route : route?.path;
       const metadata = typeof route === 'object' ? route?.metadata : null;
-      if (!pathname || !metadata?.title) continue;
+      if (!pathname || !metadata) continue;
+      checkTranslations(metadata, `routes.js ${pathname}`);
+      if (!metadata.title) continue;
+      if (typeof metadata.title !== 'string') continue;
       const served = resolveMetadata({ pathname, manifest, origin });
       const client = resolveMetadata({ pathname, manifest: {}, origin, routeMetadata: metadata });
       if (served.title && client.title && served.title !== client.title) {
