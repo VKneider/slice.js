@@ -161,11 +161,11 @@ test('route metadata accepts { t } fields', () => {
    });
    const translate = (key, params) => (key === 'seo.template' ? '%s · Shop' : `${key}${params ? `:${params.n}` : ''}`);
    applyRouteMetadata(
-      { title: { t: 'pricing.title', params: { n: 2 } }, titleTemplate: { t: 'seo.template' }, description: { t: 'pricing.description' } },
+      { title: { t: 'pricing.title', params: { n: 2 } }, titleSuffix: ' | Shop', description: { t: 'pricing.description' } },
       doc,
       translate
    );
-   assert.equal(doc.title, 'pricing.title:2 · Shop');
+   assert.equal(doc.title, 'pricing.title:2 | Shop');
    assert.equal(head.children[0].getAttribute('content'), 'pricing.description');
    assert.equal(resolveText('plain', translate), 'plain');
 });

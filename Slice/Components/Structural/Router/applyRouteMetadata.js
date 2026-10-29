@@ -15,7 +15,6 @@
  *   titlePrefix / titleSuffix        per-route overrides of router.titlePrefix /
  *                                    router.titleSuffix; the separator is part of
  *                                    the string and `false` disables it
- *   titleTemplate: '%s | Acme'       legacy escape hatch; owns the full title
  *
  * `description` / `descriptionKey` follow the same rules. Any field may also be
  * `{ t: 'key', params? }` (feature 0003).
@@ -42,7 +41,6 @@ export function applyRouteMetadata(
    const warn = options.warn ?? warnKey;
 
    const title = keyedText(metadata, 'title', 'titleKey', translate, enabled, warn);
-   const titleTemplate = resolveText(metadata.titleTemplate, translate);
    const description = keyedText(metadata, 'description', 'descriptionKey', translate, enabled, warn);
    const state = stateOf(doc);
    const descriptionMeta = doc.querySelector('meta[name="description"]');
@@ -50,9 +48,7 @@ export function applyRouteMetadata(
    if (title) {
       const prefix = affix(metadata.titlePrefix, routerConfig.titlePrefix);
       const suffix = affix(metadata.titleSuffix, routerConfig.titleSuffix);
-      const next = titleTemplate && titleTemplate !== '%s'
-         ? titleTemplate.replace('%s', String(title))
-         : `${prefix}${String(title)}${suffix}`;
+      const next = `${prefix}${String(title)}${suffix}`;
       if (doc.title !== next) doc.title = next;
       state.appliedTitle = next;
    } else if (state.appliedTitle !== null && doc.title === state.appliedTitle) {

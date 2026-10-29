@@ -226,9 +226,9 @@ const makeSeoProject = () => {
   fs.writeFileSync(path.join(project.root, 'seo.json'), JSON.stringify({
     version: 1,
     origin: 'https://acme.dev',
-    defaults: { titleTemplate: '%s | Acme', description: 'Acme.' },
+    defaults: { titleSuffix: ' | Acme', description: 'Acme.' },
     routes: {
-      '/': { title: 'Home', titleTemplate: '%s' },
+      '/': { title: 'Home', titleSuffix: false },
       '/pricing': { title: 'Pricing', description: 'Plans.' },
       '/private': { title: 'Private', robots: false },
       '/producto/${id}': { title: 'Producto' }
@@ -565,13 +565,13 @@ const makeTranslatedSeoProject = ({ localePrefix = 'except-default' } = {}) => {
 
   fs.mkdirSync(path.join(root, 'dist', 'locales'), { recursive: true });
   fs.writeFileSync(path.join(root, 'dist', 'locales', 'es.json'), JSON.stringify({
-    seo: { titleTemplate: '%s | Acme', description: 'Acme en español.' },
+    seo: { titleSuffix: ' | Acme', description: 'Acme en español.' },
     home: { title: 'Inicio' },
     pricing: { title: 'Precios', description: 'Planes.' },
     product: { title: 'Producto' }
   }));
   fs.writeFileSync(path.join(root, 'dist', 'locales', 'en.json'), JSON.stringify({
-    seo: { titleTemplate: '%s | Acme', description: 'Acme in English.' },
+    seo: { titleSuffix: ' | Acme', description: 'Acme in English.' },
     home: { title: 'Home' },
     pricing: { title: 'Pricing', description: 'Plans.' },
     product: { title: 'Product' }
@@ -588,11 +588,11 @@ const makeTranslatedSeoProject = ({ localePrefix = 'except-default' } = {}) => {
     origin: 'https://acme.dev',
     locales: { es: { ogLocale: 'es_ES' }, en: { ogLocale: 'en_US' } },
     defaults: {
-      titleTemplate: { t: 'seo.titleTemplate' },
+      titleSuffix: { t: 'seo.titleSuffix' },
       description: { t: 'seo.description' }
     },
     routes: {
-      '/': { title: { t: 'home.title' }, titleTemplate: '%s' },
+      '/': { title: { t: 'home.title' }, titleSuffix: false },
       '/pricing': { title: { t: 'pricing.title' }, description: { t: 'pricing.description' } },
       '/private': { title: 'Private', robots: false },
       '/producto/${id}': { title: { t: 'product.title' } }

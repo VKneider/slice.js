@@ -245,7 +245,7 @@ The first paint is translated. A namespace loaded later shows keys until it arri
 `metadata` in `routes.js`, accepts `{ "t": "key" }` (optionally `{ "t": "key", "params": {…} }`):
 
 ```json
-"defaults": { "titleTemplate": { "t": "seo.titleTemplate" }, "description": { "t": "seo.description" } },
+"defaults": { "titleSuffix": { "t": "seo.titleSuffix" }, "description": { "t": "seo.description" } },
 "routes": {
   "/pricing": { "title": { "t": "pricing.seo.title" }, "description": { "t": "pricing.seo.description" } }
 }
@@ -413,7 +413,7 @@ construction.
   the opt-out. The dev server and the standalone harness hid this.
 - 2026-10-28 — Library adoption stays in slicejs-components 0007, and phase 5 (multilingual SEO) and
   the CLI commands remain pending; docs state both limits.
-- 2026-10-28 — Phase 5 shipped: `seo.js` resolves `{ t }` (`title`, `titleTemplate`, `description`,
+- 2026-10-28 - Phase 5 shipped: `seo.js` resolves `{ t }` (`title`, `description`,
   `imageAlt`, `openGraph`/`twitter` titles) with the app dictionaries, prerenders every literal route
   per locale (`<html lang|dir>`, canonical, `og:locale`), adds `hreflang` + `x-default`, validates a
   missing key per locale as an error and builds the sitemap with `xhtml:link` alternates.
@@ -450,5 +450,5 @@ construction.
   warning per key. The product name is app-wide, not per route: `router.titlePrefix` / `titleSuffix`
   in `sliceConfig.json`, separator inside the string, per-route override with `false` to disable.
   Composition is `prefix + title + suffix` (only one, both or neither). The server reads the same
-  `router` block so the prerendered `<title>` and the hydrated one match. `%s`/`titleTemplate` stays
-  as a legacy escape hatch, never the documented path.
+  `router` block so the prerendered `<title>` and the hydrated one match. Titles compose only with the
+  affixes; there is no `%s`/template.

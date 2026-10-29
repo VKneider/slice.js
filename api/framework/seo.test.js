@@ -20,14 +20,14 @@ const manifest = () => ({
   version: 1,
   origin: ORIGIN,
   defaults: {
-    titleTemplate: '%s | Acme',
+    titleSuffix: ' | Acme',
     description: 'Acme docs.',
     siteName: 'Acme',
     locale: 'en_US',
     image: '/images/banner.png'
   },
   routes: {
-    '/': { title: 'Home', titleTemplate: '%s' },
+    '/': { title: 'Home', titleSuffix: false },
     '/pricing': { title: 'Pricing', description: 'Plans.' },
     '/private': { title: 'Private', robots: false },
     '/producto/${id}': { title: 'Producto', image: '/og/producto.png' }
@@ -205,7 +205,7 @@ test('titleKey resolves through translate, like title: { t }', () => {
     pathname: '/pricing',
     manifest: {},
     origin: ORIGIN,
-    routeMetadata: { titleKey: 'pricing.title', titleTemplate: '%s | Acme' },
+    routeMetadata: { titleKey: 'pricing.title', titleSuffix: ' | Acme' },
     translate: (key) => (key === 'pricing.title' ? 'Precios' : key)
   });
   assert.equal(meta.title, 'Precios | Acme');
@@ -260,7 +260,7 @@ test('validation warns when routes.js and seo.json disagree on a title', () => {
     {
       version: 1,
       origin: ORIGIN,
-      defaults: { titleTemplate: '%s | Acme' },
+      defaults: { titleSuffix: ' | Acme' },
       routes: { '/pricing': { title: 'Pricing' } }
     },
     // The client has no manifest, so it renders "Pricing"; the server sends
@@ -275,10 +275,10 @@ test('validation stays quiet when the route repeats the manifest title', () => {
     {
       version: 1,
       origin: ORIGIN,
-      defaults: { titleTemplate: '%s | Acme' },
+      defaults: { titleSuffix: ' | Acme' },
       routes: { '/pricing': { title: 'Pricing' } }
     },
-    { routes: [{ path: '/pricing', metadata: { title: 'Pricing', titleTemplate: '%s | Acme' } }] }
+    { routes: [{ path: '/pricing', metadata: { title: 'Pricing', titleSuffix: ' | Acme' } }] }
   );
   assert.equal(warnings.filter((message) => /title differs/.test(message)).length, 0);
 });
@@ -286,13 +286,13 @@ test('validation stays quiet when the route repeats the manifest title', () => {
 // -- Translator (feature 0003, phase 5) -------------------------------
 
 const ES = {
-  seo: { titleTemplate: '%s | Acme', description: 'Acme en español.' },
+  seo: { titleSuffix: ' | Acme', description: 'Acme en español.' },
   home: { title: 'Inicio' },
   pricing: { title: 'Precios', description: 'Planes.' },
   count: { one: '{count} plan', other: '{count} planes' }
 };
 const EN = {
-  seo: { titleTemplate: '%s | Acme', description: 'Acme in English.' },
+  seo: { titleSuffix: ' | Acme', description: 'Acme in English.' },
   home: { title: 'Home' },
   pricing: { title: 'Pricing', description: 'Plans.' },
   count: { one: '{count} plan', other: '{count} plans' }
@@ -378,7 +378,7 @@ test('resolveMetadata resolves { t } fields and canonicalizes the localized URL'
   const translated = {
     title: { t: 'pricing.title' },
     description: { t: 'pricing.description' },
-    titleTemplate: '%s | Acme'
+    titleSuffix: ' | Acme'
   };
 
   const es = resolveMetadata({

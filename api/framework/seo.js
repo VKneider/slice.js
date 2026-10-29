@@ -280,7 +280,6 @@ export function resolveMetadata({ pathname, routeMetadata, manifest = {}, origin
   // Always map `{ t }`: with no translate (translator off) the key is the honest output,
   // never "[object Object]".
   merged.title = text(merged.title);
-  merged.titleTemplate = text(merged.titleTemplate);
   merged.description = text(merged.description);
   merged.imageAlt = text(merged.imageAlt);
   if (merged.openGraph) {
@@ -300,13 +299,10 @@ export function resolveMetadata({ pathname, routeMetadata, manifest = {}, origin
   }
 
   const title = merged.title || defaultTitle || null;
-  const template = merged.titleTemplate;
   const affix = (own, fallback) => (own === false ? '' : typeof own === 'string' ? own : typeof fallback === 'string' ? fallback : '');
   const prefix = affix(text(merged.titlePrefix), routerConfig?.titlePrefix);
   const suffix = affix(text(merged.titleSuffix), routerConfig?.titleSuffix);
-  const finalTitle = title
-    ? (template && template !== '%s' ? template.replace('%s', title) : `${prefix}${title}${suffix}`)
-    : null;
+  const finalTitle = title ? `${prefix}${title}${suffix}` : null;
 
   const canonical = merged.canonical
     ? absolute(merged.canonical, origin)
@@ -557,7 +553,7 @@ export function validateSeoManifest(manifest, options = {}) {
         refs.push({ key: value.t, where: `${where}.${field}` });
       }
     };
-    for (const field of ['title', 'titleTemplate', 'description', 'imageAlt']) scan(entry?.[field], field);
+    for (const field of ['title', 'description', 'imageAlt']) scan(entry?.[field], field);
     for (const field of ['titleKey', 'descriptionKey']) {
       if (typeof entry?.[field] === 'string' && entry[field].trim()) {
         refs.push({ key: entry[field].trim(), where: `${where}.${field}` });

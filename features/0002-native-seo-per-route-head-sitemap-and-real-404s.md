@@ -84,7 +84,7 @@ derived.
   "origin": "https://components.slicejs.com",
 
   "defaults": {
-    "titleTemplate": "%s | Slice.js Components",
+    "titleSuffix": " | Slice.js Components",
     "title": "Slice.js Components",
     "description": "Official Slice.js Components library…",
     "siteName": "Slice.js Components",
@@ -94,7 +94,7 @@ derived.
   },
 
   "routes": {
-    "/": { "titleTemplate": "%s" },
+    "/": { "titleSuffix": false },
 
     "/docs/input/button": {
       "title": "Button",
@@ -133,7 +133,7 @@ and the localhost rules below.
 | `defaults` | route entry | `{}` | inherited by every route |
 | `routes` | `{ [path]: Entry }` | `{}` | one entry per real route (paths start with `/`, no trailing slash) |
 | `Entry.title` | string | `defaults.title` or the app's static title | `<title>`, `og:title`, `twitter:title` |
-| `Entry.titleTemplate` | string with `%s` | `defaults.titleTemplate` | `<title>`; `"%s"` opts out for that route |
+| `Entry.titleSuffix` | string | `defaults.titleSuffix` | text after the title; `false` opts a route out |
 | `Entry.description` | string | `defaults.description` | `<meta name="description">`, `og:description`, `twitter:description` |
 | `Entry.canonical` | path or same-origin URL | `origin + path` | `<link rel="canonical">`, `og:url` |
 | `Entry.image` | path or absolute https URL | `defaults.image` | `og:image`, `twitter:image`; see the local-vs-remote rules |
@@ -286,7 +286,7 @@ module, so the rules cannot drift between `slice doctor` (local, friendly) and `
 | concept | Next.js | Nuxt / Unhead | Astro | Slice |
 |---|---|---|---|---|
 | site URL | `metadataBase` | `site.url` | `site` | `origin` |
-| title | `title` (string or `{ template }`) | `title` / `titleTemplate` | `title` | `title` + `titleTemplate: "%s | Site"` |
+| title | `title` (string or `{ template }`) | `title` / `titlePrefix` / `titleSuffix` | `title` | `title` + `titleSuffix: " | Site"` |
 | canonical | `alternates.canonical` | `link rel=canonical` | `canonicalURL` | `canonical` |
 | robots | `robots` | `robots` | — | `robots` |
 | social | `openGraph` / `twitter` | `ogTitle`, `ogImage`… | `openGraph` | `image` shorthand + `openGraph` / `twitter` |
@@ -440,7 +440,7 @@ production.
 
 - Unit tests (`api/framework/seo.test.js`, pure): head injection per field, escaping of `& < > "`,
   JSON-LD serialization with a `</script>` payload, `canonical` defaulting to `origin + path`,
-  `robots: false` → noindex + excluded from the sitemap, `titleTemplate` with and without `%s`,
+  `robots: false` → noindex + excluded from the sitemap, `titleSuffix` with and without a value,
   `og:image:width/height` read from a local file, precedence (inline `metadata` > route > defaults),
   sitemap builder (sorted, escaped, `lastmod`), unknown manifest version rejected.
 - Browser/e2e tests: `@server` spec asserting the RAW HTML (no JS) of two routes differs, an unknown
@@ -488,7 +488,7 @@ production.
   only: manifest in, correct HTML/sitemap/status out. Article prerender and OG image generation stay
   out.
 - 2026-10-27 - Manifest contract v1 written down (`seo.json`): `origin` + `defaults` + `routes`,
-  standard field names (`titleTemplate` with `%s`, `canonical`, `robots`, `openGraph`, `twitter`,
+  standard field names (`titleSuffix`, `canonical`, `robots`, `openGraph`, `twitter`,
   `jsonLd`), `image` shorthand with `og:image:width/height` read from the file when local, and a
   validation list for `slice seo check`. Named `seo.json` on purpose: `manifest.json` is the PWA
   manifest.

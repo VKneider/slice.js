@@ -40,16 +40,10 @@ const fakeDocument = ({ title = 'Server title', description = null } = {}) => {
    };
 };
 
-test('applies the route title and its template', () => {
+test('applies the route title', () => {
    const doc = fakeDocument();
-   applyRouteMetadata({ title: 'Pricing', titleTemplate: '%s | Acme' }, doc);
-   assert.equal(doc.title, 'Pricing | Acme');
-});
-
-test('a template of "%s" leaves the title as written', () => {
-   const doc = fakeDocument();
-   applyRouteMetadata({ title: 'Home', titleTemplate: '%s' }, doc);
-   assert.equal(doc.title, 'Home');
+   applyRouteMetadata({ title: 'Pricing' }, doc);
+   assert.equal(doc.title, 'Pricing');
 });
 
 test('a route without a title keeps the one the server sent', () => {
@@ -113,7 +107,7 @@ test('titleKey is the shorthand for a translated title', () => {
    const doc = fakeDocument();
    const calls = [];
    applyRouteMetadata(
-      { titleKey: 'home.title', titleTemplate: '%s | Acme' },
+      { titleKey: 'home.title', titleSuffix: ' | Acme' },
       doc,
       (key) => {
          calls.push(key);
