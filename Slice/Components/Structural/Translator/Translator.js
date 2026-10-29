@@ -255,7 +255,7 @@ export default class Translator {
          });
          if (text === null) {
             this._warnOnce(`group:${key}`, `"${key}" is a group of messages, not a message`);
-            return key;
+            continue;
          }
          return text;
       }
@@ -321,12 +321,24 @@ export default class Translator {
       if (typeof namespace !== 'string' || !namespace) return;
       this._namespaces.add(namespace);
       if (!this.enabled) return;
+      const switchId = this._switchId;
+      const localeAtStart = this.locale;
       const [active, fallback] = await Promise.allSettled([
          this._fetch(this.locale, namespace),
          this.fallbackLocale ? this._fetch(this.fallbackLocale, namespace) : Promise.resolve(),
       ]);
       if (fallback.status === 'rejected') {
          this._log('warn', `Could not load "${namespace}" for the fallback "${this.fallbackLocale}"`, fallback.reason);
+      }
+      // A locale switch finished while the namespace was in flight: fetch it for the new
+      // locale too, or the screen would keep the previous language until the next switch.
+      if (switchId !== this._switchId && this.locale !== localeAtStart) {
+         await this._fetch(this.locale, namespace).catch((error) =>
+            this._log('warn', `Could not load "${namespace}" for "${this.locale}"`, error)
+         );
+         if (this.fallbackLocale && this.fallbackLocale !== this.locale) {
+            await this._fetch(this.fallbackLocale, namespace).catch(() => {});
+         }
       }
       this._refresh();
       if (active.status === 'rejected') throw active.reason;
@@ -585,22 +597,52 @@ export default class Translator {
       const intl = this._intl;
       const locale = () => this.locale;
       const toDate = (/** @type {any} */ value) => (value instanceof Date ? value : new Date(value));
+      // A bad locale, an invalid date or a missing currency must not throw from a formatter:
+      // fall back to a readable value.
+      const safe = (format, fallback) => (...args) => {
+         try {
+            return format(...args);
+         } catch {
+            return fallback(...args);
+         }
+      };
       return Object.freeze({
          /** @param {number} value @param {Intl.NumberFormatOptions} [options] */
-         number: (value, options = {}) => intl.get(Intl.NumberFormat, locale(), options).format(value),
+         number: safe(
+            (value, options = {}) => intl.get(Intl.NumberFormat, locale(), options).format(value),
+            (value) => String(value)
+         ),
          /** @param {number} value @param {string} currency @param {Intl.NumberFormatOptions} [options] */
-         currency: (value, currency, options = {}) =>
-            intl.get(Intl.NumberFormat, locale(), { style: 'currency', currency, ...options }).format(value),
+         currency: safe(
+            (value, currency, options = {}) =>
+               intl.get(Intl.NumberFormat, locale(), { style: 'currency', currency, ...options }).format(value),
+            (value, currency) => `${value} ${currency || ''}`.trim()
+         ),
          /** @param {number} value 0.25 → 25 % @param {Intl.NumberFormatOptions} [options] */
-         percent: (value, options = {}) => intl.get(Intl.NumberFormat, locale(), { style: 'percent', ...options }).format(value),
+         percent: safe(
+            (value, options = {}) => intl.get(Intl.NumberFormat, locale(), { style: 'percent', ...options }).format(value),
+            (value, options = {}) => `${Math.round(Number(value) * 100)}%`
+         ),
          /** @param {Date|number|string} value @param {Intl.DateTimeFormatOptions} [options] */
-         date: (value, options = { dateStyle: 'medium' }) => intl.get(Intl.DateTimeFormat, locale(), options).format(toDate(value)),
+         date: safe(
+            (value, options = { dateStyle: 'medium' }) => intl.get(Intl.DateTimeFormat, locale(), options).format(toDate(value)),
+            (value) => String(value)
+         ),
          /** @param {Date|number|string} value @param {Intl.DateTimeFormatOptions} [options] */
-         time: (value, options = { timeStyle: 'short' }) => intl.get(Intl.DateTimeFormat, locale(), options).format(toDate(value)),
+         time: safe(
+            (value, options = { timeStyle: 'short' }) => intl.get(Intl.DateTimeFormat, locale(), options).format(toDate(value)),
+            (value) => String(value)
+         ),
          /** @param {number} value @param {Intl.RelativeTimeFormatUnit} unit @param {Intl.RelativeTimeFormatOptions} [options] */
-         relative: (value, unit, options = { numeric: 'auto' }) => intl.get(Intl.RelativeTimeFormat, locale(), options).format(value, unit),
+         relative: safe(
+            (value, unit, options = { numeric: 'auto' }) => intl.get(Intl.RelativeTimeFormat, locale(), options).format(value, unit),
+            (value, unit) => `${value} ${unit}`
+         ),
          /** @param {string[]} items @param {Intl.ListFormatOptions} [options] */
-         list: (items, options = { type: 'conjunction' }) => intl.get(Intl.ListFormat, locale(), options).format(items),
+         list: safe(
+            (items, options = { type: 'conjunction' }) => intl.get(Intl.ListFormat, locale(), options).format(items),
+            (items) => (Array.isArray(items) ? items.join(', ') : String(items))
+         ),
       });
    }
 
@@ -828,6 +870,13 @@ export default class Translator {
    syncUrl() {
       if (!this.localePrefix || typeof location === 'undefined' || typeof history === 'undefined') return;
       const current = `${location.pathname}${location.search}${location.hash}`;
+      // Never rewrite a URL the router cannot resolve: `/fr/x` must stay a 404, not become
+      // `/es/fr/x` (and lose the miss).
+      const router = globalThis.slice?.router;
+      if (typeof router?.matchRoute === 'function') {
+         const match = router.matchRoute(current);
+         if (!match?.route || match.route.path === '/404') return;
+      }
       const { path } = splitLocalePath(current, this.locales);
       const target = localizePath(path, this.locale, { localePrefix: this.localePrefix, defaultLocale: this.defaultLocale });
       if (target !== current) history.replaceState(history.state, '', target);

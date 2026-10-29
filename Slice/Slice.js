@@ -426,9 +426,13 @@ export default class Slice {
  * @returns {string}
  */
 function stripLocalePrefix(pathname, translatorConfig) {
-   const routing = translatorConfig?.routing;
-   if (!translatorConfig?.enabled || (routing !== 'prefix' && routing !== 'prefix-except-default')) return pathname;
-   const locales = [translatorConfig.defaultLocale, ...(translatorConfig.locales || [])]
+   const localePrefix = translatorConfig?.localePrefix;
+   if (!translatorConfig?.enabled || (localePrefix !== 'always' && localePrefix !== 'except-default')) return pathname;
+   const locales = [
+      translatorConfig.defaultLocale,
+      ...(translatorConfig.locales || []),
+      translatorConfig.fallbackLocale
+   ]
       .filter((locale) => typeof locale === 'string')
       .map((locale) => locale.toLowerCase());
    const match = /^\/([^/]+)(\/.*)?$/.exec(pathname);
@@ -751,15 +755,26 @@ async function init() {
          return parts.join('+');
       };
 
-      const handlers = {
-         [normalize(sliceConfig.events?.ui?.shortcut)]: () => window.slice.eventsDebugger?.toggle?.(),
-         [normalize(sliceConfig.context?.ui?.shortcut)]: () => window.slice.contextDebugger?.toggle?.(),
-         [normalize(sliceConfig.translator?.ui?.shortcut)]: () => window.slice.translatorDebugger?.toggle?.(),
-         [normalize(sliceConfig.logger?.ui?.shortcut)]: () => window.slice.logViewer?.toggle?.(),
-         [normalize(sliceConfig.debugger?.leakInspector?.shortcut)]: () => window.slice.leakInspector?.toggle?.(),
+      const handlers = {};
+      const register = (shortcut, fn, label) => {
+         const combo = normalize(shortcut);
+         if (!combo) return;
+         if (handlers[combo]) {
+            console.warn(`[slice] The ${label} debugger shortcut "${combo}" is already used; the first one wins.`);
+            return;
+         }
+         handlers[combo] = fn;
       };
+      if (sliceConfig.events?.ui?.enabled) register(sliceConfig.events.ui.shortcut, () => window.slice.eventsDebugger?.toggle?.(), 'events');
+      if (sliceConfig.context?.ui?.enabled) register(sliceConfig.context.ui.shortcut, () => window.slice.contextDebugger?.toggle?.(), 'context');
+      if (sliceConfig.translator?.ui?.enabled) register(sliceConfig.translator.ui.shortcut, () => window.slice.translatorDebugger?.toggle?.(), 'translator');
+      if (sliceConfig.logger?.ui?.enabled) register(sliceConfig.logger.ui.shortcut, () => window.slice.logViewer?.toggle?.(), 'logger');
+      if (sliceConfig.debugger?.leakInspector?.enabled) register(sliceConfig.debugger.leakInspector.shortcut, () => window.slice.leakInspector?.toggle?.(), 'leak inspector');
 
       document.addEventListener('keydown', (event) => {
+         if (event.repeat) return;
+         const target = event.target;
+         if (target instanceof Element && target.closest('input, textarea, select, [contenteditable="true"]')) return;
          const key = toKey(event);
          if (!key || !handlers[key]) return;
          event.preventDefault();

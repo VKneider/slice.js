@@ -198,6 +198,10 @@ function writeText(element, key, params, context) {
          }
       });
       element.replaceChildren(...nodes);
+      for (const [name, slot] of slots) {
+         if (used.has(name)) slot.__sliceSlotDetached = false;
+         else if (!slot.isConnected) slot.__sliceSlotDetached = true;
+      }
       return;
    }
 
@@ -230,15 +234,20 @@ function writeText(element, key, params, context) {
  */
 function slotsOf(element, context) {
    let slots = context.slots.get(element);
+   if (!slots) slots = new Map();
+   const present = new Map();
    for (const candidate of element.querySelectorAll('[data-t-slot]')) {
       if (candidate.parentElement?.closest('[data-t]') !== element) continue;
       const name = candidate.getAttribute('data-t-slot');
       if (!name) continue;
-      if (!slots) {
-         slots = new Map();
-         context.slots.set(element, slots);
-      }
-      slots.set(name, candidate);
+      present.set(name, candidate);
    }
-   return slots || new Map();
+   // A slot the app removed is gone; one this helper detached to show a message without
+   // it is kept for the next locale (that is why the cache exists).
+   for (const [name, node] of slots) {
+      if (!node.isConnected && !node.__sliceSlotDetached) slots.delete(name);
+   }
+   for (const [name, node] of present) slots.set(name, node);
+   if (slots.size) context.slots.set(element, slots);
+   return slots;
 }

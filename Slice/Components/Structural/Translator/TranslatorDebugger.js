@@ -134,6 +134,9 @@ export default class TranslatorDebugger extends HTMLElement {
    }
 
    render() {
+      // The panel can be created before `slice.events` exists (Slice.js wiring order);
+      // retry the subscription on every render so it eventually attaches.
+      this._subscribe();
       const translator = slice.translator;
       if (!translator) {
          this.meta.textContent = 'slice.translator is not available.';

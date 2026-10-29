@@ -263,6 +263,8 @@ export function resolveMetadata({ pathname, routeMetadata, manifest = {}, origin
       inline.description = { t: inline.descriptionKey.trim() };
     }
   }
+  const text = (value) => resolveSeoText(value, translate);
+  const defaultTitle = text(manifest.defaults?.title);
   const merged = mergeDeep(
     mergeDeep(manifest.defaults || {}, pickRouteEntry(pathname, manifest)?.entry),
     inline
@@ -277,7 +279,6 @@ export function resolveMetadata({ pathname, routeMetadata, manifest = {}, origin
 
   // Always map `{ t }`: with no translate (translator off) the key is the honest output,
   // never "[object Object]".
-  const text = (value) => resolveSeoText(value, translate);
   merged.title = text(merged.title);
   merged.titleTemplate = text(merged.titleTemplate);
   merged.description = text(merged.description);
@@ -298,11 +299,11 @@ export function resolveMetadata({ pathname, routeMetadata, manifest = {}, origin
     };
   }
 
-  const title = merged.title ?? null;
+  const title = merged.title || defaultTitle || null;
   const template = merged.titleTemplate;
   const affix = (own, fallback) => (own === false ? '' : typeof own === 'string' ? own : typeof fallback === 'string' ? fallback : '');
-  const prefix = affix(routeMetadata?.titlePrefix, routerConfig?.titlePrefix);
-  const suffix = affix(routeMetadata?.titleSuffix, routerConfig?.titleSuffix);
+  const prefix = affix(text(merged.titlePrefix), routerConfig?.titlePrefix);
+  const suffix = affix(text(merged.titleSuffix), routerConfig?.titleSuffix);
   const finalTitle = title
     ? (template && template !== '%s' ? template.replace('%s', title) : `${prefix}${title}${suffix}`)
     : null;
@@ -354,17 +355,19 @@ export function renderHead(meta, { siteName = null, locale = null, alternates = 
   }
   tags.push(`<meta name="robots" content="${escapeHtml(meta.robots)}" />`);
 
-  const ogType = meta.openGraph.type || 'website';
-  const ogTitle = meta.openGraph.title || meta.title;
-  const ogDescription = meta.openGraph.description || meta.description;
+  const openGraph = meta.openGraph || {};
+  const twitter = meta.twitter || {};
+  const ogType = openGraph.type || 'website';
+  const ogTitle = openGraph.title || meta.title;
+  const ogDescription = openGraph.description || meta.description;
 
   tags.push(`<meta property="og:type" content="${escapeHtml(ogType)}" />`);
   if (ogTitle) tags.push(`<meta property="og:title" content="${escapeHtml(ogTitle)}" />`);
   if (ogDescription) tags.push(`<meta property="og:description" content="${escapeHtml(ogDescription)}" />`);
   if (meta.canonical) tags.push(`<meta property="og:url" content="${escapeHtml(meta.canonical)}" />`);
-  const ogSiteName = meta.openGraph.siteName || siteName;
+  const ogSiteName = openGraph.siteName || siteName;
   if (ogSiteName) tags.push(`<meta property="og:site_name" content="${escapeHtml(ogSiteName)}" />`);
-  const ogLocale = meta.openGraph.locale || locale;
+  const ogLocale = openGraph.locale || locale;
   if (ogLocale) tags.push(`<meta property="og:locale" content="${escapeHtml(ogLocale)}" />`);
   if (meta.image) {
     tags.push(`<meta property="og:image" content="${escapeHtml(meta.image)}" />`);
@@ -374,11 +377,11 @@ export function renderHead(meta, { siteName = null, locale = null, alternates = 
     if (meta.imageAlt) tags.push(`<meta property="og:image:alt" content="${escapeHtml(meta.imageAlt)}" />`);
   }
 
-  const card = meta.twitter.card
+  const card = twitter.card
     || (meta.image ? 'summary_large_image' : 'summary');
   tags.push(`<meta name="twitter:card" content="${escapeHtml(card)}" />`);
-  if (meta.twitter.site) tags.push(`<meta name="twitter:site" content="${escapeHtml(meta.twitter.site)}" />`);
-  if (meta.twitter.creator) tags.push(`<meta name="twitter:creator" content="${escapeHtml(meta.twitter.creator)}" />`);
+  if (twitter.site) tags.push(`<meta name="twitter:site" content="${escapeHtml(twitter.site)}" />`);
+  if (twitter.creator) tags.push(`<meta name="twitter:creator" content="${escapeHtml(twitter.creator)}" />`);
   if (ogTitle) tags.push(`<meta name="twitter:title" content="${escapeHtml(ogTitle)}" />`);
   if (ogDescription) tags.push(`<meta name="twitter:description" content="${escapeHtml(ogDescription)}" />`);
   if (meta.image) tags.push(`<meta name="twitter:image" content="${escapeHtml(meta.image)}" />`);
@@ -461,7 +464,7 @@ export function buildSitemap({ manifest, origin, translator = null }) {
     if (entry?.noindex) continue;
 
     const paths = locales.map((locale) => (active ? active.localize(key, locale) : key));
-    const alternates = active?.localePrefix
+    const alternates = active?.localePrefix && locales.length > 1
       ? locales
         .map((locale, index) => ({
           hreflang: locale,
@@ -655,20 +658,24 @@ export function validateSeoManifest(manifest, options = {}) {
     // sends for the same path, the tab title changes after hydration — and a
     // crawler that runs JS sees the shorter one. Catch it here, not in production.
     const origin = normalizeOrigin(manifest.origin) || '';
+    const translate = translator?.enabled
+      ? (key, params) => translator.t(translator.defaultLocale, key, params)
+      : null;
     for (const route of (Array.isArray(routes) ? routes : [])) {
       const pathname = typeof route === 'string' ? route : route?.path;
       const metadata = typeof route === 'object' ? route?.metadata : null;
       if (!pathname || !metadata) continue;
       checkTranslations(metadata, `routes.js ${pathname}`);
-      if (metadata.titleKey) continue; // its key is validated above; the text is locale-dependent
-      if (!metadata.title) continue;
-      if (typeof metadata.title !== 'string') continue;
-      const served = resolveMetadata({ pathname, manifest, origin });
-      const client = resolveMetadata({ pathname, manifest: {}, origin, routeMetadata: metadata });
+      if (!metadata.title && !metadata.titleKey) continue;
+      if (metadata.title && typeof metadata.title !== 'string') continue;
+      // A missing titleKey is already an error; comparing it to seo.json would only add noise.
+      if (metadata.titleKey && translator?.enabled && !translator.has(translator.defaultLocale, metadata.titleKey)) continue;
+      const served = resolveMetadata({ pathname, manifest, origin, translate });
+      const client = resolveMetadata({ pathname, manifest: {}, origin, routeMetadata: metadata, translate });
       if (served.title && client.title && served.title !== client.title) {
         add(
           warnings,
-          `route title differs from seo.json: ${pathname} ("${metadata.title}" vs "${served.title}")`
+          `route title differs from seo.json: ${pathname} ("${client.title}" vs "${served.title}")`
         );
       }
     }

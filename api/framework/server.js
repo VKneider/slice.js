@@ -197,8 +197,12 @@ export function sliceFallback(options = {}) {
     if (seo) {
       const result = seo.resolve(pathname);
       if (result.location) {
-        res.setHeader('Cache-Control', 'public, max-age=3600');
-        return res.redirect(result.status, result.location);
+        const query = req.originalUrl.includes('?') ? req.originalUrl.slice(req.originalUrl.indexOf('?')) : '';
+        const location = result.location.includes('?') ? result.location : `${result.location}${query}`;
+        // A locale redirect depends on the current default locale and prefix mode; do not
+        // let a browser keep it for an hour after a config change.
+        res.setHeader('Cache-Control', 'no-cache');
+        return res.redirect(result.status, location);
       }
       return sendRendered(req, res, result.page, result.status);
     }
@@ -345,7 +349,7 @@ export async function prepareSeo(options = {}) {
       meta.imageAlt = meta.imageAlt || meta.title;
     }
 
-    const alternates = translator.enabled && translator.localePrefix && activeLocale
+    const alternates = translator.enabled && translator.localePrefix && activeLocale && translator.locales.length > 1
       ? translator.locales
         .map((code) => ({
           hreflang: code,
@@ -383,10 +387,25 @@ export async function prepareSeo(options = {}) {
   patterns.sort((a, b) => b.path.length - a.path.length);
 
   const notFound = new Map();
+  const notFoundPrefix = typeof routerConfig.titlePrefix === 'string' ? routerConfig.titlePrefix : '';
+  const notFoundSuffix = typeof routerConfig.titleSuffix === 'string' ? routerConfig.titleSuffix : '';
   for (const activeLocale of locales) {
+    const key = 'seo.notFound.title';
+    const translated = translator.enabled && activeLocale ? translator.t(activeLocale, key) : key;
+    const title = `${notFoundPrefix}${translated === key ? 'Not found' : translated}${notFoundSuffix}`;
+    const descriptionKey = 'seo.notFound.description';
+    const description = translator.enabled && activeLocale ? translator.t(activeLocale, descriptionKey) : descriptionKey;
+    const head = renderHead(
+      {
+        title,
+        description: description === descriptionKey ? null : description,
+        robots: 'noindex, nofollow'
+      },
+      { locale: translator.enabled && activeLocale ? translator.ogLocale(activeLocale) : null }
+    );
     notFound.set(activeLocale, encodeSeoPage(injectHead(
       shell,
-      '<title>Not found</title>\n    <meta name="robots" content="noindex, nofollow" />',
+      head,
       translator.enabled && activeLocale
         ? { lang: activeLocale, dir: translator.direction(activeLocale) }
         : {}
