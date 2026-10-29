@@ -48,15 +48,16 @@ local de `api/`).
 
 ## slice.translator (feature 0003, phases 1–6)
 - `Slice/Components/Structural/Translator/`: `Translator.js` (the class), `TranslatorDebugger.js`
-  (panel), and pure helpers `messages.js` (lookup, plurals, interpolation), `markers.js` (`key()`
+  (panel), and pure helpers `messages.js` (lookup, plurals, interpolation), `markers.js` (`t.ref()`
   markers), `dom.js` (`data-t` rules, reused by the CLI), `localePath.js` (URL rules, shared with the
   server). Helpers must not import each other: the CLI bundler inlines only the helpers a Structural
   component imports directly.
 - Always created in `init()` (disabled → `t()` returns the key), so it is part of the core bundle.
 - Texts are *marked*: `data-t` / `data-t-*` anywhere in the document are translated by one
   `MutationObserver`; templates are translated in `loadTemplateToComponent` (before `init()`).
-  Props: `setComponentProps` resolves `key()` markers and `static props` setters are wrapped once per
-  class; `destroyComponent` calls `translator.forget()`. No `localeChanged()` hook.
+  Props: `setComponentProps` resolves `t.ref()` references and `static props` setters are wrapped once per
+  class; `destroyComponent` calls `translator.forget()`. No `localeChanged()` hook. One entry point:
+  `slice.t()` for text, `slice.t.ref()` for a prop; `data-t` covers the DOM (templates and JS-created).
 - URLs (phases 3–4): `localePath.js` (pure prefix rules). The Router never reads
   `window.location.pathname` for matching without `_appPath()`; components use the shortcuts
   `slice.path` / `slice.href()` (aliases of `slice.router.path` / `href()`), so they import no helper.

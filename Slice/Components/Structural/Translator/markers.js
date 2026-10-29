@@ -1,5 +1,5 @@
 /**
- * Key references for component props: `slice.translator.key('orders.save')`.
+ * Key references for component props: `slice.t.ref('orders.save')`.
  *
  * A marker is what an app passes instead of a string. The framework resolves it before
  * the component sees it (the component only ever receives text) and assigns the prop
@@ -15,7 +15,7 @@ function isPlainObject(value) {
    return proto === Object.prototype || proto === null;
 }
 
-export class TranslationKey {
+export class TranslationRef {
    /** @type {(() => void) | undefined} */
    #onStringify;
 
@@ -53,10 +53,10 @@ export class TranslationKey {
 
 /**
  * @param {unknown} value
- * @returns {value is TranslationKey}
+ * @returns {value is TranslationRef}
  */
 export function isMarker(value) {
-   return value instanceof TranslationKey;
+   return value instanceof TranslationRef;
 }
 
 /**

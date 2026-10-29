@@ -21,3 +21,12 @@ test('slice.href delegates to the router and returns the path without one', () =
    assert.equal(withRouter({}).href(null), '');
    assert.equal(withRouter({}).href(42), '42');
 });
+
+test('slice.t.ref is the prop reference, and returns the key with the translator off', () => {
+   const instance = new Slice({ paths: {} }, null);
+   assert.equal(instance.t('orders.save'), 'orders.save');
+   assert.equal(instance.t.ref('orders.save'), 'orders.save');
+   // With a translator, it is a marker object, not text.
+   instance.translator = { ref: (key) => ({ key }), t: () => 'Save' };
+   assert.deepEqual(instance.t.ref('orders.save'), { key: 'orders.save' });
+});

@@ -28,6 +28,11 @@ export default class Slice {
       this._mode = 'production';
       this._publicEnv = {};
 
+      // One translation entry point: `slice.t()` for text, `slice.t.ref()` for a prop
+      // that must follow the locale. Bound here so both survive destructuring.
+      this.t = this.t.bind(this);
+      this.t.ref = (key, params) => (this.translator ? this.translator.ref(key, params) : String(key ?? ''));
+
       // 📦 Bundle system is initialized automatically via import in index.js
    }
 
@@ -369,6 +374,15 @@ export default class Slice {
     */
    t(key, params) {
       return this.translator ? this.translator.t(key, params) : String(key ?? '');
+   }
+
+   /**
+    * The active locale (shortcut of `slice.translator.locale`).
+    * @returns {string}
+    */
+   get locale() {
+      if (this.translator?.locale) return this.translator.locale;
+      return typeof document !== 'undefined' ? document.documentElement.lang || '' : '';
    }
 
    /**

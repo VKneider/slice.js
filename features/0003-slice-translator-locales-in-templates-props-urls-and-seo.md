@@ -115,7 +115,7 @@ await slice.translator.setLocale('en')       // §8
 await slice.translator.load('orders')        // a namespace, active + fallback locale
 slice.translator.has(key, locale?)
 slice.translator.add(locale, messages, { defaults }?)
-slice.translator.key(key, params?)           // a reference for a component prop (§6)
+slice.translator.ref(key, params?)           // a reference for a component prop (§6)
 slice.translator.watch(component, callback)  // callback(locale, previous), until the component is destroyed
 slice.translator.apply(root?)                // translate data-t under root now (default: the document)
 slice.translator.format.number / currency / percent / date / time / relative / list
@@ -164,21 +164,21 @@ el.innerHTML = `<p data-t="about.description"></p>`; // HTML built in JS works t
   again.
 - Text computed at the moment it is used (`slice.t()` in a toast, a confirm) needs nothing.
 
-### 6. Component props: key references
+### 6. Component props: `t.ref()` references
 
 ```js
-await slice.build('Button', { value: slice.translator.key('orders.save') });
-this.$count.label = slice.translator.key('cart.items', { count });
-await slice.build('DropDown', { items: [{ label: slice.translator.key('menu.home'), path: '/' }] });
+await slice.build('Button', { value: slice.t.ref('orders.save') });
+this.$count.label = slice.t.ref('cart.items', { count });
+await slice.build('DropDown', { items: [{ label: slice.t.ref('menu.home'), path: '/' }] });
 ```
 
-- `key()` returns a frozen marker; **the component only ever receives the translated string**,
+- `t.ref()` returns a frozen reference; **the component only ever receives the translated string**,
   through its normal setter. Components need no change.
 - On a locale change the framework assigns the prop again. A marker nested in an array or a plain
   object is resolved, and the whole prop is assigned again.
 - Covered props: every prop given through `setComponentProps` (build or refresh) is refreshed. The
   setters of `static props` are also wrapped (once per class) so a later direct assignment of a
-  marker (`this.$badge.label = slice.translator.key(…)`) resolves and refreshes too; assigning a
+  marker (`this.$badge.label = slice.translator.ref(…)`) resolves and refreshes too; assigning a
   plain string afterwards stops the refresh for that prop.
 - Prop validation (`allowedValues`, unknown props) sees the translated strings, not the markers.
 - `String(marker)` returns the key and warns in development (a marker used as text by mistake).
@@ -367,7 +367,7 @@ construction.
 - `routes.md` / router docs: `path`, `href()`, `RouteInfo.locale`.
 - SEO docs: `{ t }` fields, multilingual output.
 - `sliceConfig` reference: the `translator` block.
-- Skills/AGENTS: "text never hard-coded in templates when the app is translated; props use `key()`".
+- Skills/AGENTS: "text never hard-coded in templates when the app is translated; props use `t.ref()`".
 
 ## Open questions
 
@@ -391,7 +391,7 @@ construction.
 - 2026-10-28 — Structural, not a Service (templates, props, router and server need it).
 - 2026-10-28 — Name `slice.translator`, shortcut `slice.t()`; no `i18n` anywhere.
 - 2026-10-28 — Hierarchical keys; templates carry only the key; a missing translation shows the key.
-- 2026-10-28 — Props through `slice.translator.key()` markers, resolved and refreshed by the framework.
+- 2026-10-28 — Props through `slice.translator.ref()` markers, resolved and refreshed by the framework.
 - 2026-10-28 — Locale in the URL and multilingual SEO are part of v1 (phases 4–5), designed with 0002.
 - 2026-10-28 — Texts are *marked*, not written: a document observer translates `data-t` (with
   `data-t-*` params) wherever it appears; no `localeChanged()` hook and no `bind()`. `watch()` only
@@ -404,7 +404,7 @@ construction.
   `navigate(path, { locale })`, prefix routing in `translator/localePath.js` (pure, shared with the
   server for phase 5). With `routing`, the URL decides the locale.
 - 2026-10-28 — Integration proof in `slicejs-lab` (Spanish default, English fallback, no routing):
-  marked shell texts, `key()` props for SideMenu/Breadcrumbs/Button/ToolTip, ES/EN switch, saved
+  marked shell texts, `t.ref()` props for SideMenu/Breadcrumbs/Button/ToolTip, ES/EN switch, saved
   choice and `translator:change`. `tests/translator.e2e.mjs` boots the dev server and drives
   Chromium (`pnpm test:lab:e2e`).
 - 2026-10-28 — Found in that proof and fixed: production did not serve the dictionaries.
@@ -429,3 +429,13 @@ construction.
   `seo sitemap/check/images`, all reusing the framework's `{ t }`/sitemap code and `dom.js` rules.
   Unused-key reporting is opt-in (`--unused`): keys reached through app helpers (`tr(key)`) are
   invisible to the scan.
+- 2026-10-29 — API closed after review: **one entry point**, `slice.t()`, for text; `slice.t.ref()`
+  for a prop that must follow the locale without rebuilding the component. `slice.translator.key()`
+  is gone (renamed to `ref()`); nothing is published, so there is no deprecated alias. The marker
+  class is `TranslationRef`.
+- 2026-10-29 — No fourth lifecycle hook and no global `refreshComponents`: `data-t` (including
+  `element.dataset.t` for DOM created from JS) is the automatic text binding; props use `t.ref()`;
+  canvas/third-party widgets use the existing `watch()`. A section that computes labels from data can
+  call its own render from `watch` in `init` when needed; that stays local and explicit.
+- 2026-10-29 — The lab was fully translated with `data-t`/`dataset.t`, `t.ref()` for component
+  props and `t()` for computed text, proving the rule end to end in both locales.

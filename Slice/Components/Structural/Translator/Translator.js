@@ -8,7 +8,7 @@ import {
    matchLocale,
    mergeMessages,
 } from './messages.js';
-import { TranslationKey, containsMarker, resolveMarkers } from './markers.js';
+import { TranslationRef, containsMarker, resolveMarkers } from './markers.js';
 import { translateTree } from './dom.js';
 import { isExternalHref, localeOfUrl, localizePath, normalizeRouting, splitLocalePath } from './localePath.js';
 
@@ -32,7 +32,7 @@ const WRAPPED = Symbol('slice.translator.wrapped');
  *
  *   slice.t('orders.count', { count: 3 })            → '3 pedidos'
  *   <h1 data-t="home.title"></h1>                    → translated, and kept translated
- *   slice.build('Button', { value: slice.translator.key('orders.save') })
+ *   slice.build('Button', { value: slice.t.ref('orders.save') })
  *
  * Texts in the DOM are *marked*, not written: any element with `data-t` (in a template, in
  * App/index.html, or created later from JS) is translated when it enters the document and
@@ -369,11 +369,11 @@ export default class Translator {
     * string, and receives it again when the locale changes.
     * @param {string} key
     * @param {Record<string, any>} [params]
-    * @returns {TranslationKey}
+    * @returns {TranslationRef}
     */
-   key(key, params) {
-      return new TranslationKey(key, params, () =>
-         this._warnOnce(`marker:${key}`, `slice.translator.key("${key}") was used as a string; pass it as a prop value, or use slice.t() for text`)
+   ref(key, params) {
+      return new TranslationRef(key, params, () =>
+         this._warnOnce(`marker:${key}`, `slice.t.ref("${key}") was used as a string; pass it as a prop value, or use slice.t() for text`)
       );
    }
 
@@ -382,7 +382,7 @@ export default class Translator {
     * @param {unknown} value
     * @returns {boolean}
     */
-   isKey(value) {
+   isRef(value) {
       return containsMarker(value);
    }
 
@@ -397,7 +397,7 @@ export default class Translator {
 
    /**
     * Wrap the setters of a component class's `static props` so that a later assignment of a
-    * marker (`this.$count.label = slice.translator.key(…)`) resolves and refreshes too.
+    * marker (`this.$count.label = slice.t.ref(…)`) resolves and refreshes too.
     * Once per class; invisible for any value that is not a marker. Called by the Controller.
     * @param {Function} ComponentClass
     * @returns {void}

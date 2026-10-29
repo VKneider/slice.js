@@ -12,7 +12,7 @@ import {
    matchLocale,
    mergeMessages,
 } from '../Components/Structural/Translator/messages.js';
-import { TranslationKey, containsMarker, resolveMarkers } from '../Components/Structural/Translator/markers.js';
+import { TranslationRef, containsMarker, resolveMarkers } from '../Components/Structural/Translator/markers.js';
 import { camelCase, templateKeys, paramsOf } from '../Components/Structural/Translator/dom.js';
 import { applyRouteMetadata, resolveText } from '../Components/Structural/Router/applyRouteMetadata.js';
 
@@ -88,7 +88,7 @@ test('markers: resolved deep, identity kept where there is nothing to resolve', 
    const translate = (key, params) => `<${key}${params ? JSON.stringify(params) : ''}>`;
    const icon = { name: 'home' };
    const items = [
-      { label: new TranslationKey('menu.home'), path: '/', icon },
+      { label: new TranslationRef('menu.home'), path: '/', icon },
       { label: 'Plain', path: '/plain' },
    ];
    const resolved = resolveMarkers(items, translate);
@@ -98,13 +98,13 @@ test('markers: resolved deep, identity kept where there is nothing to resolve', 
    assert.equal(containsMarker(items), true);
    assert.equal(containsMarker(resolved), false);
 
-   const nested = new TranslationKey('cart.items', { count: 2, who: new TranslationKey('you') });
+   const nested = new TranslationRef('cart.items', { count: 2, who: new TranslationRef('you') });
    assert.equal(resolveMarkers(nested, translate), '<cart.items{"count":2,"who":"<you>"}>');
 });
 
 test('a marker used as a string shows its key and reports it', () => {
    let reported = 0;
-   const marker = new TranslationKey('orders.save', undefined, () => reported++);
+   const marker = new TranslationRef('orders.save', undefined, () => reported++);
    assert.equal(`${marker}`, 'orders.save');
    assert.equal(String(marker), 'orders.save');
    assert.equal(reported, 2);

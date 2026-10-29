@@ -55,7 +55,7 @@ test('disabled: t() returns the key, nothing is fetched, markers resolve to thei
    const translator = new Translator({ enabled: false });
    await translator.init();
    assert.equal(translator.t('orders.title'), 'orders.title');
-   assert.equal(translator.resolve({ label: translator.key('orders.save') }).label, 'orders.save');
+   assert.equal(translator.resolve({ label: translator.ref('orders.save') }).label, 'orders.save');
    assert.equal(requests.length, 0);
    assert.equal(typeof translator.format.number(1), 'string');
 });
@@ -208,9 +208,9 @@ test('key() props: the component receives text, and receives it again after setL
    await withRealController(async ({ translator, controller }) => {
       warnings.length = 0;
       const label = new Label({
-         value: translator.key('orders.save'),
-         items: [{ label: translator.key('orders.title'), path: '/orders' }],
-         plain: translator.key('orders.title'),
+         value: translator.ref('orders.save'),
+         items: [{ label: translator.ref('orders.title'), path: '/orders' }],
+         plain: translator.ref('orders.title'),
       });
       label.sliceId = 'label-1';
       controller.registerComponent(label);
@@ -227,7 +227,7 @@ test('key() props: the component receives text, and receives it again after setL
       assert.deepEqual(label.renders, ['Guardar', 'Save']);
 
       // A later assignment of a marker goes through the wrapped setter…
-      label.value = translator.key('orders.title');
+      label.value = translator.ref('orders.title');
       assert.equal(label.value, 'Orders');
       await translator.setLocale('es');
       assert.equal(label.value, 'Pedidos');
@@ -238,7 +238,7 @@ test('key() props: the component receives text, and receives it again after setL
       assert.equal(label.value, 'x');
 
       // Destroyed components are forgotten.
-      label.value = translator.key('orders.save');
+      label.value = translator.ref('orders.save');
       controller.destroyComponent(label);
       await translator.setLocale('es');
       assert.equal(label.value, 'Save', 'a destroyed component is not refreshed');

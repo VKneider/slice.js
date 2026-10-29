@@ -152,10 +152,10 @@ export interface SliceRouterApi {
   applyMetadata(metadata: Record<string, unknown> | null): void;
 }
 
-export type TranslatorParams = Record<string, string | number | TranslationKey>;
+export type TranslatorParams = Record<string, string | number | TranslationRef>;
 
-/** A key reference for a component prop, from `slice.translator.key()`. */
-export interface TranslationKey {
+/** A key reference for a component prop, from `slice.t.ref()`. */
+export interface TranslationRef {
   readonly key: string;
   readonly params?: Readonly<TranslatorParams>;
 }
@@ -210,8 +210,8 @@ export interface SliceTranslatorApi {
   /** Rewrite the address bar to the active locale (replaceState). */
   syncUrl(): void;
   /** A key reference for a component prop: resolved before the component sees it, refreshed on a locale change. */
-  key(key: string, params?: TranslatorParams): TranslationKey;
-  isKey(value: unknown): boolean;
+  ref(key: string, params?: TranslatorParams): TranslationRef;
+  isRef(value: unknown): boolean;
   resolve<T = unknown>(value: T): T;
   /** Translate every `data-t` element under `root` (default: the document) right now. */
   apply(root?: ParentNode): number;
@@ -267,6 +267,12 @@ export interface SliceFrameworkClasses {
   [key: string]: unknown;
 }
 
+/** `slice.t`: call it for text, `slice.t.ref()` for a prop reference. */
+export interface SliceTranslate {
+  (key: string, params?: TranslatorParams): string;
+  ref(key: string, params?: TranslatorParams): TranslationRef;
+}
+
 export interface SliceApi {
   frameworkClasses: SliceFrameworkClasses | null;
   controller: SliceControllerApi;
@@ -297,8 +303,10 @@ export interface SliceApi {
   /** The URL for an app path in the active (or given) locale. */
   href(path: string, options?: { locale?: string }): string;
   attachTemplate(componentInstance: HTMLElement): void;
-  /** Shortcut of `slice.translator.t()`. */
-  t(key: string, params?: TranslatorParams): string;
+  /** `t()` returns text; `t.ref()` returns a reference for a prop. */
+  t: SliceTranslate;
+  /** The active locale. */
+  readonly locale: string;
 }
 
 declare class Slice {
