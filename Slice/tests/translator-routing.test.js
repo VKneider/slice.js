@@ -7,7 +7,7 @@ import {
    isExternalHref,
    localeOfUrl,
    localizePath,
-   normalizeRouting,
+   normalizeLocalePrefix,
    splitLocalePath,
 } from '../Components/Structural/Translator/localePath.js';
 
@@ -23,21 +23,21 @@ test('splitLocalePath: known prefixes only, query and hash kept', () => {
 });
 
 test('localizePath per routing mode', () => {
-   const prefix = { routing: /** @type {const} */ ('prefix'), defaultLocale: 'es' };
-   const except = { routing: /** @type {const} */ ('prefix-except-default'), defaultLocale: 'es' };
+   const prefix = { localePrefix: /** @type {const} */ ('always'), defaultLocale: 'es' };
+   const except = { localePrefix: /** @type {const} */ ('except-default'), defaultLocale: 'es' };
    assert.equal(localizePath('/pricing', 'es', prefix), '/es/pricing');
    assert.equal(localizePath('/', 'en', prefix), '/en');
    assert.equal(localizePath('/pricing', 'es', except), '/pricing');
    assert.equal(localizePath('/pricing?a=1', 'en', except), '/en/pricing?a=1');
-   assert.equal(localizePath('/pricing', 'en', { routing: false, defaultLocale: 'es' }), '/pricing');
-   assert.equal(normalizeRouting('yes'), false);
+   assert.equal(localizePath('/pricing', 'en', { localePrefix: false, defaultLocale: 'es' }), '/pricing');
+   assert.equal(normalizeLocalePrefix('yes'), false);
 });
 
 test('localeOfUrl and isExternalHref', () => {
-   const except = { routing: /** @type {const} */ ('prefix-except-default'), defaultLocale: 'es', locales: LOCALES };
+   const except = { localePrefix: /** @type {const} */ ('except-default'), defaultLocale: 'es', locales: LOCALES };
    assert.equal(localeOfUrl('/en/x', except), 'en');
    assert.equal(localeOfUrl('/x', except), 'es');
-   assert.equal(localeOfUrl('/x', { ...except, routing: 'prefix' }), null);
+   assert.equal(localeOfUrl('/x', { ...except, localePrefix: 'always' }), null);
    for (const href of ['https://a.com/x', '//cdn/x', 'mailto:a@b.c', '#top', '?page=2', 'relative/path']) {
       assert.equal(isExternalHref(href), true, href);
    }
@@ -120,7 +120,7 @@ async function boot(url, translatorConfig) {
 }
 
 test('prefix-except-default: unprefixed URL is the default locale; prefix picks the locale', async () => {
-   const { translator, router, rendered } = await boot('/en/pricing', { routing: 'prefix-except-default' });
+   const { translator, router, rendered } = await boot('/en/pricing', { localePrefix: 'except-default' });
    assert.equal(translator.locale, 'en');
    assert.equal(router.path, '/pricing');
    assert.equal(router.href('/p/7'), '/en/p/7');
@@ -132,7 +132,7 @@ test('prefix-except-default: unprefixed URL is the default locale; prefix picks 
 });
 
 test('prefix-except-default: the default locale with a prefix is canonicalized', async () => {
-   const { browser, translator } = await boot('/es/pricing?x=1', { routing: 'prefix-except-default' });
+   const { browser, translator } = await boot('/es/pricing?x=1', { localePrefix: 'except-default' });
    assert.equal(translator.locale, 'es');
    assert.equal(`${browser.location.pathname}${browser.location.search}`, '/pricing?x=1');
 });
@@ -141,7 +141,7 @@ test('prefix: an unprefixed URL gets the detected locale (saved choice here)', a
    const store = new Map([['slice:locale', 'en']]);
    globalThis.localStorage = { getItem: (k) => store.get(k) ?? null, setItem: (k, v) => store.set(k, v) };
    try {
-      const { browser, translator, router } = await boot('/pricing', { routing: 'prefix', saveLocally: true });
+      const { browser, translator, router } = await boot('/pricing', { localePrefix: 'always', saveLocally: true });
       assert.equal(translator.locale, 'en');
       assert.equal(browser.location.pathname, '/en/pricing');
       assert.equal(router.path, '/pricing');
@@ -151,7 +151,7 @@ test('prefix: an unprefixed URL gets the detected locale (saved choice here)', a
 });
 
 test('navigate keeps the locale; { locale } switches language before rendering', async () => {
-   const { browser, translator, router, rendered, guards, events } = await boot('/', { routing: 'prefix-except-default' });
+   const { browser, translator, router, rendered, guards, events } = await boot('/', { localePrefix: 'except-default' });
 
    await router.navigate('/pricing');
    assert.equal(browser.location.pathname, '/pricing');
@@ -179,7 +179,7 @@ test('navigate keeps the locale; { locale } switches language before rendering',
 });
 
 test('back/forward to another locale follows the URL', async () => {
-   const { browser, translator, router, rendered } = await boot('/en/pricing', { routing: 'prefix-except-default' });
+   const { browser, translator, router, rendered } = await boot('/en/pricing', { localePrefix: 'except-default' });
    browser.set('/p/3'); // popstate to the default locale
    await router.onRouteChange();
    assert.equal(translator.locale, 'es');
@@ -187,14 +187,14 @@ test('back/forward to another locale follows the URL', async () => {
 });
 
 test('setLocale() rewrites the current URL without a new history entry', async () => {
-   const { browser, translator } = await boot('/pricing?tab=2', { routing: 'prefix-except-default' });
+   const { browser, translator } = await boot('/pricing?tab=2', { localePrefix: 'except-default' });
    browser.entries.length = 0;
    await translator.setLocale('en');
    assert.equal(`${browser.location.pathname}${browser.location.search}`, '/en/pricing?tab=2');
    assert.deepEqual(browser.entries, [['replace', '/en/pricing']]);
 });
 
-test('without routing: the path is the URL, and { locale } still switches', async () => {
+test('without localePrefix: the path is the URL, and { locale } still switches', async () => {
    const { browser, translator, router } = await boot('/en/pricing', {});
    assert.equal(router.path, '/en/pricing', 'en is not a prefix when routing is off');
    assert.equal(router.href('/pricing'), '/pricing');

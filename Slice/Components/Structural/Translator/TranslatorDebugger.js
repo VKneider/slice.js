@@ -155,7 +155,7 @@ export default class TranslatorDebugger extends HTMLElement {
       this.meta.textContent = [
          `default ${translator.defaultLocale}`,
          translator.fallbackLocale ? `fallback ${translator.fallbackLocale}` : 'no fallback',
-         translator.routing ? `routing ${translator.routing}` : 'locale not in the URL',
+         translator.localePrefix ? `localePrefix ${translator.localePrefix}` : 'locale not in the URL',
          translator.enabled ? 'enabled' : 'disabled'
       ].join(' · ');
 

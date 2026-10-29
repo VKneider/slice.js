@@ -118,9 +118,9 @@
         "path": { "type": "string", "description": "Where dictionaries are served from. Default /locales." },
         "saveLocally": { "type": "boolean", "description": "Remember the user's choice in localStorage." },
         "useBrowserLocale": { "type": "boolean", "description": "First visit: the browser's language when supported." },
-        "routing": {
-          "enum": [false, "prefix", "prefix-except-default"],
-          "description": "Locale in the URL. false keeps it out; prefix puts it in every URL; prefix-except-default leaves the default locale unprefixed."
+        "localePrefix": {
+          "enum": [false, "always", "except-default"],
+          "description": "Locale in the URL. false keeps it out; always puts it in every URL; except-default leaves the default locale unprefixed."
         },
         "ui": {
           "type": "object",

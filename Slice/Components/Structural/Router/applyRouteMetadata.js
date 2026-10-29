@@ -44,6 +44,8 @@ export function applyRouteMetadata(
    const title = keyedText(metadata, 'title', 'titleKey', translate, enabled, warn);
    const titleTemplate = resolveText(metadata.titleTemplate, translate);
    const description = keyedText(metadata, 'description', 'descriptionKey', translate, enabled, warn);
+   const state = stateOf(doc);
+   const descriptionMeta = doc.querySelector('meta[name="description"]');
 
    if (title) {
       const prefix = affix(metadata.titlePrefix, routerConfig.titlePrefix);
@@ -52,10 +54,16 @@ export function applyRouteMetadata(
          ? titleTemplate.replace('%s', String(title))
          : `${prefix}${String(title)}${suffix}`;
       if (doc.title !== next) doc.title = next;
+      state.appliedTitle = next;
+   } else if (state.appliedTitle !== null && doc.title === state.appliedTitle) {
+      // The route has no title: put back what the server sent, but never clobber a
+      // title a component set after the router's last write.
+      if (doc.title !== state.title) doc.title = state.title;
+      state.appliedTitle = null;
    }
 
    if (description) {
-      let meta = doc.querySelector('meta[name="description"]');
+      let meta = descriptionMeta;
       if (!meta) {
          meta = doc.createElement('meta');
          meta.setAttribute('name', 'description');
@@ -64,7 +72,34 @@ export function applyRouteMetadata(
       if (meta.getAttribute('content') !== description) {
          meta.setAttribute('content', description);
       }
+      state.appliedDescription = description;
+   } else if (state.appliedDescription !== null && descriptionMeta?.getAttribute('content') === state.appliedDescription) {
+      if (state.description === null) descriptionMeta.removeAttribute('content');
+      else if (descriptionMeta.getAttribute('content') !== state.description) {
+         descriptionMeta.setAttribute('content', state.description);
+      }
+      state.appliedDescription = null;
    }
+}
+
+/**
+ * Per-document baseline: what the server sent, and what this helper wrote last.
+ * @param {Document} doc
+ * @returns {{ title: string, description: string|null, appliedTitle: string|null, appliedDescription: string|null }}
+ */
+function stateOf(doc) {
+   let state = states.get(doc);
+   if (!state) {
+      const meta = doc.querySelector('meta[name="description"]');
+      state = {
+         title: doc.title,
+         description: meta ? meta.getAttribute('content') : null,
+         appliedTitle: null,
+         appliedDescription: null
+      };
+      states.set(doc, state);
+   }
+   return state;
 }
 
 /**
@@ -101,6 +136,9 @@ function affix(own, fallback) {
 
 /** @type {Set<string>} */
 const warned = new Set();
+
+/** @type {WeakMap<Document, { title: string, description: string|null, appliedTitle: string|null, appliedDescription: string|null }>} */
+const states = new WeakMap();
 
 /**
  * One warning per key and field, not one per navigation.

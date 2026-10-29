@@ -1,22 +1,23 @@
 /**
- * The locale in the URL (`routing`, feature 0003 §7). Pure: no DOM, no `slice` global, no
+ * The locale in the URL (`localePrefix`, feature 0003 §7). Pure: no DOM, no `slice` global, no
  * imports — the server-side SEO code uses the same rules.
  *
- *   routing: "prefix"                 /es/pricing   /en/pricing   (`/` redirects to a locale)
- *   routing: "prefix-except-default"  /pricing      /en/pricing   (default locale has no prefix)
+ *   localePrefix: "always"          /es/pricing   /en/pricing   (`/` redirects to a locale)
+ *   localePrefix: "except-default"  /pricing      /en/pricing   (default locale has no prefix)
+ *   localePrefix: false             /pricing      (the locale is never in the URL)
  *
  * Routes are declared once, without a locale; the prefix is added and removed here.
  */
 
-/** @typedef {false|'prefix'|'prefix-except-default'} LocaleRouting */
+/** @typedef {false|'always'|'except-default'} LocalePrefix */
 
 /**
- * Normalize the `routing` option: anything else means "not in the URL".
+ * Normalize the `localePrefix` option: anything else means "not in the URL".
  * @param {unknown} value
- * @returns {LocaleRouting}
+ * @returns {LocalePrefix}
  */
-export function normalizeRouting(value) {
-   return value === 'prefix' || value === 'prefix-except-default' ? value : false;
+export function normalizeLocalePrefix(value) {
+   return value === 'always' || value === 'except-default' ? value : false;
 }
 
 /**
@@ -52,30 +53,30 @@ export function splitLocalePath(url, locales) {
  * The URL of an app path in a locale.
  * @param {string} path app path, without locale (may carry `?query#hash`)
  * @param {string|null} locale
- * @param {{ routing: LocaleRouting, defaultLocale: string }} options
+ * @param {{ localePrefix: LocalePrefix, defaultLocale: string }} options
  * @returns {string}
  */
-export function localizePath(path, locale, { routing, defaultLocale }) {
+export function localizePath(path, locale, { localePrefix, defaultLocale }) {
    const value = typeof path === 'string' && path ? path : '/';
-   if (!routing || !locale) return value;
-   if (routing === 'prefix-except-default' && locale === defaultLocale) return value;
+   if (!localePrefix || !locale) return value;
+   if (localePrefix === 'except-default' && locale === defaultLocale) return value;
    const [pathname, suffix] = splitSuffix(value);
    return `/${locale}${pathname === '/' ? '' : pathname}${suffix}`;
 }
 
 /**
- * The locale a URL stands for: its prefix, or — with "prefix-except-default" — the default
- * locale when there is none. `null` with "prefix" and no prefix (the locale must be chosen
- * and the URL redirected), and always `null` without routing.
+ * The locale a URL stands for: its prefix, or — with "except-default" — the default locale
+ * when there is none. `null` with "always" and no prefix (the locale must be chosen and the
+ * URL redirected), and always `null` without a prefix.
  * @param {string} url
- * @param {{ routing: LocaleRouting, defaultLocale: string, locales: readonly string[] }} options
+ * @param {{ localePrefix: LocalePrefix, defaultLocale: string, locales: readonly string[] }} options
  * @returns {string|null}
  */
-export function localeOfUrl(url, { routing, defaultLocale, locales }) {
-   if (!routing) return null;
+export function localeOfUrl(url, { localePrefix, defaultLocale, locales }) {
+   if (!localePrefix) return null;
    const { locale } = splitLocalePath(url, locales);
    if (locale) return locale;
-   return routing === 'prefix-except-default' ? defaultLocale : null;
+   return localePrefix === 'except-default' ? defaultLocale : null;
 }
 
 /**

@@ -53,8 +53,7 @@ const config = (extra = {}) => ({ enabled: true, defaultLocale: 'es', fallbackLo
 test('disabled: t() returns the key, nothing is fetched, markers resolve to their key', async () => {
    const requests = stubFetch();
    const translator = new Translator({ enabled: false });
-   await translator.init();
-   assert.equal(translator.t('orders.title'), 'orders.title');
+   await translator.init();   assert.equal(translator.t('orders.title'), 'orders.title');
    assert.equal(translator.resolve({ label: translator.ref('orders.save') }).label, 'orders.save');
    assert.equal(requests.length, 0);
    assert.equal(typeof translator.format.number(1), 'string');
@@ -273,4 +272,53 @@ test('setShowKeys: keys instead of texts and back, without changing the locale',
    assert.equal(translator.setShowKeys(false), false);
    assert.equal(translator.t('orders.title'), 'Pedidos');
    assert.equal(translator.locale, 'es');
+});
+
+test('enabled without defaultLocale stays disabled and says why', () => {
+   const original = console.error;
+   const errors = [];
+   console.error = (message) => errors.push(String(message));
+   try {
+      const translator = new Translator({ enabled: true, locales: ['es'] });
+      assert.equal(translator.enabled, false);
+      assert.match(errors[0], /defaultLocale/);
+      assert.equal(translator.t('orders.title'), 'orders.title');
+   } finally {
+      console.error = original;
+   }
+});
+
+test('locale names are deduped case-insensitively and the fallback compares the same way', () => {
+   const translator = new Translator({
+      enabled: true,
+      defaultLocale: 'ES',
+      locales: ['es', 'ES'],
+      fallbackLocale: 'es'
+   });
+   assert.deepEqual(translator.locales, ['ES']);
+   assert.equal(translator.fallbackLocale, null);
+});
+
+test('with the translator off, ref() is the plain key (no marker leaks into a prop)', () => {
+   const translator = new Translator({ enabled: false });
+   assert.equal(translator.ref('orders.save'), 'orders.save');
+});
+
+test('a 404 namespace does not block every future setLocale', async () => {
+   stubFetch({ fail: ['/locales/en/missing.json'] });
+   const translator = new Translator(config());
+   await translator.init();
+
+   await assert.rejects(translator.load('missing'));
+   await translator.setLocale('en');
+
+   assert.equal(translator.locale, 'en');
+   assert.equal(translator.t('orders.title'), 'Orders');
+});
+
+test('a relative translator.path is normalized to the app root', () => {
+   const translator = new Translator({ enabled: false, path: 'locales' });
+   assert.equal(translator.path, '/locales');
+   const rooted = new Translator({ enabled: false, path: '/locales/' });
+   assert.equal(rooted.path, '/locales');
 });

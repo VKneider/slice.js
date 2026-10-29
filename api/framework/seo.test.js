@@ -9,6 +9,7 @@ import {
   pickRouteEntry,
   renderHead,
   resolveMetadata,
+  routePaths,
   serializeJsonLd,
   validateSeoManifest
 } from './seo.js';
@@ -297,8 +298,8 @@ const EN = {
   count: { one: '{count} plan', other: '{count} plans' }
 };
 
-const translatorContext = (routing = 'prefix-except-default') => buildTranslatorContext(
-  { enabled: true, defaultLocale: 'es', fallbackLocale: 'en', locales: ['es', 'en'], routing },
+const translatorContext = (localePrefix = 'except-default') => buildTranslatorContext(
+  { enabled: true, defaultLocale: 'es', fallbackLocale: 'en', locales: ['es', 'en'], localePrefix },
   { es: ES, en: EN }
 );
 
@@ -318,13 +319,13 @@ test('translator context: lookup, fallback, plurals and the key when missing', (
   assert.equal(translator.has('es', 'nope.key'), false);
 });
 
-test('translator context: URLs follow the routing mode', () => {
-  const prefixed = translatorContext('prefix');
+test('translator context: URLs follow the locale prefix mode', () => {
+  const prefixed = translatorContext('always');
   assert.equal(prefixed.localize('/pricing', 'es'), '/es/pricing');
   assert.equal(prefixed.localize('/pricing', 'en'), '/en/pricing');
   assert.deepEqual(prefixed.split('/en/pricing?x=1'), { locale: 'en', path: '/pricing?x=1' });
 
-  const exceptDefault = translatorContext('prefix-except-default');
+  const exceptDefault = translatorContext('except-default');
   assert.equal(exceptDefault.localize('/pricing', 'es'), '/pricing');
   assert.equal(exceptDefault.localize('/pricing', 'en'), '/en/pricing');
   assert.equal(exceptDefault.localeOf('/pricing'), 'es');
@@ -333,6 +334,43 @@ test('translator context: URLs follow the routing mode', () => {
   const off = translatorContext(false);
   assert.equal(off.localize('/pricing', 'en'), '/pricing');
   assert.deepEqual(off.split('/en/pricing'), { locale: null, path: '/en/pricing' });
+});
+
+test('an unlisted fallbackLocale is a routable locale on the server too', () => {
+  const translator = buildTranslatorContext(
+    { enabled: true, defaultLocale: 'es', locales: ['es'], fallbackLocale: 'en', localePrefix: 'except-default' },
+    { es: ES, en: EN }
+  );
+  assert.deepEqual(translator.locales, ['es', 'en']);
+  assert.equal(translator.localize('/pricing', 'en'), '/en/pricing');
+  assert.equal(translator.has('es', 'home.title'), true);
+  assert.equal(translator.has('es', 'seo'), false, 'a group is not a message');
+});
+
+test('resolveMetadata never stringifies a { t } object, even without a translator', () => {
+  const meta = resolveMetadata({
+    pathname: '/pricing',
+    manifest: { routes: { '/pricing': { title: { t: 'pricing.title' } } } },
+    origin: ORIGIN
+  });
+  assert.equal(meta.title, 'pricing.title');
+});
+
+test('a titleKey in seo.json resolves like the routes.js one', () => {
+  const meta = resolveMetadata({
+    pathname: '/pricing',
+    manifest: { routes: { '/pricing': { titleKey: 'pricing.title' } } },
+    origin: ORIGIN,
+    translate: (key) => (key === 'pricing.title' ? 'Precios' : key)
+  });
+  assert.equal(meta.title, 'Precios');
+});
+
+test('routePaths flattens children with the same path rule as the router', () => {
+  assert.deepEqual(routePaths([
+    { path: '/', children: [{ path: '/admin', children: [{ path: '/users' }] }] },
+    { path: '/pricing' }
+  ]), ['/', '/admin', '/admin/users', '/pricing']);
 });
 
 test('resolveMetadata resolves { t } fields and canonicalizes the localized URL', () => {

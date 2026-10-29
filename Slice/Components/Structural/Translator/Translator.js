@@ -10,7 +10,7 @@ import {
 } from './messages.js';
 import { TranslationRef, containsMarker, resolveMarkers } from './markers.js';
 import { translateTree } from './dom.js';
-import { isExternalHref, localeOfUrl, localizePath, normalizeRouting, splitLocalePath } from './localePath.js';
+import { isExternalHref, localeOfUrl, localizePath, normalizeLocalePrefix, splitLocalePath } from './localePath.js';
 
 const STORAGE_KEY = 'slice:locale';
 const WRAPPED = Symbol('slice.translator.wrapped');
@@ -24,7 +24,7 @@ const WRAPPED = Symbol('slice.translator.wrapped');
  * @property {string} [path]
  * @property {boolean} [saveLocally]
  * @property {boolean} [useBrowserLocale]
- * @property {false|'prefix'|'prefix-except-default'} [routing]
+ * @property {false|'always'|'except-default'} [localePrefix]
  */
 
 /**
@@ -50,30 +50,50 @@ export default class Translator {
    constructor(config = {}) {
       const options = config && typeof config === 'object' ? config : {};
       const browserLocale = Translator.browserLocales()[0] || 'en';
+      const clean = (value) => (typeof value === 'string' && value.trim() ? value.trim() : '');
+      const wantsEnabled = options.enabled === true;
+      const configuredDefault = clean(options.defaultLocale);
 
       /** @type {boolean} */
-      this.enabled = options.enabled === true && typeof options.defaultLocale === 'string' && options.defaultLocale !== '';
+      this.enabled = wantsEnabled && configuredDefault !== '';
+      if (wantsEnabled && !this.enabled) {
+         // The schema says enabled needs defaultLocale, but the runtime must say so too:
+         // silently booting with keys everywhere is the worst failure mode.
+         console.error('[slice.translator] "enabled": true requires a non-empty "defaultLocale"; the translator stays disabled.');
+      }
       /** @type {string} */
-      this.defaultLocale = this.enabled ? /** @type {string} */ (options.defaultLocale) : browserLocale;
+      this.defaultLocale = this.enabled ? configuredDefault : browserLocale;
 
-      const declared = Array.isArray(options.locales) ? options.locales.filter((l) => typeof l === 'string' && l) : [];
+      const declared = Array.isArray(options.locales) ? options.locales.map(clean).filter(Boolean) : [];
+      // Dedupe case-insensitively: "ES" and "es" are the same language, and a duplicate
+      // would fetch a file that does not exist while the real one is fine.
+      const seen = new Map();
+      for (const locale of [this.defaultLocale, ...declared]) {
+         const key = locale.toLowerCase();
+         if (!seen.has(key)) seen.set(key, locale);
+      }
       /** @type {readonly string[]} */
-      this.locales = Object.freeze([...new Set([this.defaultLocale, ...declared])]);
+      this.locales = Object.freeze([...seen.values()]);
+      const configuredFallback = clean(options.fallbackLocale);
       /** @type {string|null} */
       this.fallbackLocale =
-         this.enabled && typeof options.fallbackLocale === 'string' && options.fallbackLocale !== this.defaultLocale
-            ? options.fallbackLocale
+         this.enabled && configuredFallback && configuredFallback.toLowerCase() !== this.defaultLocale.toLowerCase()
+            ? configuredFallback
             : null;
-      if (this.fallbackLocale && !this.locales.includes(this.fallbackLocale)) {
+      if (this.fallbackLocale && !this.locales.some((locale) => locale.toLowerCase() === this.fallbackLocale.toLowerCase())) {
          // The fallback is loaded like any locale; listing it keeps setLocale() consistent.
          this.locales = Object.freeze([...this.locales, this.fallbackLocale]);
       }
 
-      this.path = String(options.path || '/locales').replace(/\/+$/, '');
+      const rawPath = clean(options.path) || '/locales';
+      const cleanedPath = rawPath.replace(/^\/+|\/+$/g, '');
+      // A relative path would resolve against the current URL (`/en/locales/...`), so the
+      // leading slash is not cosmetic.
+      this.path = cleanedPath ? `/${cleanedPath}` : '/locales';
       this.saveLocally = options.saveLocally === true;
       this.useBrowserLocale = options.useBrowserLocale === true;
-      /** @type {false|'prefix'|'prefix-except-default'} the locale in the URL (§7) */
-      this.routing = this.enabled ? normalizeRouting(options.routing) : false;
+      /** @type {false|'always'|'except-default'} the locale in the URL (§7) */
+      this.localePrefix = this.enabled ? normalizeLocalePrefix(options.localePrefix) : false;
 
       /** @type {string} */
       this.locale = this.defaultLocale;
@@ -166,7 +186,7 @@ export default class Translator {
       }
       this._ready = true;
       this._applyDocumentLocale();
-      // With "prefix", `/pricing` becomes `/es/pricing`; with "prefix-except-default",
+      // With "always", `/pricing` becomes `/es/pricing`; with "except-default",
       // `/es/pricing` (the default locale) becomes `/pricing`. Before the router starts.
       this.syncUrl();
       this.apply();
@@ -174,16 +194,18 @@ export default class Translator {
    }
 
    /**
-    * The locale to start with. With `routing`, the URL decides: its prefix, or — with
-    * "prefix-except-default" — the default locale when there is none. Otherwise (and for
+    * The locale to start with. With `localePrefix`, the URL decides: its prefix, or — with
+    * "except-default" — the default locale when there is none. Otherwise (and for
     * "prefix" at an unprefixed URL): the saved choice (`saveLocally`) → the browser's
     * language (`useBrowserLocale`) → `defaultLocale`.
     * @returns {string}
     */
    initialLocale() {
       if (!this.enabled) return this.defaultLocale;
-      if (this.routing && typeof location !== 'undefined') {
-         const fromUrl = this.localeOfUrl(location.pathname);
+      if (this.localePrefix && typeof location !== 'undefined') {
+         // Only an explicit prefix decides on the first load. Under "except-default" an
+         // unprefixed URL means "no choice yet", so saveLocally/useBrowserLocale still run.
+         const { locale: fromUrl } = splitLocalePath(location.pathname, this.locales);
          if (fromUrl) return fromUrl;
       }
       if (this.saveLocally) {
@@ -366,12 +388,14 @@ export default class Translator {
 
    /**
     * A reference to a key, for a component prop. The component receives the translated
-    * string, and receives it again when the locale changes.
+    * string, and receives it again when the locale changes. With the translator off it is
+    * the plain key: a marker stored in a prop would leak into comparisons and JSON.
     * @param {string} key
     * @param {Record<string, any>} [params]
-    * @returns {TranslationRef}
+    * @returns {TranslationRef|string}
     */
    ref(key, params) {
+      if (!this.enabled) return String(key ?? '');
       return new TranslationRef(key, params, () =>
          this._warnOnce(`marker:${key}`, `slice.t.ref("${key}") was used as a string; pass it as a prop value, or use slice.t() for text`)
       );
@@ -464,12 +488,12 @@ export default class Translator {
 
    /**
     * Split a known locale prefix off a URL: `/en/pricing` → `{ locale: 'en', path: '/pricing' }`.
-    * Without `routing`, the URL is returned whole with `locale: null`.
+    * Without `localePrefix`, the URL is returned whole with `locale: null`.
     * @param {string} url
     * @returns {{ locale: string|null, path: string }}
     */
    splitPath(url) {
-      if (!this.routing) return { locale: null, path: typeof url === 'string' && url ? url : '/' };
+      if (!this.localePrefix) return { locale: null, path: typeof url === 'string' && url ? url : '/' };
       return splitLocalePath(url, this.locales);
    }
 
@@ -482,18 +506,18 @@ export default class Translator {
     * @returns {string}
     */
    localizePath(path, locale = this.locale) {
-      if (!this.routing || isExternalHref(path)) return path;
+      if (!this.localePrefix || isExternalHref(path)) return path;
       if (splitLocalePath(path, this.locales).locale) return path;
-      return localizePath(path, locale, { routing: this.routing, defaultLocale: this.defaultLocale });
+      return localizePath(path, locale, { localePrefix: this.localePrefix, defaultLocale: this.defaultLocale });
    }
 
    /**
-    * The locale a URL stands for (see `initialLocale()`); null without `routing`.
+    * The locale a URL stands for (see `initialLocale()`); null without `localePrefix`.
     * @param {string} url
     * @returns {string|null}
     */
    localeOfUrl(url) {
-      return localeOfUrl(url, { routing: this.routing, defaultLocale: this.defaultLocale, locales: this.locales });
+      return localeOfUrl(url, { localePrefix: this.localePrefix, defaultLocale: this.defaultLocale, locales: this.locales });
    }
 
    // ───────────────────────────── DOM ─────────────────────────────
@@ -601,11 +625,23 @@ export default class Translator {
     * @param {string} locale
     */
    async _loadLocale(locale) {
-      const files = (/** @type {string} */ loc) => [this._fetch(loc), ...[...this._namespaces].map((ns) => this._fetch(loc, ns))];
-      const active = Promise.all(files(locale));
-      const fallback =
-         this.fallbackLocale && this.fallbackLocale !== locale ? Promise.allSettled(files(this.fallbackLocale)) : Promise.resolve([]);
-      const [, fallbackResults] = await Promise.all([active, fallback]);
+      const namespaces = [...this._namespaces];
+      // Only the main file is fatal. One broken optional namespace must not block every
+      // future setLocale() (load() adds it to `_namespaces` before the fetch).
+      const main = this._fetch(locale);
+      const activeNamespaces = Promise.allSettled(namespaces.map((ns) => this._fetch(locale, ns)));
+      const fallbackFiles =
+         this.fallbackLocale && this.fallbackLocale !== locale
+            ? [this._fetch(this.fallbackLocale), ...namespaces.map((ns) => this._fetch(this.fallbackLocale, ns))]
+            : [];
+      const [activeResults, fallbackResults] = await Promise.all([
+         activeNamespaces,
+         fallbackFiles.length ? Promise.allSettled(fallbackFiles) : Promise.resolve([])
+      ]);
+      await main;
+      for (const result of /** @type {PromiseSettledResult<void>[]} */ (activeResults)) {
+         if (result.status === 'rejected') this._log('warn', `Namespace dictionary failed (${locale})`, result.reason);
+      }
       for (const result of /** @type {PromiseSettledResult<void>[]} */ (fallbackResults)) {
          if (result.status === 'rejected') this._log('warn', `Fallback dictionary failed (${this.fallbackLocale})`, result.reason);
       }
@@ -770,7 +806,7 @@ export default class Translator {
                   for (const node of record.addedNodes) {
                      if (node.nodeType === 1) translateTree(/** @type {Element} */ (node), this._dom);
                   }
-               } else if (record.attributeName && record.attributeName.startsWith('data-t') && record.target.isConnected) {
+               } else if (record.attributeName && (record.attributeName === 'data-t' || record.attributeName.startsWith('data-t-')) && record.target.isConnected) {
                   translateTree(/** @type {Element} */ (record.target), this._dom);
                }
             }
@@ -790,10 +826,10 @@ export default class Translator {
     * @returns {void}
     */
    syncUrl() {
-      if (!this.routing || typeof location === 'undefined' || typeof history === 'undefined') return;
+      if (!this.localePrefix || typeof location === 'undefined' || typeof history === 'undefined') return;
       const current = `${location.pathname}${location.search}${location.hash}`;
       const { path } = splitLocalePath(current, this.locales);
-      const target = localizePath(path, this.locale, { routing: this.routing, defaultLocale: this.defaultLocale });
+      const target = localizePath(path, this.locale, { localePrefix: this.localePrefix, defaultLocale: this.defaultLocale });
       if (target !== current) history.replaceState(history.state, '', target);
    }
 

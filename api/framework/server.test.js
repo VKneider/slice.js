@@ -543,10 +543,10 @@ test('translator: no dictionary mount when the translator is off', async (t) => 
 });
 
 // -- SEO + translator (feature 0003, phase 5) -------------------------
-// With translator.routing, the server prerenders every route once per locale,
+// With a locale prefix, the server prerenders every route once per locale,
 // strips/canonicalizes the prefix and answers an unknown prefix with a 404.
 
-const makeTranslatedSeoProject = () => {
+const makeTranslatedSeoProject = ({ localePrefix = 'except-default' } = {}) => {
   const project = makeSeoProject();
   const root = project.root;
 
@@ -559,13 +559,13 @@ const makeTranslatedSeoProject = () => {
       fallbackLocale: 'en',
       locales: ['es', 'en'],
       path: '/locales',
-      routing: 'prefix-except-default'
+      localePrefix
     }
   }));
 
   fs.mkdirSync(path.join(root, 'dist', 'locales'), { recursive: true });
   fs.writeFileSync(path.join(root, 'dist', 'locales', 'es.json'), JSON.stringify({
-    seo: { titleTemplate: '%s | Acme', description: 'Acme en español.' },
+    seo: { titleTemplate: '%s | Acme', description: 'Acme en espaÃ±ol.' },
     home: { title: 'Inicio' },
     pricing: { title: 'Precios', description: 'Planes.' },
     product: { title: 'Producto' }
@@ -602,8 +602,8 @@ const makeTranslatedSeoProject = () => {
   return project;
 };
 
-const bootTranslatedSeo = async (t) => {
-  const project = makeTranslatedSeoProject();
+const bootTranslatedSeo = async (t, options) => {
+  const project = makeTranslatedSeoProject(options);
   const instance = createSliceServer({
     projectRoot: project.root,
     mode: 'production',
@@ -617,6 +617,31 @@ const bootTranslatedSeo = async (t) => {
   });
   return { base: `http://127.0.0.1:${server.address().port}`, ...instance };
 };
+
+test('seo+translator: without a locale prefix the server prerenders one page per route', async (t) => {
+  const { base } = await bootTranslatedSeo(t, { localePrefix: false });
+
+  const pricing = await get(base, '/pricing');
+  assert.equal(pricing.status, 200);
+  const html = await pricing.text();
+  assert.match(html, /<title>Precios \| Acme<\/title>/);
+  assert.doesNotMatch(html, /hreflang=/);
+
+  // Without a locale prefix /en is not a locale prefix: it is an unknown path.
+  const prefixed = await get(base, '/en/pricing');
+  assert.equal(prefixed.status, 404);
+});
+
+test('seo+translator: "always" redirects a known unprefixed path instead of 404', async (t) => {
+  const { base } = await bootTranslatedSeo(t, { localePrefix: 'always' });
+
+  const response = await get(base, '/pricing', { redirect: 'manual' });
+  assert.equal(response.status, 302);
+  assert.match(response.headers.get('location') || '', /\/es\/pricing$/);
+
+  const prefixed = await get(base, '/es/pricing');
+  assert.equal(prefixed.status, 200);
+});
 
 test('seo+translator: each locale is prerendered with its own head and alternates', async (t) => {
   const { base } = await bootTranslatedSeo(t);

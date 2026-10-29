@@ -32,7 +32,7 @@ export const RESERVED_PARAMS = Object.freeze(['text', 'slot']);
 /** Elements that never hold text. */
 const VOID_ELEMENTS = new Set([
    'AREA', 'BASE', 'BR', 'COL', 'EMBED', 'HR', 'IMG', 'INPUT', 'LINK', 'META', 'SOURCE', 'TRACK', 'WBR',
-   'SELECT', 'TEXTAREA',
+   'SELECT',
 ]);
 
 const INPUT_VALUE_TYPES = new Set(['button', 'submit', 'reset']);

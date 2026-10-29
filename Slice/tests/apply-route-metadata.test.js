@@ -11,7 +11,8 @@ const fakeDocument = ({ title = 'Server title', description = null } = {}) => {
       const meta = {
          attrs: { name: 'description', content: description },
          getAttribute(name) { return this.attrs[name] ?? null; },
-         setAttribute(name, value) { this.attrs[name] = value; }
+         setAttribute(name, value) { this.attrs[name] = value; },
+         removeAttribute(name) { delete this.attrs[name]; }
       };
       metas.push(meta);
    }
@@ -32,7 +33,8 @@ const fakeDocument = ({ title = 'Server title', description = null } = {}) => {
             tag,
             attrs: {},
             getAttribute(name) { return this.attrs[name] ?? null; },
-            setAttribute(name, value) { this.attrs[name] = value; }
+            setAttribute(name, value) { this.attrs[name] = value; },
+            removeAttribute(name) { delete this.attrs[name]; }
          };
       }
    };
@@ -54,6 +56,25 @@ test('a route without a title keeps the one the server sent', () => {
    const doc = fakeDocument({ title: 'Pricing | Acme (from seo.json)' });
    applyRouteMetadata({ description: 'Plans and limits.' }, doc);
    assert.equal(doc.title, 'Pricing | Acme (from seo.json)');
+});
+
+test('a route without a title restores the served title and description', () => {
+   const doc = fakeDocument({ title: 'Server title', description: 'Server description' });
+   applyRouteMetadata({ title: 'Pricing', description: 'Plans.' }, doc);
+   assert.equal(doc.title, 'Pricing');
+   assert.equal(doc.metas[0].getAttribute('content'), 'Plans.');
+
+   applyRouteMetadata({}, doc);
+   assert.equal(doc.title, 'Server title');
+   assert.equal(doc.metas[0].getAttribute('content'), 'Server description');
+});
+
+test('a component-set title is not clobbered by a later route without metadata', () => {
+   const doc = fakeDocument({ title: 'Server title' });
+   applyRouteMetadata({ title: 'Pricing' }, doc);
+   doc.title = 'Order 42';
+   applyRouteMetadata({}, doc);
+   assert.equal(doc.title, 'Order 42');
 });
 
 test('creates the description meta when the shell has none', () => {

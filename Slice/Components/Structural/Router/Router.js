@@ -340,6 +340,7 @@ export default class Router {
          }
 
          // Retornar tanto el path como las opciones
+         if (redirectPath === false) return { path: false, options: {} };
          return redirectPath ? { path: redirectPath, options: redirectOptions } : null;
       } catch (error) {
          slice.logger.error('Router', `Error in beforeEach guard from "${from?.path}" to "${to?.path}"`, error);
@@ -469,7 +470,7 @@ export default class Router {
 
       // Without routing the locale is not in the URL: switch it here. With routing,
       // onRouteChange() follows the URL (dictionaries are already loaded).
-      if (targetLocale && !translator?.routing && targetLocale !== translator.locale) {
+      if (targetLocale && !translator?.localePrefix && targetLocale !== translator.locale) {
          await translator.setLocale(targetLocale);
       }
 
@@ -536,9 +537,9 @@ export default class Router {
                   return;
                }
 
-               const { route, params } = this.matchRoute(path);
+               const { route, params, childRoute } = this.matchRoute(path);
                if (route) {
-                  await this.handleRoute(route, params);
+                  await this.handleRoute(childRoute ? { ...childRoute, parentRoute: route } : route, params);
                }
             } catch (error) {
                slice.logger.error('Router', `Route change failed for ${window.location.pathname}`, error);
@@ -558,7 +559,7 @@ export default class Router {
     */
    async _followUrlLocale() {
       const translator = slice.translator;
-      if (!translator?.routing) return;
+      if (!translator?.localePrefix) return;
       const urlLocale = translator.localeOfUrl(window.location.pathname);
       if (urlLocale && urlLocale !== translator.locale) {
          try {
@@ -607,6 +608,10 @@ export default class Router {
     * @returns {Promise<void>}
     */
    async handleRoute(route, params) {
+      if (!route) {
+         slice.logger.logError('Router', `No route matches "${this.path}" and no /404 route is declared`);
+         return;
+      }
       // Titles are on by default: without this, a SPA keeps the first page's
       // title while the user navigates. `sliceConfig.router.updateTitles: false`
       // opts out; a `router:change` listener still wins, because this runs
@@ -682,7 +687,12 @@ export default class Router {
     */
    async loadInitialRoute() {
       const path = this.path;
-      const { route, params } = this.matchRoute(path);
+      const match = this.matchRoute(path);
+      const { route, params } = match;
+      if (!route) {
+         slice.logger.logError('Router', `No route matches "${path}" and no /404 route is declared`);
+         return;
+      }
 
       // Para la carga inicial, también ejecutar guards
       const from = this._createRouteInfo(null, {}, null);
@@ -701,7 +711,7 @@ export default class Router {
          return;
       }
 
-      await this.handleRoute(route, params);
+      await this.handleRoute(match.childRoute ? { ...match.childRoute, parentRoute: route } : route, params);
 
       // EJECUTAR AFTER EACH GUARD en carga inicial
       this._executeAfterEachGuard(to, from);
@@ -832,7 +842,10 @@ export default class Router {
 
             let response = await routeContainer.renderIfCurrentRoute();
             if (response) {
-               this.activeRoute = routeContainer.props;
+               // The container owns the view; the route object (not its props) is what
+               // `activeRoute` promises to callers.
+               const match = this.matchRoute(this.path);
+               this.activeRoute = match.childRoute || match.route || null;
                routerContainersFlag = true;
             }
          } catch (error) {

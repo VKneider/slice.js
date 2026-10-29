@@ -13,12 +13,13 @@ import {
   IntlCache,
   directionOf,
   formatMessage,
+  isPluralMessage,
   lookup as lookupMessage
 } from '../../Slice/Components/Structural/Translator/messages.js';
 import {
   localeOfUrl,
   localizePath,
-  normalizeRouting,
+  normalizeLocalePrefix,
   splitLocalePath
 } from '../../Slice/Components/Structural/Translator/localePath.js';
 
@@ -61,20 +62,24 @@ const isPattern = (value) => /\$\{[^}]+\}/.test(String(value));
  * @param {Record<string, object>} [dictionaries] locale → messages
  */
 export function buildTranslatorContext(config, dictionaries = {}) {
-  const enabled = config?.enabled === true
-    && typeof config.defaultLocale === 'string'
-    && config.defaultLocale !== '';
-  const defaultLocale = enabled ? config.defaultLocale : null;
-  const declared = Array.isArray(config?.locales) ? config.locales : [];
-  const locales = enabled
-    ? [...new Set([defaultLocale, ...declared].filter((value) => typeof value === 'string' && value))]
-    : [];
-  const fallbackLocale = enabled
-    && typeof config.fallbackLocale === 'string'
-    && config.fallbackLocale !== defaultLocale
-    ? config.fallbackLocale
+  const clean = (value) => (typeof value === 'string' && value.trim() ? value.trim() : '');
+  const enabled = config?.enabled === true && clean(config.defaultLocale) !== '';
+  const defaultLocale = enabled ? clean(config.defaultLocale) : null;
+  const declared = Array.isArray(config?.locales) ? config.locales.map(clean).filter(Boolean) : [];
+  const seen = new Map();
+  for (const locale of enabled ? [defaultLocale, ...declared] : []) {
+    const key = locale.toLowerCase();
+    if (!seen.has(key)) seen.set(key, locale);
+  }
+  const fallbackLocale = enabled && clean(config.fallbackLocale)
+    && clean(config.fallbackLocale).toLowerCase() !== defaultLocale.toLowerCase()
+    ? clean(config.fallbackLocale)
     : null;
-  const routing = enabled ? normalizeRouting(config.routing) : false;
+  // The fallback is a real locale: the client lists it (setLocale accepts it), so the
+  // server must too or it would emit URLs it then treats as unknown prefixes.
+  if (fallbackLocale && !seen.has(fallbackLocale.toLowerCase())) seen.set(fallbackLocale.toLowerCase(), fallbackLocale);
+  const locales = enabled ? [...seen.values()] : [];
+  const localePrefix = enabled ? normalizeLocalePrefix(config.localePrefix) : false;
   const intl = new IntlCache();
 
   const entry = (locale, key) => {
@@ -93,23 +98,27 @@ export function buildTranslatorContext(config, dictionaries = {}) {
   };
 
   const localize = (pathname, locale) => (enabled
-    ? localizePath(pathname, locale || defaultLocale, { routing, defaultLocale })
+    ? localizePath(pathname, locale || defaultLocale, { localePrefix, defaultLocale })
     : pathname);
 
   return {
     enabled,
-    routing,
+    localePrefix,
     defaultLocale,
     fallbackLocale,
     locales,
     t,
-    has: (locale, key) => enabled && entry(locale, key) !== undefined,
+    has: (locale, key) => {
+      if (!enabled) return false;
+      const value = entry(locale, key);
+      return typeof value === 'string' || isPluralMessage(value);
+    },
     localize,
-    split: (pathname) => (enabled && routing
+    split: (pathname) => (enabled && localePrefix
       ? splitLocalePath(pathname, locales)
       : { locale: null, path: pathname }),
     localeOf: (pathname) => (enabled
-      ? localeOfUrl(pathname, { routing, defaultLocale, locales })
+      ? localeOfUrl(pathname, { localePrefix, defaultLocale, locales })
       : null),
     direction: (locale) => directionOf(locale || defaultLocale || 'en'),
     ogLocale: (locale) => String(locale || '').replace('-', '_')
@@ -132,13 +141,32 @@ export function loadTranslatorDictionaries(projectRoot, folderDeployed, config) 
 
   const dictionaries = {};
   for (const locale of [...new Set(declared)]) {
-    const file = path.join(projectRoot, folderDeployed, folder, `${locale}.json`);
-    if (!fs.existsSync(file)) continue;
-    try {
-      dictionaries[locale] = JSON.parse(fs.readFileSync(file, 'utf8'));
-    } catch (error) {
-      throw new Error(`seo: invalid translator dictionary ${locale}.json: ${error.message}`);
+    const base = path.join(projectRoot, folderDeployed, folder);
+    const file = path.join(base, `${locale}.json`);
+    let messages = null;
+    if (fs.existsSync(file)) {
+      try {
+        messages = JSON.parse(fs.readFileSync(file, 'utf8'));
+      } catch (error) {
+        throw new Error(`seo: invalid translator dictionary ${locale}.json: ${error.message}`);
+      }
     }
+    // Namespaced dictionaries (`<path>/<locale>/<ns>.json`, loaded by translator.load())
+    // are part of the same locale; the browser merges them under the file name.
+    const namespaceDir = path.join(base, locale);
+    if (fs.existsSync(namespaceDir) && fs.statSync(namespaceDir).isDirectory()) {
+      messages = messages && typeof messages === 'object' ? messages : {};
+      for (const name of fs.readdirSync(namespaceDir)) {
+        if (!name.endsWith('.json')) continue;
+        const namespace = name.slice(0, -5);
+        try {
+          messages[namespace] = JSON.parse(fs.readFileSync(path.join(namespaceDir, name), 'utf8'));
+        } catch (error) {
+          throw new Error(`seo: invalid translator dictionary ${locale}/${name}: ${error.message}`);
+        }
+      }
+    }
+    if (messages) dictionaries[locale] = messages;
   }
   return dictionaries;
 }
@@ -240,27 +268,34 @@ export function resolveMetadata({ pathname, routeMetadata, manifest = {}, origin
     inline
   );
 
-  if (translate) {
-    const text = (value) => resolveSeoText(value, translate);
-    merged.title = text(merged.title);
-    merged.titleTemplate = text(merged.titleTemplate);
-    merged.description = text(merged.description);
-    merged.imageAlt = text(merged.imageAlt);
-    if (merged.openGraph) {
-      merged.openGraph = {
-        ...merged.openGraph,
-        title: text(merged.openGraph.title),
-        description: text(merged.openGraph.description),
-        siteName: text(merged.openGraph.siteName)
-      };
-    }
-    if (merged.twitter) {
-      merged.twitter = {
-        ...merged.twitter,
-        title: text(merged.twitter.title),
-        description: text(merged.twitter.description)
-      };
-    }
+  // `titleKey` / `descriptionKey` may come from routes.js OR from a seo.json entry;
+  // normalise the merged object so both work (the manifest path was previously ignored).
+  if (typeof merged.titleKey === 'string' && merged.titleKey.trim()) merged.title = { t: merged.titleKey.trim() };
+  if (typeof merged.descriptionKey === 'string' && merged.descriptionKey.trim()) {
+    merged.description = { t: merged.descriptionKey.trim() };
+  }
+
+  // Always map `{ t }`: with no translate (translator off) the key is the honest output,
+  // never "[object Object]".
+  const text = (value) => resolveSeoText(value, translate);
+  merged.title = text(merged.title);
+  merged.titleTemplate = text(merged.titleTemplate);
+  merged.description = text(merged.description);
+  merged.imageAlt = text(merged.imageAlt);
+  if (merged.openGraph) {
+    merged.openGraph = {
+      ...merged.openGraph,
+      title: text(merged.openGraph.title),
+      description: text(merged.openGraph.description),
+      siteName: text(merged.openGraph.siteName)
+    };
+  }
+  if (merged.twitter) {
+    merged.twitter = {
+      ...merged.twitter,
+      title: text(merged.twitter.title),
+      description: text(merged.twitter.description)
+    };
   }
 
   const title = merged.title ?? null;
@@ -403,7 +438,7 @@ const xmlEscape = (value) => String(value ?? '')
  * `sitemap.xml` from the manifest. Only literal routes that are indexable and
  * not explicitly excluded: a `${param}` pattern cannot be enumerated.
  *
- * With a translator context and `routing`, every route appears once per locale and
+ * With a translator context and `localePrefix`, every route appears once per locale and
  * each `<url>` carries the `xhtml:link` alternates (plus `x-default`), so the
  * sitemap and the `hreflang` in the head cannot disagree.
  */
@@ -412,7 +447,11 @@ export function buildSitemap({ manifest, origin, translator = null }) {
   if (!base) throw new Error('seo: buildSitemap needs an absolute origin');
 
   const active = translator?.enabled ? translator : null;
-  const locales = active ? active.locales : [null];
+  // Without a locale prefix the URL does not identify a locale, so the sitemap has one
+  // URL per route (the default locale) and no alternates.
+  const locales = active
+    ? (active.localePrefix ? active.locales : [active.defaultLocale])
+    : [null];
   const urls = [];
 
   for (const [key, entry] of Object.entries(manifest?.routes || {})) {
@@ -422,7 +461,7 @@ export function buildSitemap({ manifest, origin, translator = null }) {
     if (entry?.noindex) continue;
 
     const paths = locales.map((locale) => (active ? active.localize(key, locale) : key));
-    const alternates = active
+    const alternates = active?.localePrefix
       ? locales
         .map((locale, index) => ({
           hreflang: locale,
@@ -469,10 +508,24 @@ export function buildSitemap({ manifest, origin, translator = null }) {
 /** Route paths from `routes.js`, normalised (leading slash, no trailing slash). */
 export function routePaths(routes) {
   const list = Array.isArray(routes) ? routes : [];
-  return list
-    .map((route) => (typeof route === 'string' ? route : route?.path))
-    .filter(Boolean)
-    .map((value) => String(value).replace(/\/+$/, '') || '/');
+  const normalize = (base, value) => {
+    const merged = `${base || ''}${value || ''}`.replace(/\/+/g, '/');
+    return merged.length > 1 ? merged.replace(/\/+$/, '') || '/' : '/';
+  };
+  const paths = [];
+  const walk = (entries, base = '') => {
+    for (const route of Array.isArray(entries) ? entries : []) {
+      if (typeof route === 'string') {
+        paths.push(normalize(base, route));
+        continue;
+      }
+      const full = normalize(base, route?.path);
+      if (route?.path) paths.push(full);
+      if (Array.isArray(route?.children)) walk(route.children, full);
+    }
+  };
+  walk(list);
+  return paths;
 }
 
 /**

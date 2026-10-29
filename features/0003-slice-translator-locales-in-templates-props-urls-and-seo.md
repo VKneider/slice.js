@@ -53,7 +53,7 @@ the prop pipeline all have to know the locale.
   "path": "/locales",
   "saveLocally": true,
   "useBrowserLocale": true,
-  "routing": "prefix-except-default"
+  "localePrefix": "except-default"
 }
 ```
 
@@ -66,10 +66,10 @@ the prop pipeline all have to know the locale.
 | `path` | `/locales` | Where dictionaries are served from. |
 | `saveLocally` | `false` | Remember the choice (like `themeManager.saveThemeLocally`). |
 | `useBrowserLocale` | `false` | First visit: the browser's language if supported (`es-VE` → `es`). |
-| `routing` | `false` | `false`: the locale is not in the URL. `"prefix"`: every URL has it (`/es/pricing`, `/en/pricing`). `"prefix-except-default"`: the default locale has none (`/pricing`, `/en/pricing`). |
+| `localePrefix` | `false` | `false`: the locale is not in the URL. `"prefix"`: every URL has it (`/es/pricing`, `/en/pricing`). `"except-default"`: the default locale has none (`/pricing`, `/en/pricing`). |
 
-**Which locale starts**: with `routing`, the URL decides — its prefix, or with
-`"prefix-except-default"` the default locale when there is none (an unprefixed URL *is* the default
+**Which locale starts**: with a locale prefix, the URL decides — its prefix, or with
+`"except-default"` the default locale when there is none (an unprefixed URL *is* the default
 language, so a saved choice never contradicts the address bar). Otherwise, and for `"prefix"` at an
 unprefixed URL: the saved one → the browser's → `defaultLocale`. `sliceConfig.schema.json` gains the block, so `slice doctor` validates it.
 
@@ -185,7 +185,7 @@ await slice.build('DropDown', { items: [{ label: slice.t.ref('menu.home'), path:
 
 ### 7. Router and URLs
 
-**For every app, whatever `routing` says** — the router becomes the only reader of the URL:
+**For every app, whatever `localePrefix` says** — the router becomes the only reader of the URL:
 
 ```js
 slice.router.path            // the app path, without locale or query: '/pricing'
@@ -196,7 +196,7 @@ slice.router.href('/pricing')// the URL to put in an <a>: '/en/pricing' (or '/pr
 `ComponentsPage` and `UnsavedChangesGuard` move from `window.location.pathname` to these
 (slicejs-components feature 0002).
 
-**With `routing` on:**
+**With a locale prefix:**
 - Routes are declared **once**, without a locale (`/pricing`, `/producto/${id}`). `matchRoute` strips
   a known locale prefix first; the prefix sets the active locale.
 - `navigate('/pricing')` and `Link` add the active locale. `navigate('/pricing', { locale: 'en' })`
@@ -207,7 +207,7 @@ slice.router.href('/pricing')// the URL to put in an <a>: '/en/pricing' (or '/pr
   page renders translated and a failed load leaves the user where they were. A path given with a
   prefix (`navigate('/en/pricing')`) means that locale. A guard redirect stays in the target locale.
 - Back/forward across languages: the router follows the URL's locale before rendering.
-- The default locale with a prefix under `"prefix-except-default"` (`/es/pricing`) is canonicalized
+- The default locale with a prefix under `"except-default"` (`/es/pricing`) is canonicalized
   to `/pricing` (client: `replaceState`; server: phase 5).
 - `matchRoute()` drops a known prefix and the query/hash before matching, so a component that still
   passes `window.location.pathname` keeps working.
@@ -224,7 +224,7 @@ slice.router.href('/pricing')// the URL to put in an <a>: '/en/pricing' (or '/pr
 1. Load what the locale needs (main file, namespaces already loaded, the fallback's). On failure the
    locale does not change and the promise rejects.
 2. Set `slice.translator.locale`, `<html lang>`, `<html dir>` (`rtl` for ar, he, fa, ur); save it if
-   `saveLocally`; with `routing`, rewrite the URL.
+   `saveLocally`; with a locale prefix, rewrite the URL.
 3. Re-translate every `data-t` in the document.
 4. Re-assign every prop that came from a marker, parents before children.
 5. Re-apply the active route's `metadata` (`applyRouteMetadata`, now locale-aware, §9).
@@ -255,7 +255,7 @@ The server resolves them at startup with the same `/locales/*.json` the client u
 `applyRouteMetadata` resolves them with `slice.t()`. A plain string stays a plain string (the same
 in every locale), so existing manifests do not change.
 
-**With `routing` on, `prepareSeo()`:**
+**With a locale prefix, `prepareSeo()`:**
 - prerenders every route **once per locale** (`/pricing`, `/en/pricing`), each with `<html lang>`,
   `<html dir>`, `og:locale` (from the locale, `en` → `en_US` unless `seo.json` maps it), the
   translated `<head>`, and its own canonical;
@@ -264,7 +264,7 @@ in every locale), so existing manifests do not change.
 - answers `404` for an unknown locale prefix, exactly like an unknown path;
 - `${param}` routes render per request as today, per locale.
 
-**Without `routing`**, the server prerenders the `defaultLocale`; there is one URL per page and no
+**Without `localePrefix`**, the server prerenders the `defaultLocale`; there is one URL per page and no
 `hreflang` (switching language is a client preference).
 
 **Sitemap.** `buildSitemap()` emits one `<url>` per route and locale, each with its
@@ -319,7 +319,7 @@ construction.
 2. Templates (`data-t`, attributes, slots, `data-t-*` params, observer) and prop markers. **Done.**
 3. `slice.router.path` / `href()` (useful without any locale) and their adoption in the library.
    **Framework done**; the library adoption is slicejs-components 0002.
-4. `routing: "prefix" | "prefix-except-default"`. **Done on the client.** Until phase 5, a server
+4. `localePrefix: "always" | "except-default"`. **Done on the client.** Until phase 5, a server
    with native SEO (`seo.json`) answers `/en/…` as an unknown path (404 page); apps without SEO get
    the shell and work.
 5. SEO: `{ t }` fields, per-locale prerender, `hreflang`, sitemap alternates, validation. **Done.**
@@ -335,7 +335,7 @@ construction.
 
 ## Compatibility and risk
 
-- **Additive.** `translator.enabled` defaults to `false`; `routing` to `false`. Apps that do nothing
+- **Additive.** `translator.enabled` defaults to `false`; `localePrefix` to `false`. Apps that do nothing
   see no change except `slice.router.path`/`href()` existing.
 - **Setter wrapping** touches every component with `static props`. It must be invisible: same `this`,
   same return, no change for non-marker values. Measure registration cost on the docs site (≈ 70
@@ -345,7 +345,7 @@ construction.
   Animations that rewrite `style` every frame create records that are discarded. Measured on the
   phase 1–2 harness: 200 style writes caused no re-translation.
 - **SEO memory** grows with locales (§9).
-- **Breaking for apps with `routing` on**: every hard-coded `href="/x"` in their templates bypasses
+- **Breaking for apps with a locale prefix on**: every hard-coded `href="/x"` in their templates bypasses
   `href()`. `Link` and `navigate` are fine; raw anchors need `slice.router.href()` or a delegated
   click handler. Document it, and let `slice translator check` (CLI 0003) report raw `href="/…"`.
 
@@ -356,10 +356,10 @@ construction.
   `buildSitemap` alternates, `{ t }` resolution in `resolveMetadata`.
 - Browser: first paint translated (no keys visible); `setLocale` order (§8) with a spy per step;
   `data-t` text/attributes/slots; props re-assigned on change; no leaks after destroying
-  components (LeakInspector); `routing` navigation, back/forward, guards receiving `locale`.
+  components (LeakInspector); `localePrefix` navigation, back/forward, guards receiving `locale`.
 - Server: per-locale prerender, `hreflang` + `x-default`, canonical per locale, 404 for `/fr/…`,
   sitemap with `xhtml:link`.
-- Dogfood: the components docs site in English and Spanish with `prefix-except-default`.
+- Dogfood: the components docs site in English and Spanish with `except-default`.
 
 ## Documentation impact
 
@@ -401,9 +401,9 @@ construction.
   The translator is always created (disabled: `t()` returns the key), so the CLI bundles it with
   the core.
 - 2026-10-28 — Phases 3–4 (framework): `slice.router.path` / `href()`, `RouteInfo.locale` / `url`,
-  `navigate(path, { locale })`, prefix routing in `translator/localePath.js` (pure, shared with the
-  server for phase 5). With `routing`, the URL decides the locale.
-- 2026-10-28 — Integration proof in `slicejs-lab` (Spanish default, English fallback, no routing):
+  `navigate(path, { locale })`, locale-prefix handling in `translator/localePath.js` (pure, shared with the
+  server for phase 5). With a locale prefix, the URL decides the locale.
+- 2026-10-28 — Integration proof in `slicejs-lab` (Spanish default, English fallback, no locale prefix):
   marked shell texts, `t.ref()` props for SideMenu/Breadcrumbs/Button/ToolTip, ES/EN switch, saved
   choice and `translator:change`. `tests/translator.e2e.mjs` boots the dev server and drives
   Chromium (`pnpm test:lab:e2e`).
@@ -417,7 +417,7 @@ construction.
   `imageAlt`, `openGraph`/`twitter` titles) with the app dictionaries, prerenders every literal route
   per locale (`<html lang|dir>`, canonical, `og:locale`), adds `hreflang` + `x-default`, validates a
   missing key per locale as an error and builds the sitemap with `xhtml:link` alternates.
-  `/` under `prefix` answers 302, a default-locale prefix under `prefix-except-default` answers 301,
+  `/` under `"always"` answers 302, a default-locale prefix under `except-default` answers 301,
   an unknown prefix stays a 404. `og:locale` defaults to the locale with `-` → `_`, overridable per
   locale in `seo.json` (`locales.<locale>.ogLocale`).
 - 2026-10-28 — Phase 6 shipped: `TranslatorDebugger` (`translator.ui`) with a locale switcher, the

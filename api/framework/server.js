@@ -241,14 +241,24 @@ async function loadRouteDefinitions(projectRoot, folderDeployed) {
     path.join(projectRoot, folderDeployed, 'routes.js'),
     path.join(projectRoot, 'src', 'routes.js')
   ];
+  const normalize = (base, value) => {
+    const merged = `${base || ''}${value || ''}`.replace(/\/+/g, '/');
+    return merged.length > 1 ? merged.replace(/\/+$/, '') || '/' : '/';
+  };
+  const flatten = (list, base = '') => {
+    const entries = [];
+    for (const route of Array.isArray(list) ? list : []) {
+      const full = normalize(base, route?.path);
+      if (full) entries.push({ path: full, metadata: route?.metadata || {} });
+      if (Array.isArray(route?.children)) entries.push(...flatten(route.children, full));
+    }
+    return entries;
+  };
   for (const candidate of candidates) {
     if (!fs.existsSync(candidate)) continue;
     const module = await import(pathToFileURL(candidate).href);
     const routes = module.default ?? module.routes ?? [];
-    return (Array.isArray(routes) ? routes : []).map((route) => ({
-      path: String(route?.path ?? '').replace(/\/+$/, '') || '/',
-      metadata: route?.metadata || {}
-    })).filter((route) => route.path);
+    return flatten(routes).filter((route) => route.path);
   }
   return [];
 }
@@ -298,6 +308,9 @@ export async function prepareSeo(options = {}) {
   const siteName = config.siteName || manifest.defaults?.siteName || null;
   const locale = config.locale || manifest.defaults?.locale || null;
   const routes = await loadRouteDefinitions(projectRoot, folderDeployed);
+  if (!routes.length) {
+    throw new Error('seo: routes.js is missing or empty; every page would answer 404');
+  }
 
   // Multilingual SEO (translator feature 0003, phase 5). Without a translator this is
   // one `null` locale and every rule below collapses to the old single-language path.
@@ -307,7 +320,9 @@ export async function prepareSeo(options = {}) {
     translatorConfig,
     loadTranslatorDictionaries(projectRoot, folderDeployed, translatorConfig)
   );
-  const locales = translator.enabled ? translator.locales : [null];
+  const locales = translator.enabled
+    ? (translator.localePrefix ? translator.locales : [translator.defaultLocale])
+    : [null];
   const ogLocaleConfig = manifest.locales && typeof manifest.locales === 'object' ? manifest.locales : {};
 
   const render = (activeLocale, pathname, routeMetadata) => {
@@ -330,7 +345,7 @@ export async function prepareSeo(options = {}) {
       meta.imageAlt = meta.imageAlt || meta.title;
     }
 
-    const alternates = translator.enabled && activeLocale
+    const alternates = translator.enabled && translator.localePrefix && activeLocale
       ? translator.locales
         .map((code) => ({
           hreflang: code,
@@ -412,7 +427,7 @@ export async function prepareSeo(options = {}) {
     translator,
     prerendered: pages.size,
     resolve(pathname) {
-      if (!translator.enabled || !translator.routing) {
+      if (!translator.enabled || !translator.localePrefix) {
         return settle(pathname, translator.defaultLocale);
       }
 
@@ -420,18 +435,19 @@ export async function prepareSeo(options = {}) {
 
       if (urlLocale) {
         // `/es/pricing` under "prefix-except-default": the canonical URL is `/pricing`.
-        if (translator.routing === 'prefix-except-default' && urlLocale === translator.defaultLocale) {
+        if (translator.localePrefix === 'except-default' && urlLocale === translator.defaultLocale) {
           return { status: 301, location: appPath };
         }
         return settle(appPath, urlLocale);
       }
 
-      // With "prefix" every page has a locale in the URL. `/` picks the default (the
-      // client may then apply the saved/browser choice); anything else is not a page,
-      // including an unknown prefix such as `/fr/...`.
-      if (translator.routing === 'prefix') {
-        if (pathname === '/') {
-          return { status: 302, location: translator.localize('/', translator.defaultLocale) };
+      // With "always" every page has a locale in the URL. `/` picks the default (the
+      // client may then apply the saved/browser choice). A known unprefixed path is a
+      // 302 to its prefixed URL, not a 404: the client can render it and search engines
+      // must see the canonical URL.
+      if (translator.localePrefix === 'always') {
+        if (pathname === '/' || settle(pathname, translator.defaultLocale).status === 200) {
+          return { status: 302, location: translator.localize(pathname, translator.defaultLocale) };
         }
         return { status: 404, page: notFound.get(translator.defaultLocale) };
       }
