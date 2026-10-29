@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- `slice.t.list(key, params?)` reads a dictionary array for the active locale (string items are
+  formatted, records are returned as-is); `slice.t.ref.list()` is the prop marker and refreshes the
+  whole array on a locale change. Missing or non-array values return `[]` with one warning.
+- `slice.t.content(name)` loads `<translator.path>/content/<name>.json` once and resolves every
+  `copy: { en, es }` branch for the active locale, flattening nested nodes. `slice.t.localized(value)`
+  is the primitive for a one-off localized value.
+- Content documents are served from `src/locales/content/` in development and `dist/locales/content/`
+  in production, and `api/framework/content.js` exposes `readContent()` / `resolveContentFor()` for
+  server-side SEO.
+- `slice translator check` validates `t.list` keys, `t.content` document names and each content
+  `copy` (every locale present, same shape, no empty strings); the doctor Translator row uses the
+  same scan.
+
 ## [4.1.1] - 2026-10-28
 
 ### Added

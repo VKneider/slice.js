@@ -522,6 +522,35 @@ test('translator: the configured dictionaries folder is served from dist, not th
   assert.match(cached.headers.get('cache-control'), /max-age=300/);
 });
 
+test('translator: content documents under locales/content are served as JSON, not the shell', async (t) => {
+  const { root, folder } = makeProject('production');
+  fs.writeFileSync(path.join(root, folder, 'sliceConfig.json'), JSON.stringify({
+    paths: { components: { Visual: { path: '/Components/Visual' } } },
+    translator: { enabled: true, defaultLocale: 'es', path: '/locales' }
+  }));
+  fs.mkdirSync(path.join(root, folder, 'locales', 'content'), { recursive: true });
+  fs.writeFileSync(
+    path.join(root, folder, 'locales', 'content', 'experience.json'),
+    JSON.stringify({ records: [{ id: 1, copy: { es: { position: 'Ingeniero' }, en: { position: 'Engineer' } } }] })
+  );
+
+  const { start } = createSliceServer({ projectRoot: root, mode: 'production', port: 0 });
+  const server = await start({ port: 0, signals: false });
+  await once(server, 'listening');
+  t.after(() => {
+    server.close();
+    fs.rmSync(root, { recursive: true, force: true });
+  });
+  const base = `http://127.0.0.1:${server.address().port}`;
+
+  const document = await get(base, '/locales/content/experience.json');
+  assert.equal(document.status, 200);
+  assert.match(document.headers.get('content-type'), /application\/json/);
+  assert.deepEqual(await document.json(), {
+    records: [{ id: 1, copy: { es: { position: 'Ingeniero' }, en: { position: 'Engineer' } } }]
+  });
+});
+
 test('translator: no dictionary mount when the translator is off', async (t) => {
   const { root, folder } = makeProject('production');
   fs.mkdirSync(path.join(root, folder, 'locales'), { recursive: true });

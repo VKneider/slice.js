@@ -29,9 +29,14 @@ export default class Slice {
       this._publicEnv = {};
 
       // One translation entry point: `slice.t()` for text, `slice.t.ref()` for a prop
-      // that must follow the locale. Bound here so both survive destructuring.
+      // that must follow the locale, `slice.t.list()` for a list, `slice.t.content()` for a
+      // content document. Bound here so all of them survive destructuring.
       this.t = this.t.bind(this);
       this.t.ref = (key, params) => (this.translator ? this.translator.ref(key, params) : String(key ?? ''));
+      this.t.ref.list = (key, params) => (this.translator ? this.translator.refList(key, params) : String(key ?? ''));
+      this.t.list = (key, params) => (this.translator ? this.translator.list(key, params) : []);
+      this.t.content = (name) => (this.translator ? this.translator.content(name) : Promise.resolve(null));
+      this.t.localized = (value) => (this.translator ? this.translator.localized(value) : value);
 
       // 📦 Bundle system is initialized automatically via import in index.js
    }

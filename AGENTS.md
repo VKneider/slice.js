@@ -58,6 +58,10 @@ local de `api/`).
   Props: `setComponentProps` resolves `t.ref()` references and `static props` setters are wrapped once per
   class; `destroyComponent` calls `translator.forget()`. No `localeChanged()` hook. One entry point:
   `slice.t()` for text, `slice.t.ref()` for a prop; `data-t` covers the DOM (templates and JS-created).
+- Lists and content values: `slice.t.list()` returns a dictionary array (`t.ref.list()` is the prop
+  marker); `localized.js` resolves `{ en, es }` and `content.js` resolves `copy` documents loaded from
+  `<path>/content/<name>.json` (`t.content()`). The CLI validates list keys and every `copy`; the
+  server reads the same documents with `api/framework/content.js`.
 - URLs (phases 3–4): `localePath.js` (pure prefix rules). The Router never reads
   `window.location.pathname` for matching without `_appPath()`; components use the shortcuts
   `slice.path` / `slice.href()` (aliases of `slice.router.path` / `href()`), so they import no helper.

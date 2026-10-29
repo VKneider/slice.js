@@ -8,7 +8,9 @@ import {
    matchLocale,
    mergeMessages,
 } from './messages.js';
-import { TranslationRef, containsMarker, resolveMarkers } from './markers.js';
+import { TranslationListRef, TranslationRef, containsMarker, resolveMarkers } from './markers.js';
+import { localize } from './localized.js';
+import { resolveContent } from './content.js';
 import { translateTree } from './dom.js';
 import { isExternalHref, localeOfUrl, localizePath, normalizeLocalePrefix, splitLocalePath } from './localePath.js';
 
@@ -108,6 +110,10 @@ export default class Translator {
       this._requests = new Map();
       /** @private @type {Set<string>} */
       this._namespaces = new Set();
+      /** @private @type {Map<string, Promise<Record<string, any>|undefined>>} content document → load */
+      this._content = new Map();
+      /** @private @type {Map<string, any>} `${document}|${locale}` → resolved content */
+      this._contentCache = new Map();
       /** @private */
       this._version = 0;
       /** @private texts are not written (nor missing keys reported) before the first load */
@@ -267,6 +273,108 @@ export default class Translator {
    }
 
    /**
+    * Translate a list value: an array of messages (strings or plurals) or records.
+    * String items are formatted with `params`; objects are returned as-is (content lists
+    * carry their own localized records). A missing entry or a non-array returns `[]` and
+    * warns once. With `showKeys`, string items become `key.<index>`.
+    * @param {string} key
+    * @param {Record<string, any>} [params]
+    * @returns {any[]}
+    */
+   list(key, params) {
+      if (typeof key !== 'string' || key === '') return [];
+      if (!this.enabled) return [];
+
+      for (const locale of this._chain()) {
+         const entry = this._entry(key, locale);
+         if (entry === undefined) continue;
+         if (!Array.isArray(entry)) {
+            this._warnOnce(`list-shape:${key}`, `"${key}" is not a list: slice.t.list() expects an array`);
+            return [];
+         }
+         return entry.map((item, index) => {
+            if (this.showKeys) {
+               return typeof item === 'string' || isPluralMessage(item) ? `${key}.${index}` : item;
+            }
+            if (typeof item === 'string' || isPluralMessage(item)) {
+               const text = formatMessage(item, params, locale, this._intl, {
+                  onMissingParam: (name) => this._warnOnce(`param:${locale}:${key}:${index}:${name}`, `"${key}.${index}" (${locale}) uses {${name}} but no "${name}" param was given`),
+                  onMissingCount: () => this._warnOnce(`count:${locale}:${key}:${index}`, `"${key}.${index}" (${locale}) is a plural message: pass { count }`),
+               });
+               return text === null ? item : text;
+            }
+            return item;
+         });
+      }
+
+      if (this._ready) {
+         this._warnOnce(`list-missing:${this.locale}:${key}`, `Missing list "${key}" for "${this.locale}"`);
+      }
+      return [];
+   }
+
+   /**
+    * Resolve a localized content value (`{ en: …, es: … }`) for the active locale.
+    * Arrays and plain objects are walked recursively; it never looks up dictionary keys.
+    * @param {any} value
+    * @returns {any}
+    */
+   localized(value) {
+      return localize(value, {
+         locale: this.locale,
+         fallbackLocale: this.fallbackLocale,
+         defaultLocale: this.defaultLocale,
+         locales: this.locales,
+      });
+   }
+
+   /**
+    * Load a content document (`<path>/content/<name>.json`) and resolve it for the active
+    * locale: every `copy` becomes its branch, nested nodes are flattened. The document is
+    * fetched once; the resolution is cached per locale. Returns `null` when it cannot load.
+    * @param {string} name
+    * @returns {Promise<any|null>}
+    */
+   async content(name) {
+      const id = String(name ?? '').trim().replace(/^\/+|\/+$/g, '');
+      const valid = id && /^[a-z0-9][a-z0-9/_-]*$/i.test(id) && !id.split('/').some((segment) => !segment || segment === '.' || segment === '..');
+      if (!valid) {
+         this._log('warn', `slice.t.content() needs a document name such as "experience" (got "${name}")`);
+         return null;
+      }
+      if (!this.enabled) {
+         this._warnOnce('content-disabled', 'slice.t.content() needs the translator enabled');
+         return null;
+      }
+
+      const document = await this._loadContent(id);
+      if (document === undefined) return null;
+
+      const locale = this.locale;
+      const cacheKey = `${id}|${locale}`;
+      if (this._contentCache.has(cacheKey)) return this._contentCache.get(cacheKey);
+
+      const options = {
+         locale,
+         fallbackLocale: this.fallbackLocale,
+         defaultLocale: this.defaultLocale,
+         locales: this.locales,
+      };
+      const resolved = resolveContent(document, (value) => localize(value, options), {
+         onMissing: (path) => this._warnOnce(
+            `content-copy:${id}:${locale}:${path}`,
+            `Content "${id}" has a "copy" at "${path}" without "${locale}" (or its fallback)`
+         ),
+         onInvalid: (path) => this._warnOnce(
+            `content-invalid:${id}:${path}`,
+            `Content "${id}" has a scalar/array "copy" at "${path}" next to structural fields; use an object branch (e.g. { "title": … })`
+         ),
+      });
+      this._contentCache.set(cacheKey, resolved);
+      return resolved;
+   }
+
+   /**
     * Debugger switch: show keys instead of texts, everywhere, without changing the locale.
     * Re-translates the document and marker props on both transitions.
     * @param {boolean} enabled
@@ -414,6 +522,21 @@ export default class Translator {
    }
 
    /**
+    * A reference to a *list* of messages, for a component prop. The component receives the
+    * array, and receives a fresh one when the locale changes. With the translator off it is
+    * the plain key, like `ref()`.
+    * @param {string} key
+    * @param {Record<string, any>} [params]
+    * @returns {TranslationListRef|string}
+    */
+   refList(key, params) {
+      if (!this.enabled) return String(key ?? '');
+      return new TranslationListRef(key, params, () =>
+         this._warnOnce(`marker-list:${key}`, `slice.t.ref.list("${key}") was used as a string; pass it as a prop value`)
+      );
+   }
+
+   /**
     * Whether a value is (or contains) a `key()` marker.
     * @param {unknown} value
     * @returns {boolean}
@@ -428,7 +551,12 @@ export default class Translator {
     * @returns {any}
     */
    resolve(value) {
-      return resolveMarkers(value, (key, params) => this.t(key, params));
+      return resolveMarkers(
+         value,
+         (key, params) => this.t(key, params),
+         0,
+         (key, params) => this.list(key, params)
+      );
    }
 
    /**
@@ -687,6 +815,36 @@ export default class Translator {
       for (const result of /** @type {PromiseSettledResult<void>[]} */ (fallbackResults)) {
          if (result.status === 'rejected') this._log('warn', `Fallback dictionary failed (${this.fallbackLocale})`, result.reason);
       }
+   }
+
+   /**
+    * Fetch one content document once (`<path>/content/<name>.json`). A failure warns and
+    * resolves to `undefined`; it is removed from the cache so a later call can retry.
+    * @private
+    * @param {string} name
+    * @returns {Promise<Record<string, any>|undefined>}
+    */
+   _loadContent(name) {
+      const cached = this._content.get(name);
+      if (cached) return cached;
+
+      const url = `${this.path}/content/${name}.json`;
+      const request = (async () => {
+         const response = await fetch(url);
+         if (!response.ok) throw new Error(`${url}: ${response.status} ${response.statusText}`);
+         const json = await response.json();
+         if (!isPlainObject(json)) throw new Error(`${url} is not a JSON object`);
+         this._version++;
+         return json;
+      })()
+         .catch((error) => {
+            this._log('warn', `Could not load content "${name}"`, error);
+            this._content.delete(name);
+            return undefined;
+         });
+
+      this._content.set(name, request);
+      return request;
    }
 
    /**

@@ -52,11 +52,55 @@ export class TranslationRef {
 }
 
 /**
+ * A reference to a *list* of messages for a component prop, from `slice.t.ref.list()`.
+ * It resolves to an array, and the whole prop is assigned again on a locale change.
+ */
+export class TranslationListRef {
+   /** @type {(() => void) | undefined} */
+   #onStringify;
+
+   /**
+    * @param {string} key
+    * @param {Record<string, any>} [params]
+    * @param {() => void} [onStringify] called when the marker is used as text by mistake
+    */
+   constructor(key, params, onStringify) {
+      this.key = String(key);
+      this.params = params && typeof params === 'object' ? Object.freeze({ ...params }) : undefined;
+      this.#onStringify = onStringify;
+      Object.freeze(this);
+   }
+
+   /** @returns {string} */
+   toString() {
+      this.#onStringify?.();
+      return this.key;
+   }
+
+   /** @param {string} hint */
+   [Symbol.toPrimitive](hint) {
+      return hint === 'number' ? NaN : this.toString();
+   }
+
+   toJSON() {
+      return this.toString();
+   }
+}
+
+/**
  * @param {unknown} value
  * @returns {value is TranslationRef}
  */
 export function isMarker(value) {
    return value instanceof TranslationRef;
+}
+
+/**
+ * @param {unknown} value
+ * @returns {value is TranslationListRef}
+ */
+export function isListMarker(value) {
+   return value instanceof TranslationListRef;
 }
 
 /**
@@ -67,7 +111,7 @@ export function isMarker(value) {
  * @returns {boolean}
  */
 export function containsMarker(value, depth = 0) {
-   if (isMarker(value)) return true;
+   if (isMarker(value) || isListMarker(value)) return true;
    if (depth > 8) return false;
    if (Array.isArray(value)) return value.some((item) => containsMarker(item, depth + 1));
    if (isPlainObject(value)) return Object.values(value).some((item) => containsMarker(item, depth + 1));
@@ -75,25 +119,30 @@ export function containsMarker(value, depth = 0) {
 }
 
 /**
- * A copy of `value` with every marker replaced by `translate(key, params)`. Arrays and
- * plain objects are copied only along the paths that hold markers; everything else keeps
- * its identity. Markers inside a marker's params resolve too.
+ * A copy of `value` with every marker replaced by `translate(key, params)` (or
+ * `translateList(key, params)` for a list marker). Arrays and plain objects are copied only
+ * along the paths that hold markers; everything else keeps its identity. Markers inside a
+ * marker's params resolve too.
  * @param {unknown} value
  * @param {(key: string, params?: Record<string, any>) => string} translate
  * @param {number} [depth]
+ * @param {((key: string, params?: Record<string, any>) => any) | null} [translateList]
  * @returns {any}
  */
-export function resolveMarkers(value, translate, depth = 0) {
-   if (isMarker(value)) {
-      const params = value.params ? resolveMarkers(value.params, translate, depth + 1) : undefined;
+export function resolveMarkers(value, translate, depth = 0, translateList = null) {
+   if (isMarker(value) || isListMarker(value)) {
+      const params = value.params ? resolveMarkers(value.params, translate, depth + 1, translateList) : undefined;
+      if (isListMarker(value)) {
+         return typeof translateList === 'function' ? translateList(value.key, params) : translate(value.key, params);
+      }
       return translate(value.key, params);
    }
    if (depth > 8 || !containsMarker(value, depth)) return value;
-   if (Array.isArray(value)) return value.map((item) => resolveMarkers(item, translate, depth + 1));
+   if (Array.isArray(value)) return value.map((item) => resolveMarkers(item, translate, depth + 1, translateList));
    /** @type {Record<string, any>} */
    const copy = {};
    for (const [key, item] of Object.entries(/** @type {Record<string, any>} */ (value))) {
-      copy[key] = resolveMarkers(item, translate, depth + 1);
+      copy[key] = resolveMarkers(item, translate, depth + 1, translateList);
    }
    return copy;
 }

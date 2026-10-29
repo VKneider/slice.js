@@ -160,6 +160,12 @@ export interface TranslationRef {
   readonly params?: Readonly<TranslatorParams>;
 }
 
+/** A list reference for a component prop, from `slice.t.ref.list()`. */
+export interface TranslationListRef {
+  readonly key: string;
+  readonly params?: Readonly<TranslatorParams>;
+}
+
 export interface TranslatorConfig {
   enabled?: boolean;
   defaultLocale?: string;
@@ -192,6 +198,12 @@ export interface SliceTranslatorApi {
   readonly format: SliceTranslatorFormatApi;
   /** Translate a key; returns the key when it is missing (or the translator is off). */
   t(key: string, params?: TranslatorParams): string;
+  /** Translate a list of messages, or read a list of records; `[]` when missing. */
+  list<T = unknown>(key: string, params?: TranslatorParams): T[];
+  /** Resolve a localized content value (`{ en: …, es: … }`) for the active locale. */
+  localized<T = unknown>(value: T): T;
+  /** Load `<path>/content/<name>.json` and resolve its `copy` branches for the active locale. */
+  content(name: string): Promise<Record<string, unknown> | null>;
   has(key: string, locale?: string): boolean;
   /** Merge messages; `{ defaults: true }` adds a layer the app's dictionaries always override. */
   add(locale: string, messages: Record<string, unknown>, options?: { defaults?: boolean }): void;
@@ -211,6 +223,8 @@ export interface SliceTranslatorApi {
   syncUrl(): void;
   /** A key reference for a component prop: resolved before the component sees it, refreshed on a locale change. */
   ref(key: string, params?: TranslatorParams): TranslationRef;
+  /** A list reference for a component prop: resolves to an array, refreshed on a locale change. */
+  refList(key: string, params?: TranslatorParams): TranslationListRef;
   isRef(value: unknown): boolean;
   resolve<T = unknown>(value: T): T;
   /** Translate every `data-t` element under `root` (default: the document) right now. */
@@ -267,10 +281,19 @@ export interface SliceFrameworkClasses {
   [key: string]: unknown;
 }
 
+/** `slice.t.ref` and its `slice.t.ref.list` namespace. */
+export interface SliceTranslateRef {
+  (key: string, params?: TranslatorParams): TranslationRef;
+  list(key: string, params?: TranslatorParams): TranslationListRef;
+}
+
 /** `slice.t`: call it for text, `slice.t.ref()` for a prop reference. */
 export interface SliceTranslate {
   (key: string, params?: TranslatorParams): string;
-  ref(key: string, params?: TranslatorParams): TranslationRef;
+  ref: SliceTranslateRef;
+  list<T = unknown>(key: string, params?: TranslatorParams): T[];
+  localized<T = unknown>(value: T): T;
+  content(name: string): Promise<Record<string, unknown> | null>;
 }
 
 export interface SliceApi {
