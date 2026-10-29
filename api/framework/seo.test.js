@@ -141,7 +141,7 @@ test('injectHead replaces the shell tags instead of stacking them', () => {
   assert.doesNotMatch(html, /"@type":"WebSite"/);
 });
 
-test('the sitemap lists literal indexable routes only, sorted and escaped', () => {
+test('the sitemap lists literal routes and pattern paths, sorted and escaped', () => {
   const data = {
     version: 1,
     origin: ORIGIN,
@@ -150,7 +150,8 @@ test('the sitemap lists literal indexable routes only, sorted and escaped', () =
       '/a': { title: 'A', sitemap: { lastmod: '2026-10-22', priority: 0.7 } },
       '/private': { robots: false },
       '/hidden': { sitemap: false },
-      '/producto/${id}': { title: 'Producto' }
+      '/producto/${id}': { title: 'Producto', sitemap: { paths: ['42', { id: '7' }] } },
+      '/sin-paths/${id}': { title: 'Sin paths' }
     }
   };
   const xml = buildSitemap({ manifest: data, origin: ORIGIN });
@@ -159,10 +160,12 @@ test('the sitemap lists literal indexable routes only, sorted and escaped', () =
   assert.match(xml, /<loc>https:\/\/acme.dev\/a<\/loc>/);
   assert.match(xml, /<lastmod>2026-10-22<\/lastmod>/);
   assert.match(xml, /<priority>0.7<\/priority>/);
+  assert.match(xml, /<loc>https:\/\/acme.dev\/producto\/42<\/loc>/);
+  assert.match(xml, /<loc>https:\/\/acme.dev\/producto\/7<\/loc>/);
   // One field per line, so a <lastmod> change is a one-line diff.
   assert.match(xml, / {2}<url>\n {4}<loc>https:\/\/acme\.dev\/a<\/loc>\n/);
   assert.ok(xml.indexOf('/a</loc>') < xml.indexOf('/z</loc>'), 'sorted by URL');
-  assert.doesNotMatch(xml, /private|hidden|producto/);
+  assert.doesNotMatch(xml, /private|hidden|sin-paths/);
   assert.throws(() => buildSitemap({ manifest: data, origin: '/relative' }), /absolute origin/);
 });
 
@@ -176,7 +179,8 @@ test('validation reports the mistakes and the soft ones', () => {
         '/trailing/': { title: 'x' },
         '/gone': { title: 'x', image: '/og/missing.png' },
         '/long': { title: 'x'.repeat(80), description: 'y'.repeat(200) },
-        '/unlisted': { title: 'x', sitemap: false }
+        '/unlisted': { title: 'x', sitemap: false },
+        '/producto/${id}': { title: 'x', sitemap: { paths: ['42', { id: '' }] } }
       }
     },
     { fileExists: () => false, publicDir: '/public' }
@@ -186,6 +190,7 @@ test('validation reports the mistakes and the soft ones', () => {
   assert.ok(errors.some((message) => /must not end with a slash/.test(message)));
   assert.ok(errors.some((message) => /must start with/.test(message)));
   assert.ok(errors.some((message) => /image not found/.test(message)));
+  assert.ok(errors.some((message) => /missing "id"/.test(message)));
   assert.ok(warnings.some((message) => /title longer than/.test(message)));
   assert.ok(warnings.some((message) => /description longer than/.test(message)));
   assert.ok(warnings.some((message) => /indexable page excluded/.test(message)));
@@ -438,15 +443,18 @@ test('buildSitemap emits one URL per locale, with alternates and x-default', () 
       origin: ORIGIN,
       routes: {
         '/': { title: 'Home' },
-        '/pricing': { title: 'Pricing' }
+        '/pricing': { title: 'Pricing' },
+        '/producto/${id}': { title: 'Producto', sitemap: { paths: ['42'] } }
       }
     }
   });
 
   assert.match(sitemap, /xmlns:xhtml="http:\/\/www.w3.org\/1999\/xhtml"/);
-  assert.equal((sitemap.match(/<url>/g) || []).length, 4);
+  assert.equal((sitemap.match(/<url>/g) || []).length, 6);
   assert.match(sitemap, /<loc>https:\/\/acme.dev\/pricing<\/loc>/);
   assert.match(sitemap, /<loc>https:\/\/acme.dev\/en\/pricing<\/loc>/);
+  assert.match(sitemap, /<loc>https:\/\/acme.dev\/producto\/42<\/loc>/);
+  assert.match(sitemap, /<loc>https:\/\/acme.dev\/en\/producto\/42<\/loc>/);
   assert.match(sitemap, /hreflang="en" href="https:\/\/acme.dev\/en\/pricing"/);
   assert.match(sitemap, /hreflang="x-default" href="https:\/\/acme.dev\/pricing"/);
 });

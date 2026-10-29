@@ -21,6 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `slice translator check` validates `t.list` keys, `t.content` document names and each content
   `copy` (every locale present, same shape, no empty strings); the doctor Translator row uses the
   same scan.
+- SEO: a `${param}` route can declare `sitemap.paths` (strings or parameter objects); `buildSitemap`
+  expands every value into one URL per locale with alternates, and the validator rejects a value
+  missing one of the pattern's parameters.
 
 ## [4.1.1] - 2026-10-28
 

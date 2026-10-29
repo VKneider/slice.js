@@ -441,6 +441,26 @@ const xmlEscape = (value) => String(value ?? '')
  * each `<url>` carries the `xhtml:link` alternates (plus `x-default`), so the
  * sitemap and the `hreflang` in the head cannot disagree.
  */
+/**
+ * Expand a `${param}` sitemap entry into concrete paths.
+ * `values` are strings (single parameter) or objects (`{ slug: 'pr2' }`).
+ * @param {string} key
+ * @param {any[]} values
+ * @returns {string[]}
+ */
+function expandPatternPaths(key, values) {
+   const names = [...key.matchAll(/\$\{([^}]+)\}/g)].map((match) => match[1]);
+   if (names.length === 0 || !Array.isArray(values)) return [];
+   const paths = [];
+   for (const value of values) {
+      const params = typeof value === 'string' ? { [names[0]]: value } : value;
+      if (!params || typeof params !== 'object') continue;
+      if (names.some((name) => params[name] === undefined || params[name] === null || params[name] === '')) continue;
+      paths.push(key.replace(/\$\{([^}]+)\}/g, (_, name) => encodeURIComponent(String(params[name]))));
+   }
+   return paths;
+}
+
 export function buildSitemap({ manifest, origin, translator = null }) {
   const base = normalizeOrigin(origin);
   if (!base) throw new Error('seo: buildSitemap needs an absolute origin');
@@ -452,45 +472,55 @@ export function buildSitemap({ manifest, origin, translator = null }) {
     ? (active.localePrefix ? active.locales : [active.defaultLocale])
     : [null];
   const urls = [];
+  const seen = new Set();
 
   for (const [key, entry] of Object.entries(manifest?.routes || {})) {
-    if (isPattern(key)) continue;
     if (entry?.sitemap === false) continue;
     if (entry?.robots === false || entry?.robots?.index === false) continue;
     if (entry?.noindex) continue;
 
-    const paths = locales.map((locale) => (active ? active.localize(key, locale) : key));
-    const alternates = active?.localePrefix && locales.length > 1
-      ? locales
-        .map((locale, index) => ({
-          hreflang: locale,
-          href: `${base}${paths[index] === '/' ? '/' : paths[index]}`
-        }))
-        .concat([{
-          hreflang: 'x-default',
-          href: `${base}${active.localize(key, active.defaultLocale)}`
-        }])
-      : [];
+    // A pattern cannot be enumerated by itself; it opts in with `sitemap.paths`.
+    const concretePaths = isPattern(key)
+      ? expandPatternPaths(key, entry?.sitemap?.paths)
+      : [key];
+    if (concretePaths.length === 0) continue;
 
     const sitemap = entry?.sitemap && typeof entry.sitemap === 'object' ? entry.sitemap : {};
     const lastmod = sitemap.lastmod || entry?.lastmod;
     const changefreq = sitemap.changefreq || entry?.changefreq;
     const priority = sitemap.priority || entry?.priority;
 
-    for (const pathname of paths) {
-      const loc = `${base}${pathname === '/' ? '/' : pathname}`;
-      // One field per line: a <lastmod> update is a one-line diff in review.
-      const block = [
-        '  <url>',
-        `    <loc>${xmlEscape(loc)}</loc>`,
-        ...alternates.map((alternate) =>
-          `    <xhtml:link rel="alternate" hreflang="${xmlEscape(alternate.hreflang)}" href="${xmlEscape(alternate.href)}" />`),
-        lastmod ? `    <lastmod>${xmlEscape(lastmod)}</lastmod>` : '',
-        changefreq ? `    <changefreq>${xmlEscape(changefreq)}</changefreq>` : '',
-        priority ? `    <priority>${xmlEscape(priority)}</priority>` : '',
-        '  </url>'
-      ].filter(Boolean);
-      urls.push({ loc, body: block.join('\n') });
+    for (const concrete of concretePaths) {
+      const paths = locales.map((locale) => (active ? active.localize(concrete, locale) : concrete));
+      const alternates = active?.localePrefix && locales.length > 1
+        ? locales
+          .map((locale, index) => ({
+            hreflang: locale,
+            href: `${base}${paths[index] === '/' ? '/' : paths[index]}`
+          }))
+          .concat([{
+            hreflang: 'x-default',
+            href: `${base}${active.localize(concrete, active.defaultLocale)}`
+          }])
+        : [];
+
+      for (const pathname of paths) {
+        const loc = `${base}${pathname === '/' ? '/' : pathname}`;
+        if (seen.has(loc)) continue;
+        seen.add(loc);
+        // One field per line: a <lastmod> update is a one-line diff in review.
+        const block = [
+          '  <url>',
+          `    <loc>${xmlEscape(loc)}</loc>`,
+          ...alternates.map((alternate) =>
+            `    <xhtml:link rel="alternate" hreflang="${xmlEscape(alternate.hreflang)}" href="${xmlEscape(alternate.href)}" />`),
+          lastmod ? `    <lastmod>${xmlEscape(lastmod)}</lastmod>` : '',
+          changefreq ? `    <changefreq>${xmlEscape(changefreq)}</changefreq>` : '',
+          priority ? `    <priority>${xmlEscape(priority)}</priority>` : '',
+          '  </url>'
+        ].filter(Boolean);
+        urls.push({ loc, body: block.join('\n') });
+      }
     }
   }
 
@@ -631,6 +661,22 @@ export function validateSeoManifest(manifest, options = {}) {
     const indexable = !(robots === false || robots?.index === false);
     if (indexable && entry.sitemap === false) {
       add(warnings, `indexable page excluded from the sitemap: ${key}`);
+    }
+
+    if (isPattern(key) && entry.sitemap && typeof entry.sitemap === 'object' && Array.isArray(entry.sitemap.paths)) {
+      const names = [...key.matchAll(/\$\{([^}]+)\}/g)].map((match) => match[1]);
+      for (const value of entry.sitemap.paths) {
+        const params = typeof value === 'string' ? { [names[0]]: value } : value;
+        if (!params || typeof params !== 'object') {
+          add(errors, `sitemap.paths entry must be a string or an object: ${key}`);
+          continue;
+        }
+        for (const name of names) {
+          if (params[name] === undefined || params[name] === null || params[name] === '') {
+            add(errors, `sitemap.paths entry is missing "${name}": ${key}`);
+          }
+        }
+      }
     }
   }
 
