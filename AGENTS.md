@@ -46,11 +46,12 @@ local de `api/`).
   The JS property alone (`component.sliceId = ...`) is invisible to CSS attribute selectors.
 - Full rationale: the docs `project-architecture/service-patterns.md`.
 
-## slice.translator (feature 0003, phases 1–2)
-- `Slice/Components/Structural/Translator/`: `Translator.js` (the class), and pure helpers
-  `messages.js` (lookup, plurals, interpolation), `markers.js` (`key()` markers), `dom.js` (`data-t`
-  rules, reused by the CLI). Helpers must not import each other: the CLI bundler inlines only the
-  helpers a Structural component imports directly.
+## slice.translator (feature 0003, phases 1–6)
+- `Slice/Components/Structural/Translator/`: `Translator.js` (the class), `TranslatorDebugger.js`
+  (panel), and pure helpers `messages.js` (lookup, plurals, interpolation), `markers.js` (`key()`
+  markers), `dom.js` (`data-t` rules, reused by the CLI), `localePath.js` (URL rules, shared with the
+  server). Helpers must not import each other: the CLI bundler inlines only the helpers a Structural
+  component imports directly.
 - Always created in `init()` (disabled → `t()` returns the key), so it is part of the core bundle.
 - Texts are *marked*: `data-t` / `data-t-*` anywhere in the document are translated by one
   `MutationObserver`; templates are translated in `loadTemplateToComponent` (before `init()`).
@@ -59,7 +60,15 @@ local de `api/`).
 - URLs (phases 3–4): `localePath.js` (pure prefix rules). The Router never reads
   `window.location.pathname` for matching without `_appPath()`; use `slice.router.path` /
   `slice.router.href()` in components. With `routing` on, the URL decides the locale.
-- Unit tests: `Slice/tests/translator*.test.js`. DOM behaviour needs a browser (see the library).
+- SEO (phase 5): `api/framework/seo.js` resolves `{ t }` fields and prerenders per locale with
+  `hreflang`, canonical and `og:locale`; `buildSitemap` emits alternates; validation fails on a key
+  missing in a locale. `api/framework/server.js` mounts the dictionaries folder from `dist`.
+- Debugger (phase 6): `translator.ui.enabled` + `shortcut` creates `slice.translatorDebugger`;
+  `setShowKeys()` renders keys instead of texts. The shortcut parser normalizes modifier order
+  (`ctrl+alt+shift+meta`) — configs use `alt+shift+t`.
+- Unit tests: `Slice/tests/translator*.test.js`, `api/framework/seo.test.js`,
+  `api/framework/server.test.js`. DOM behaviour and the panel: `slicejs-lab` `tests/translator.e2e.mjs`.
+- The CLI (`slice translator init/check`, doctor row) reuses `dom.js` for the same template rules.
 
 ## Conventions
 - `id`, `sliceId`, `singleton` are **reserved build directives** — stripped from props before setters

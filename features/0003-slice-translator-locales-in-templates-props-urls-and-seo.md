@@ -2,7 +2,7 @@
 id: "0003"
 title: "slice.translator: locales in templates, props, URLs and SEO"
 repo: "slice.js"
-status: in-progress
+status: done
 area: framework
 priority: medium
 created: 2026-10-28
@@ -322,8 +322,8 @@ construction.
 4. `routing: "prefix" | "prefix-except-default"`. **Done on the client.** Until phase 5, a server
    with native SEO (`seo.json`) answers `/en/…` as an unknown path (404 page); apps without SEO get
    the shell and work.
-5. SEO: `{ t }` fields, per-locale prerender, `hreflang`, sitemap alternates, validation.
-6. Debugger panel.
+5. SEO: `{ t }` fields, per-locale prerender, `hreflang`, sitemap alternates, validation. **Done.**
+6. Debugger panel. **Done.**
 
 ### Out of scope
 
@@ -413,3 +413,19 @@ construction.
   the opt-out. The dev server and the standalone harness hid this.
 - 2026-10-28 — Library adoption stays in slicejs-components 0007, and phase 5 (multilingual SEO) and
   the CLI commands remain pending; docs state both limits.
+- 2026-10-28 — Phase 5 shipped: `seo.js` resolves `{ t }` (`title`, `titleTemplate`, `description`,
+  `imageAlt`, `openGraph`/`twitter` titles) with the app dictionaries, prerenders every literal route
+  per locale (`<html lang|dir>`, canonical, `og:locale`), adds `hreflang` + `x-default`, validates a
+  missing key per locale as an error and builds the sitemap with `xhtml:link` alternates.
+  `/` under `prefix` answers 302, a default-locale prefix under `prefix-except-default` answers 301,
+  an unknown prefix stays a 404. `og:locale` defaults to the locale with `-` → `_`, overridable per
+  locale in `seo.json` (`locales.<locale>.ogLocale`).
+- 2026-10-28 — Phase 6 shipped: `TranslatorDebugger` (`translator.ui`) with a locale switcher, the
+  missing keys on the page, and `setShowKeys()` (keys instead of texts). Registering it in the bundle
+  is config-driven in `DependencyAnalyzer`. Found and fixed while wiring the panel: the shortcut
+  parser built `shift+alt+t` while configs say `alt+shift+t`, so every panel shortcut was dead;
+  modifier order is now canonical.
+- 2026-10-28 — CLI: `slice translator init/check`, a Translators row in `doctor`, locale-aware
+  `seo sitemap/check/images`, all reusing the framework's `{ t }`/sitemap code and `dom.js` rules.
+  Unused-key reporting is opt-in (`--unused`): keys reached through app helpers (`tr(key)`) are
+  invisible to the scan.
