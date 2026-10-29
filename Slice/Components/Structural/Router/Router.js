@@ -528,6 +528,11 @@ export default class Router {
                const routeContainersFlag = await this.renderRoutesComponentsInPage();
 
                if (routeContainersFlag) {
+                  // An App Shell (Route/MultiRoute in the page) owns the view, so
+                  // handleRoute() is skipped. The title still belongs to the
+                  // matched section: apply its metadata, and keep activeMetadata
+                  // so the translator can re-apply it on a locale change.
+                  this._applyMatchedMetadata(path);
                   return;
                }
 
@@ -573,6 +578,26 @@ export default class Router {
     */
    applyMetadata(metadata) {
       applyRouteMetadata(metadata);
+   }
+
+   /**
+    * Apply the metadata of the route that owns `path`, without rendering it.
+    * Used when an App Shell (Route/MultiRoute in the page) owns the view: the
+    * section title (and any `{ t }` key) must still follow the URL, and
+    * `activeMetadata` is what the translator re-applies after a locale change.
+    * @param {string} path
+    * @returns {void}
+    */
+   _applyMatchedMetadata(path) {
+      const match = this.matchRoute(path);
+      // A nested route renders through its parent shell, but the title belongs
+      // to the leaf the user navigated to.
+      const route = match.childRoute || match.route;
+      if (!route) return;
+      this.activeMetadata = route.metadata ?? null;
+      if (slice.routerConfig?.updateTitles !== false) {
+         this.applyMetadata(this.activeMetadata);
+      }
    }
 
    /**

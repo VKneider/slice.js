@@ -223,10 +223,21 @@ const robotsDirectives = (robots) => {
  * -> inline `metadata` from routes.js (most specific, wins). With `translate`, every
  * documented text field may be `{ t: 'key', params? }` (translator feature 0003).
  */
-export function resolveMetadata({ pathname, routeMetadata, manifest = {}, origin, translate = null, url = pathname }) {
+export function resolveMetadata({ pathname, routeMetadata, manifest = {}, origin, translate = null, url = pathname, routerConfig = {} }) {
+  const inline = routeMetadata && typeof routeMetadata === 'object' ? { ...routeMetadata } : null;
+  // `titleKey` / `descriptionKey` are the shorthand for `{ t: 'key' }`; they win
+  // over the literal `title` / `description`.
+  if (inline) {
+    if (typeof inline.titleKey === 'string' && inline.titleKey.trim()) {
+      inline.title = { t: inline.titleKey.trim() };
+    }
+    if (typeof inline.descriptionKey === 'string' && inline.descriptionKey.trim()) {
+      inline.description = { t: inline.descriptionKey.trim() };
+    }
+  }
   const merged = mergeDeep(
     mergeDeep(manifest.defaults || {}, pickRouteEntry(pathname, manifest)?.entry),
-    routeMetadata
+    inline
   );
 
   if (translate) {
@@ -254,7 +265,12 @@ export function resolveMetadata({ pathname, routeMetadata, manifest = {}, origin
 
   const title = merged.title ?? null;
   const template = merged.titleTemplate;
-  const finalTitle = title && template && template !== '%s' ? template.replace('%s', title) : title;
+  const affix = (own, fallback) => (own === false ? '' : typeof own === 'string' ? own : typeof fallback === 'string' ? fallback : '');
+  const prefix = affix(routeMetadata?.titlePrefix, routerConfig?.titlePrefix);
+  const suffix = affix(routeMetadata?.titleSuffix, routerConfig?.titleSuffix);
+  const finalTitle = title
+    ? (template && template !== '%s' ? template.replace('%s', title) : `${prefix}${title}${suffix}`)
+    : null;
 
   const canonical = merged.canonical
     ? absolute(merged.canonical, origin)
@@ -486,6 +502,11 @@ export function validateSeoManifest(manifest, options = {}) {
       }
     };
     for (const field of ['title', 'titleTemplate', 'description', 'imageAlt']) scan(entry?.[field], field);
+    for (const field of ['titleKey', 'descriptionKey']) {
+      if (typeof entry?.[field] === 'string' && entry[field].trim()) {
+        refs.push({ key: entry[field].trim(), where: `${where}.${field}` });
+      }
+    }
     for (const group of ['openGraph', 'twitter']) {
       for (const field of ['title', 'description', 'siteName']) scan(entry?.[group]?.[field], `${group}.${field}`);
     }
@@ -586,6 +607,7 @@ export function validateSeoManifest(manifest, options = {}) {
       const metadata = typeof route === 'object' ? route?.metadata : null;
       if (!pathname || !metadata) continue;
       checkTranslations(metadata, `routes.js ${pathname}`);
+      if (metadata.titleKey) continue; // its key is validated above; the text is locale-dependent
       if (!metadata.title) continue;
       if (typeof metadata.title !== 'string') continue;
       const served = resolveMetadata({ pathname, manifest, origin });

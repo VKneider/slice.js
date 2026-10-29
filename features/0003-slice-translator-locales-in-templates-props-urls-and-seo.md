@@ -439,3 +439,16 @@ construction.
   call its own render from `watch` in `init` when needed; that stays local and explicit.
 - 2026-10-29 — The lab was fully translated with `data-t`/`dataset.t`, `t.ref()` for component
   props and `t()` for computed text, proving the rule end to end in both locales.
+- 2026-10-29 — App Shell titles: `onRouteChange()` skipped `handleRoute()` when a
+  `<slice-route>`/`<slice-multiRoute>` owns the view, so a section's `metadata.title` was never
+  applied and `activeMetadata` kept the shell's. It now applies the matched leaf's metadata before
+  delegating to MultiRoute (respecting `router.updateTitles: false`) and stores `activeMetadata`, so
+  the translator re-applies the title after a locale change. `metadata.titleKey` is the key; the
+  router resolves it through `slice.t()`.
+- 2026-10-29 — Title/description design closed: `titleKey` / `descriptionKey` are the shorthand for
+  `{ t }` and win over the literal; with the translator off the key is shown and the router logs one
+  warning per key. The product name is app-wide, not per route: `router.titlePrefix` / `titleSuffix`
+  in `sliceConfig.json`, separator inside the string, per-route override with `false` to disable.
+  Composition is `prefix + title + suffix` (only one, both or neither). The server reads the same
+  `router` block so the prerendered `<title>` and the hydrated one match. `%s`/`titleTemplate` stays
+  as a legacy escape hatch, never the documented path.

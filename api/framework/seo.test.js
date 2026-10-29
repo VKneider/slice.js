@@ -199,6 +199,61 @@ test('validation cross-checks routes.js both ways', () => {
   assert.ok(warnings.some((message) => /metadata entry has no route: \/ghost/.test(message)));
 });
 
+test('titleKey resolves through translate, like title: { t }', () => {
+  const meta = resolveMetadata({
+    pathname: '/pricing',
+    manifest: {},
+    origin: ORIGIN,
+    routeMetadata: { titleKey: 'pricing.title', titleTemplate: '%s | Acme' },
+    translate: (key) => (key === 'pricing.title' ? 'Precios' : key)
+  });
+  assert.equal(meta.title, 'Precios | Acme');
+});
+
+test('router affixes compose the prerendered title, and descriptionKey resolves', () => {
+  const meta = resolveMetadata({
+    pathname: '/pricing',
+    manifest: {},
+    origin: ORIGIN,
+    routeMetadata: { titleKey: 'pricing.title', descriptionKey: 'pricing.description' },
+    translate: (key) =>
+      ({ 'pricing.title': 'Precios', 'pricing.description': 'Planes y límites.' })[key] ?? key,
+    routerConfig: { titlePrefix: 'Acme · ', titleSuffix: ' · Acme' }
+  });
+  assert.equal(meta.title, 'Acme · Precios · Acme');
+  assert.equal(meta.description, 'Planes y límites.');
+});
+
+test('a route can disable an affix for the prerendered title too', () => {
+  const meta = resolveMetadata({
+    pathname: '/pricing',
+    manifest: {},
+    origin: ORIGIN,
+    routeMetadata: { titleKey: 'pricing.title', titleSuffix: false },
+    translate: (key) => (key === 'pricing.title' ? 'Precios' : key),
+    routerConfig: { titlePrefix: 'Acme · ', titleSuffix: ' · Acme' }
+  });
+  assert.equal(meta.title, 'Acme · Precios');
+});
+
+test('validation understands titleKey in routes.js', () => {
+  const translator = translatorContext();
+  const { errors, warnings } = validateSeoManifest(
+    {
+      version: 1,
+      origin: ORIGIN,
+      defaults: { description: 'Acme docs.' },
+      routes: { '/pricing': { title: { t: 'pricing.title' } } }
+    },
+    {
+      translator,
+      routes: [{ path: '/pricing', metadata: { titleKey: 'pricing.missing' } }]
+    }
+  );
+  assert.ok(errors.some((error) => /missing translation "pricing\.missing"/.test(error)));
+  assert.equal(warnings.filter((message) => /title differs/.test(message)).length, 0);
+});
+
 test('validation warns when routes.js and seo.json disagree on a title', () => {
   const { warnings } = validateSeoManifest(
     {
@@ -230,7 +285,7 @@ test('validation stays quiet when the route repeats the manifest title', () => {
 // -- Translator (feature 0003, phase 5) -------------------------------
 
 const ES = {
-  seo: { titleTemplate: '%s | Acme', description: 'Acme en espa�ol.' },
+  seo: { titleTemplate: '%s | Acme', description: 'Acme en español.' },
   home: { title: 'Inicio' },
   pricing: { title: 'Precios', description: 'Planes.' },
   count: { one: '{count} plan', other: '{count} planes' }

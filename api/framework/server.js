@@ -69,6 +69,20 @@ function readTranslatorConfig(projectRoot, folderDeployed) {
   return null;
 }
 
+/** The `router` block from the deployed config (`dist` wins in production). */
+function readRouterConfig(projectRoot, folderDeployed) {
+  for (const folder of [folderDeployed, 'src']) {
+    const file = path.join(projectRoot, folder, 'sliceConfig.json');
+    if (!fs.existsSync(file)) continue;
+    try {
+      return JSON.parse(fs.readFileSync(file, 'utf8')).router || {};
+    } catch {
+      // unreadable config: no title affixes, as before
+    }
+  }
+  return {};
+}
+
 /**
  * Folder holding the translator dictionaries, from the deployed config (`translator.path`,
  * `/locales` by default). Null when the translator is off or the path is unusable, so no
@@ -288,6 +302,7 @@ export async function prepareSeo(options = {}) {
   // Multilingual SEO (translator feature 0003, phase 5). Without a translator this is
   // one `null` locale and every rule below collapses to the old single-language path.
   const translatorConfig = config.translator || readTranslatorConfig(projectRoot, folderDeployed);
+  const routerConfig = readRouterConfig(projectRoot, folderDeployed);
   const translator = buildTranslatorContext(
     translatorConfig,
     loadTranslatorDictionaries(projectRoot, folderDeployed, translatorConfig)
@@ -300,7 +315,7 @@ export async function prepareSeo(options = {}) {
       ? (key, params) => translator.t(activeLocale, key, params)
       : null;
     const url = translator.enabled ? translator.localize(pathname, activeLocale) : pathname;
-    const meta = resolveMetadata({ pathname, routeMetadata, manifest, origin, translate, url });
+    const meta = resolveMetadata({ pathname, routeMetadata, manifest, origin, translate, url, routerConfig });
 
     // Precedence: an image declared on the route entry wins, then the generated
     // card, then `defaults.image` (the generic banner). Comparing against the raw

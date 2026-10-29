@@ -87,3 +87,96 @@ test('a missing document (SSR / node) is a no-op', () => {
    assert.doesNotThrow(() => applyRouteMetadata({ title: 'X' }, null));
    assert.doesNotThrow(() => applyRouteMetadata(null, null));
 });
+
+test('titleKey is the shorthand for a translated title', () => {
+   const doc = fakeDocument();
+   const calls = [];
+   applyRouteMetadata(
+      { titleKey: 'home.title', titleTemplate: '%s | Acme' },
+      doc,
+      (key) => {
+         calls.push(key);
+         return key === 'home.title' ? 'Inicio' : key;
+      },
+      { translatorEnabled: true }
+   );
+   assert.equal(doc.title, 'Inicio | Acme');
+   assert.deepEqual(calls, ['home.title']);
+});
+
+test('titleKey wins over title when the translator is on', () => {
+   const doc = fakeDocument();
+   applyRouteMetadata(
+      { titleKey: 'home.title', title: 'Home' },
+      doc,
+      (key) => (key === 'home.title' ? 'Inicio' : key),
+      { translatorEnabled: true }
+   );
+   assert.equal(doc.title, 'Inicio');
+});
+
+test('titleKey with the translator off shows the key and warns once', () => {
+   const doc = fakeDocument();
+   const warnings = [];
+   const warn = (field, key) => warnings.push([field, key]);
+   applyRouteMetadata({ titleKey: 'home.title', title: 'Home' }, doc, (key) => key, {
+      translatorEnabled: false,
+      warn
+   });
+   assert.equal(doc.title, 'home.title');
+   assert.deepEqual(warnings, [['titleKey', 'home.title']]);
+});
+
+test('titlePrefix and titleSuffix compose around the title', () => {
+   const cases = [
+      [{}, 'Resumen'],
+      [{ titleSuffix: ' · Lab' }, 'Resumen · Lab'],
+      [{ titlePrefix: 'Lab · ' }, 'Lab · Resumen'],
+      [{ titlePrefix: 'Lab · ', titleSuffix: ' · Lab' }, 'Lab · Resumen · Lab']
+   ];
+   for (const [config, expected] of cases) {
+      const doc = fakeDocument();
+      applyRouteMetadata({ title: 'Resumen' }, doc, (key) => key, { routerConfig: config });
+      assert.equal(doc.title, expected, JSON.stringify(config));
+   }
+});
+
+test('a per-route affix overrides the router config, and false disables it', () => {
+   const doc = fakeDocument();
+   applyRouteMetadata(
+      { title: 'Resumen', titleSuffix: ' · Otra', titlePrefix: false },
+      doc,
+      (key) => key,
+      { routerConfig: { titlePrefix: 'Lab · ', titleSuffix: ' · Lab' } }
+   );
+   assert.equal(doc.title, 'Resumen · Otra');
+});
+
+test('descriptionKey follows the same rules as titleKey', () => {
+   const doc = fakeDocument();
+   const calls = [];
+   applyRouteMetadata(
+      { descriptionKey: 'home.description' },
+      doc,
+      (key) => {
+         calls.push(key);
+         return key === 'home.description' ? 'Todo sobre el producto.' : key;
+      },
+      { translatorEnabled: true }
+   );
+   const meta = doc.metas[0] || doc.head.appended[0];
+   assert.equal(meta.getAttribute('content'), 'Todo sobre el producto.');
+   assert.deepEqual(calls, ['home.description']);
+});
+
+test('descriptionKey with the translator off shows the key and warns', () => {
+   const doc = fakeDocument();
+   const warnings = [];
+   applyRouteMetadata({ descriptionKey: 'home.description' }, doc, (key) => key, {
+      translatorEnabled: false,
+      warn: (field, key) => warnings.push([field, key])
+   });
+   const meta = doc.metas[0] || doc.head.appended[0];
+   assert.equal(meta.getAttribute('content'), 'home.description');
+   assert.deepEqual(warnings, [['descriptionKey', 'home.description']]);
+});

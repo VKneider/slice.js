@@ -100,13 +100,16 @@
       "type": "object",
       "additionalProperties": true,
       "properties": {
-        "defaultRoute": { "type": "string" }
+        "defaultRoute": { "type": "string" },
+        "updateTitles": { "type": "boolean", "description": "Write document.title and the description from route metadata. Default true." },
+        "titlePrefix": { "type": "string", "description": "Text before every route title. The separator is part of the string (\"Acme · \")." },
+        "titleSuffix": { "type": "string", "description": "Text after every route title. The separator is part of the string (\" · Acme\")." }
       }
     },
     "translator": {
       "type": "object",
       "additionalProperties": false,
-      "description": "slice.translator: dictionaries in <path>/<locale>.json, data-t in templates, slice.t() and slice.translator.key() in code.",
+      "description": "slice.translator: dictionaries in <path>/<locale>.json, data-t in templates, slice.t() for text and slice.t.ref() for props.",
       "properties": {
         "enabled": { "type": "boolean", "description": "Off: slice.t() returns the key and nothing is loaded." },
         "defaultLocale": { "type": "string", "minLength": 1 },
