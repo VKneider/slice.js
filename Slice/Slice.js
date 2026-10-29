@@ -372,6 +372,30 @@ export default class Slice {
    }
 
    /**
+    * The app path the router is showing, without locale or query: `/pricing`.
+    * Falls back to the browser path before the router exists. Components use this
+    * instead of `window.location.pathname`.
+    * @returns {string}
+    */
+   get path() {
+      const path = this.router?.path;
+      if (typeof path === 'string' && path) return path;
+      return typeof window !== 'undefined' ? window.location.pathname : '/';
+   }
+
+   /**
+    * The URL to render in an `<a href>` for an app path: `/pricing` → `/en/pricing` when
+    * the locale is in the URL, unchanged otherwise.
+    * @param {string} path
+    * @param {{ locale?: string }} [options]
+    * @returns {string}
+    */
+   href(path, options) {
+      const value = path == null ? '' : String(path);
+      return typeof this.router?.href === 'function' ? this.router.href(value, options) : value;
+   }
+
+   /**
     * Attach HTML template to a component instance.
     * @param {HTMLElement} componentInstance
     * @returns {void}

@@ -58,8 +58,9 @@ local de `api/`).
   Props: `setComponentProps` resolves `key()` markers and `static props` setters are wrapped once per
   class; `destroyComponent` calls `translator.forget()`. No `localeChanged()` hook.
 - URLs (phases 3–4): `localePath.js` (pure prefix rules). The Router never reads
-  `window.location.pathname` for matching without `_appPath()`; use `slice.router.path` /
-  `slice.router.href()` in components. With `routing` on, the URL decides the locale.
+  `window.location.pathname` for matching without `_appPath()`; components use the shortcuts
+  `slice.path` / `slice.href()` (aliases of `slice.router.path` / `href()`), so they import no helper.
+  With `routing` on, the URL decides the locale.
 - SEO (phase 5): `api/framework/seo.js` resolves `{ t }` fields and prerenders per locale with
   `hreflang`, canonical and `og:locale`; `buildSitemap` emits alternates; validation fails on a key
   missing in a locale. `api/framework/server.js` mounts the dictionaries folder from `dist`.

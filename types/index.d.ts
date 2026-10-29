@@ -292,6 +292,10 @@ export interface SliceApi {
   build<T = HTMLElement>(componentName: string, props?: Record<string, unknown>): Promise<T | null>;
   setTheme(themeName: string): Promise<void>;
   readonly theme: string | null;
+  /** The app path the router is showing, without locale or query. */
+  readonly path: string;
+  /** The URL for an app path in the active (or given) locale. */
+  href(path: string, options?: { locale?: string }): string;
   attachTemplate(componentInstance: HTMLElement): void;
   /** Shortcut of `slice.translator.t()`. */
   t(key: string, params?: TranslatorParams): string;
