@@ -6,7 +6,7 @@ status: done
 area: framework
 priority: medium
 created: 2026-10-28
-updated: 2026-10-28
+updated: 2026-10-29
 target: "TBD"
 owners: []
 related:
@@ -452,3 +452,13 @@ construction.
   Composition is `prefix + title + suffix` (only one, both or neither). The server reads the same
   `router` block so the prerendered `<title>` and the hydrated one match. Titles compose only with the
   affixes; there is no `%s`/template.
+- 2026-10-29 — Open question 7 closed with **content documents**, not `pick({ en, es })` inline in
+  `data.js`: records live in `<translator.path>/content/<name>.json` with a `copy: { en, es }` branch
+  per node; `slice.t.content(name)` loads once and resolves/flattens it, `slice.t.localized(value)` is
+  the primitive. Structure is written once; the component receives plain records. The CLI validates
+  every `copy` (all locales, same shape, no empty strings) and every `t.content('name')`; the server
+  reads the same document through `api/framework/content.js`.
+- 2026-10-29 — Lists: a dictionary value can be an array; `slice.t.list(key)` reads it (string items
+  formatted, records as-is) and `slice.t.ref.list(key)` is the prop marker. This closes the
+  "group of messages" gap without a second lookup system. Open question 8 stays as designed:
+  content sections rebuild from `watch()`; there is no `setLocale({ reload: true })`.
