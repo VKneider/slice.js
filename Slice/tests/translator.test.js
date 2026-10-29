@@ -256,3 +256,21 @@ test('setter wrapping is invisible for plain values and happens once per class',
       assert.equal(descriptorAfter.get, descriptorBefore.get, 'getter untouched');
    });
 });
+
+test('setShowKeys: keys instead of texts and back, without changing the locale', async () => {
+   stubFetch();
+   const translator = new Translator(config());
+   await translator.init();
+
+   assert.equal(translator.t('orders.title'), 'Pedidos');
+   assert.equal(translator.showKeys, false);
+
+   assert.equal(translator.setShowKeys(true), true);
+   assert.equal(translator.showKeys, true);
+   assert.equal(translator.t('orders.title'), 'orders.title');
+   assert.equal(translator.t('orders.count', { count: 3 }), 'orders.count');
+
+   assert.equal(translator.setShowKeys(false), false);
+   assert.equal(translator.t('orders.title'), 'Pedidos');
+   assert.equal(translator.locale, 'es');
+});

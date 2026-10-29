@@ -169,6 +169,7 @@ export interface TranslatorConfig {
   saveLocally?: boolean;
   useBrowserLocale?: boolean;
   routing?: false | 'prefix' | 'prefix-except-default';
+  ui?: { enabled?: boolean; shortcut?: string };
 }
 
 export interface SliceTranslatorFormatApi {
@@ -218,6 +219,9 @@ export interface SliceTranslatorApi {
   watch(component: object, callback: (locale: string, previous: string) => void): () => void;
   watch(callback: (locale: string, previous: string) => void): () => void;
   forget(component: object): void;
+  /** Debugger switch: `t()` returns keys instead of texts. Re-renders the document. */
+  showKeys: boolean;
+  setShowKeys(enabled: boolean): boolean;
 }
 
 export interface SlicePanelDebuggerApi {
@@ -259,6 +263,7 @@ export interface SliceFrameworkClasses {
   ContextManagerDebugger?: new () => SlicePanelDebuggerApi;
   ThemeManager?: new () => SliceThemeManagerApi;
   Translator?: new (config?: TranslatorConfig) => SliceTranslatorApi;
+  TranslatorDebugger?: new () => SlicePanelDebuggerApi;
   [key: string]: unknown;
 }
 
@@ -274,6 +279,7 @@ export interface SliceApi {
   debugger?: SliceDebuggerApi;
   eventsDebugger?: SlicePanelDebuggerApi;
   contextDebugger?: SlicePanelDebuggerApi;
+  translatorDebugger?: SlicePanelDebuggerApi;
   leakInspector?: SlicePanelDebuggerApi;
   loading?: SliceLoadingApi;
   paths: SlicePaths;

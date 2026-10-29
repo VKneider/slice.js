@@ -117,7 +117,7 @@
         "useBrowserLocale": { "type": "boolean", "description": "First visit: the browser's language when supported." },
         "routing": {
           "enum": [false, "prefix", "prefix-except-default"],
-          "description": "Locale in the URL (planned; phase 4 of feature 0003). false keeps it out of the URL."
+          "description": "Locale in the URL. false keeps it out; prefix puts it in every URL; prefix-except-default leaves the default locale unprefixed."
         },
         "ui": {
           "type": "object",

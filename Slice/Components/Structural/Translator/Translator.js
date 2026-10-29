@@ -97,6 +97,8 @@ export default class Translator {
       this._intl = new IntlCache();
       /** @private @type {Set<string>} */
       this._warned = new Set();
+      /** @type {boolean} debugger switch: `t()` returns the key instead of the text */
+      this.showKeys = false;
 
       // DOM
       /** @private @type {WeakMap<Element, string>} */
@@ -108,7 +110,7 @@ export default class Translator {
       /** @private */
       this._dom = {
          t: (key, params) => this.t(key, params),
-         signature: () => `${this.locale}#${this._version}`,
+         signature: () => `${this.locale}#${this._version}#${this.showKeys ? 'keys' : 'text'}`,
          applied: this._applied,
          slots: this._slots,
          warn: (message) => this._warnOnce(message, message),
@@ -220,6 +222,7 @@ export default class Translator {
    t(key, params) {
       if (typeof key !== 'string' || key === '') return String(key ?? '');
       if (!this.enabled) return key;
+      if (this.showKeys) return key;
 
       for (const locale of this._chain()) {
          const entry = this._entry(key, locale);
@@ -239,6 +242,21 @@ export default class Translator {
          this._warnOnce(`missing:${this.locale}:${key}`, `Missing translation "${key}" for "${this.locale}"${this.fallbackLocale ? ` (and "${this.fallbackLocale}")` : ''}`);
       }
       return key;
+   }
+
+   /**
+    * Debugger switch: show keys instead of texts, everywhere, without changing the locale.
+    * Re-translates the document and marker props on both transitions.
+    * @param {boolean} enabled
+    * @returns {boolean} the new state
+    */
+   setShowKeys(enabled) {
+      const next = enabled === true;
+      if (next === this.showKeys) return this.showKeys;
+      this.showKeys = next;
+      this._version++;
+      this._refresh();
+      return this.showKeys;
    }
 
    /**

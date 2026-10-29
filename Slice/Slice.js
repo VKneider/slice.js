@@ -588,6 +588,14 @@ async function init() {
        document.body.appendChild(window.slice.contextDebugger);
     }
 
+     if (sliceConfig.translator?.ui?.enabled) {
+        const TranslatorDebuggerModule = window.slice.frameworkClasses?.TranslatorDebugger
+           || await window.slice.getClass(`${slice.paths.structuralComponentFolderPath}/Translator/TranslatorDebugger.js`);
+        window.slice.translatorDebugger = new TranslatorDebuggerModule();
+        await window.slice.translatorDebugger.init();
+        document.body.appendChild(window.slice.translatorDebugger);
+     }
+
      if (sliceConfig.debugger?.leakInspector?.enabled && !window.slice.isProduction()) {
         const LeakInspectorModule = window.slice.frameworkClasses?.LeakInspector
            || await window.slice.getClass(`${slice.paths.structuralComponentFolderPath}/LeakInspector/LeakInspector.js`);
@@ -681,13 +689,22 @@ async function init() {
    const stylesInitPromise = window.slice.stylesManager.init();
    const routesModulePromise = import(slice.paths.routesFile);
 
-   if (sliceConfig.events?.ui?.shortcut || sliceConfig.context?.ui?.shortcut || sliceConfig.logger?.ui?.shortcut || sliceConfig.debugger?.leakInspector?.shortcut) {
-      const normalize = (value) => (typeof value === 'string' ? value.toLowerCase() : '');
+   if (sliceConfig.events?.ui?.shortcut || sliceConfig.context?.ui?.shortcut || sliceConfig.translator?.ui?.shortcut || sliceConfig.logger?.ui?.shortcut || sliceConfig.debugger?.leakInspector?.shortcut) {
+      const normalize = (value) => {
+         if (typeof value !== 'string') return '';
+         const order = ['ctrl', 'alt', 'shift', 'meta'];
+         const parts = value.toLowerCase().split('+').map((part) => part.trim()).filter(Boolean);
+         const modifiers = parts
+            .filter((part) => order.includes(part))
+            .sort((a, b) => order.indexOf(a) - order.indexOf(b));
+         const key = parts.find((part) => !order.includes(part)) || '';
+         return [...modifiers, key].filter(Boolean).join('+');
+      };
       const toKey = (event) => {
          const parts = [];
          if (event.ctrlKey) parts.push('ctrl');
-         if (event.shiftKey) parts.push('shift');
          if (event.altKey) parts.push('alt');
+         if (event.shiftKey) parts.push('shift');
          if (event.metaKey) parts.push('meta');
          const key = event.key?.toLowerCase();
          if (key && !['control', 'shift', 'alt', 'meta'].includes(key)) {
@@ -699,6 +716,7 @@ async function init() {
       const handlers = {
          [normalize(sliceConfig.events?.ui?.shortcut)]: () => window.slice.eventsDebugger?.toggle?.(),
          [normalize(sliceConfig.context?.ui?.shortcut)]: () => window.slice.contextDebugger?.toggle?.(),
+         [normalize(sliceConfig.translator?.ui?.shortcut)]: () => window.slice.translatorDebugger?.toggle?.(),
          [normalize(sliceConfig.logger?.ui?.shortcut)]: () => window.slice.logViewer?.toggle?.(),
          [normalize(sliceConfig.debugger?.leakInspector?.shortcut)]: () => window.slice.leakInspector?.toggle?.(),
       };
