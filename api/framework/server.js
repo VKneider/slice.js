@@ -38,6 +38,14 @@ function resolveRuntimeContext(options = {}) {
   return { projectRoot, runMode, folderDeployed };
 }
 
+// Per-request bookkeeping (which bundle was served, which one was missing) is
+// useful when debugging the bundler and noise everywhere else.
+function debugLog(message) {
+  if (process.env.SLICE_DEBUG === '1' || process.env.SLICE_DEBUG === 'true') {
+    console.log(`[slice] ${message}`);
+  }
+}
+
 /** Component URL prefixes, from sliceConfig. Used by the development carve-outs. */
 function readComponentPrefixes(projectRoot) {
   for (const folder of ['src', 'dist']) {
@@ -695,20 +703,20 @@ export function createSliceServer(options = {}) {
           cleanedPath
         );
       }
-      console.log(`📂 Processing bundle: ${req.path} -> ${filePath}`);
+      debugLog(`Processing bundle: ${req.path} -> ${filePath}`);
 
       if (fs.existsSync(filePath)) {
         try {
           const fileContent = fs.readFileSync(filePath, 'utf8');
           res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
-          console.log(`✅ Serving bundle: ${req.path} (${fileContent.length} bytes, ${Buffer.byteLength(fileContent, 'utf8')} bytes UTF-8)`);
+          debugLog(`Serving bundle: ${req.path} (${fileContent.length} bytes, ${Buffer.byteLength(fileContent, 'utf8')} bytes UTF-8)`);
           return res.send(fileContent);
         } catch (error) {
           console.error(`Error reading bundle file:`, error);
           return res.status(500).send('Error reading bundle file');
         }
       } else {
-        console.log(`❌ Bundle file not found: ${filePath}`);
+        debugLog(`Bundle file not found: ${filePath}`);
         return res.status(404).send('Bundle file not found');
       }
     }
@@ -717,7 +725,6 @@ export function createSliceServer(options = {}) {
   });
 
   app.use('/bundles/', express.static(path.join(projectRoot, folderDeployed, 'bundles')));
-  console.log(`📦 Serving bundles from /${folderDeployed}/bundles`);
 
   // Servir framework Slice.js (solo development)
   if (runMode === 'development') {
@@ -914,7 +921,7 @@ export function createSliceServer(options = {}) {
       seo = await prepareSeo({ ...options, port });
       if (seo) {
         const localeCount = seo.translator?.enabled ? seo.translator.locales.length : 0;
-        console.log(`🔎 SEO: ${seo.prerendered} pages prerendered${localeCount ? ` (${localeCount} locales)` : ''} (${seo.origin})`);
+        console.log(`SEO: ${seo.prerendered} pages prerendered${localeCount ? ` (${localeCount} locales)` : ''} (${seo.origin})`);
       } else {
         console.warn('[slice] seo options were given but no manifest was found; SEO is off.');
       }
@@ -933,8 +940,7 @@ export function createSliceServer(options = {}) {
     }
 
     const server = app.listen(port, host, () => {
-      console.log('🔒 Security middleware: active (zero-config, automatic)');
-      console.log(`🚀 Slice.js server running on port ${server.address()?.port ?? port}`);
+      console.log(`Slice.js server running on port ${server.address()?.port ?? port}`);
     });
 
     if (signals) {
@@ -944,8 +950,8 @@ export function createSliceServer(options = {}) {
         force.unref?.();
         server.close(() => process.exit(0));
       };
-      process.once('SIGINT', shutdown('\n🛑 Slice server stopped'));
-      process.once('SIGTERM', shutdown('\n🛑 Server terminated'));
+      process.once('SIGINT', shutdown('\nSlice server stopped'));
+      process.once('SIGTERM', shutdown('\nServer terminated'));
     }
 
     return server;

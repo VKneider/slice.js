@@ -1,6 +1,27 @@
 // api/framework/securityMiddleware.js
 import path from 'path';
 
+// Security events are intentionally quiet: `slice dev` should not narrate every
+// probe or every framework module fetched without a referer. Requests are still
+// blocked exactly as before; set SLICE_DEBUG=1 to see the reason. Even then each
+// category is logged at most once a minute, so a scanner cannot flood the terminal.
+const WARNING_COOLDOWN_MS = 60_000;
+const lastWarningAt = new Map();
+
+function isDebug() {
+  return process.env.SLICE_DEBUG === '1' || process.env.SLICE_DEBUG === 'true';
+}
+
+function report(category, message, { always = false } = {}) {
+  if (!always && !isDebug()) return;
+
+  const now = Date.now();
+  if (now - (lastWarningAt.get(category) || 0) < WARNING_COOLDOWN_MS) return;
+  lastWarningAt.set(category, now);
+
+  console.warn(`[slice:security] ${message}`);
+}
+
 /**
  * Middleware de seguridad para prevenir acceso directo malicioso
  * pero permitir que la aplicación cargue sus dependencias normalmente
@@ -31,14 +52,14 @@ export function securityMiddleware(options = {}) {
 
   return (req, res, next) => {
     const requestPath = req.path;
-    
+
     // 1. Bloquear acceso a rutas definitivamente sensibles (configuración, dependencias)
-    const isBlockedPath = blockedPaths.some(blocked => 
+    const isBlockedPath = blockedPaths.some(blocked =>
       requestPath.startsWith(blocked) || requestPath.includes(blocked)
     );
-    
+
     if (isBlockedPath) {
-      console.warn(`🚫 Blocked access to sensitive path: ${requestPath}`);
+      report('blocked-path', `Blocked access to sensitive path: ${requestPath}`, { always: true });
       return res.status(403).json({
         error: 'Forbidden',
         message: 'Access to this resource is not allowed',
@@ -48,10 +69,10 @@ export function securityMiddleware(options = {}) {
 
     // 2. Permitir acceso a assets públicos (servidos desde src/public/)
     if (allowPublicAssets) {
-      const isPublicAsset = publicPaths.some(publicPath => 
+      const isPublicAsset = publicPaths.some(publicPath =>
         requestPath.startsWith(publicPath)
       );
-      
+
       if (isPublicAsset) {
         return next();
       }
@@ -59,9 +80,9 @@ export function securityMiddleware(options = {}) {
 
     // 3. Validar extensiones de archivo
     const fileExtension = path.extname(requestPath).toLowerCase();
-    
+
     if (fileExtension && !allowedExtensions.includes(fileExtension)) {
-      console.warn(`🚫 Blocked file type: ${requestPath}`);
+      report('blocked-extension', `Blocked file type: ${requestPath}`, { always: true });
       return res.status(403).json({
         error: 'Forbidden',
         message: 'File type not allowed',
@@ -72,7 +93,7 @@ export function securityMiddleware(options = {}) {
     // 4. Prevenir path traversal attacks
     const normalizedPath = path.normalize(requestPath);
     if (normalizedPath.includes('..') || normalizedPath.includes('~')) {
-      console.warn(`🚫 Path traversal attempt: ${requestPath}`);
+      report('path-traversal', `Path traversal attempt: ${requestPath}`, { always: true });
       return res.status(403).json({
         error: 'Forbidden',
         message: 'Invalid path',
@@ -91,12 +112,12 @@ export function securityMiddleware(options = {}) {
  * BLOQUEA acceso directo desde navegador o herramientas externas
  */
 export function sliceFrameworkProtection(options = {}) {
-  const { 
-    port = 3000, 
+  const {
+    port = 3000,
     strictMode = false,
     allowedDomains = [] // Dominios personalizados permitidos
   } = options;
-  
+
   return (req, res, next) => {
     const requestPath = req.path;
 
@@ -105,7 +126,7 @@ export function sliceFrameworkProtection(options = {}) {
       '/Slice/Components/Structural'
     ];
 
-    const isFrameworkFile = frameworkPaths.some(fwPath => 
+    const isFrameworkFile = frameworkPaths.some(fwPath =>
       requestPath.startsWith(fwPath)
     );
 
@@ -117,7 +138,7 @@ export function sliceFrameworkProtection(options = {}) {
     const referer = req.get('Referer') || req.get('Referrer');
     const origin = req.get('Origin');
     const host = req.get('Host');
-    
+
     // Construir lista de orígenes válidos dinámicamente
     const validOrigins = [
       `http://localhost:${port}`,
@@ -126,7 +147,7 @@ export function sliceFrameworkProtection(options = {}) {
       `https://localhost:${port}`,
       ...allowedDomains // Dominios personalizados del usuario
     ];
-    
+
     // Si hay un Host header, agregarlo automáticamente
     if (host) {
       validOrigins.push(`http://${host}`);
@@ -137,7 +158,7 @@ export function sliceFrameworkProtection(options = {}) {
     const hasValidReferer = referer && validOrigins.some(valid => referer.startsWith(valid));
     const hasValidOrigin = origin && validOrigins.some(valid => origin === valid);
     const isSameHost = host && referer && referer.includes(host);
-    
+
     // Permitir si viene desde la aplicación
     if (hasValidReferer || hasValidOrigin || isSameHost) {
       return next();
@@ -145,7 +166,7 @@ export function sliceFrameworkProtection(options = {}) {
 
     // En modo estricto, bloquear todo acceso sin referer válido
     if (strictMode) {
-      console.warn(`🚫 Blocked direct framework file access: ${requestPath}`);
+      report('blocked-framework', `Blocked direct framework file access: ${requestPath}`, { always: true });
       return res.status(403).json({
         error: 'Framework Protection',
         message: 'Direct access to Slice.js framework files is blocked',
@@ -154,8 +175,9 @@ export function sliceFrameworkProtection(options = {}) {
       });
     }
 
-    // En modo normal (desarrollo), permitir pero advertir
-    console.warn(`⚠️  Framework file accessed without valid referer: ${requestPath}`);
+    // En modo normal (desarrollo), permitir. A direct hit on a framework module
+    // is common while debugging, so it is only reported with SLICE_DEBUG=1.
+    report('framework-referer', `Framework file accessed without a valid referer: ${requestPath}`);
     next();
   };
 }
@@ -176,14 +198,14 @@ export function suspiciousRequestLogger() {
 
   return (req, res, next) => {
     const requestPath = req.path;
-    
-    const isSuspicious = suspiciousPatterns.some(pattern => 
+
+    const isSuspicious = suspiciousPatterns.some(pattern =>
       pattern.test(requestPath)
     );
 
     if (isSuspicious) {
       const clientIp = req.ip || req.connection.remoteAddress;
-      console.warn(`⚠️  Suspicious request: ${requestPath} from ${clientIp}`);
+      report('suspicious', `Suspicious request: ${requestPath} from ${clientIp}`);
     }
 
     next();
