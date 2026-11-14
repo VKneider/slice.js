@@ -32,6 +32,7 @@
     "./api/framework/server.js": "./api/framework/server.js",
     "./api/framework/seo.js": "./api/framework/seo.js",
     "./api/framework/content.js": "./api/framework/content.js",
+    "./api/framework/publicEnvResolver.js": "./api/framework/publicEnvResolver.js",
     "./api/framework/devDepsOptimizer.js": "./api/framework/devDepsOptimizer.js"
   },
   "types": "./types/index.d.ts",
