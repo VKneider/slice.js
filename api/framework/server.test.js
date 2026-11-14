@@ -104,6 +104,51 @@ test('start() mounts the fallback when the app mounted none', async (t) => {
   assert.match(await response.text(), /id="app"/);
 });
 
+test('production serves the built slice-env.json instead of resolving .env', async (t) => {
+  const { root, folder } = makeProject('production');
+  fs.writeFileSync(path.join(root, '.env'), 'SLICE_PUBLIC_SOURCE=from-env\n');
+  fs.writeFileSync(
+    path.join(root, folder, 'slice-env.json'),
+    JSON.stringify({ mode: 'production', env: { SLICE_PUBLIC_SOURCE: 'from-build' } })
+  );
+  fs.writeFileSync(
+    path.join(root, folder, 'slice-env.generated.js'),
+    'const env = { mode: "production", env: { SLICE_PUBLIC_SOURCE: "from-build" } };\nexport default env;\n'
+  );
+
+  const instance = createSliceServer({ projectRoot: root, mode: 'production', port: 0 });
+  const server = await instance.start({ port: 0, signals: false });
+  await once(server, 'listening');
+  t.after(() => {
+    server.close();
+    fs.rmSync(root, { recursive: true, force: true });
+  });
+
+  const response = await get(`http://127.0.0.1:${server.address().port}`, '/slice-env.json');
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), {
+    mode: 'production',
+    env: { SLICE_PUBLIC_SOURCE: 'from-build' }
+  });
+
+  const shim = await get(`http://127.0.0.1:${server.address().port}`, '/slice-env.generated.js');
+  assert.equal(shim.status, 200);
+  const shimText = await shim.text();
+  assert.match(shimText, /SLICE_PUBLIC_SOURCE/);
+  assert.match(shimText, /from-build/);
+});
+
+test('development serves a live slice-env.generated.js from .env', async (t) => {
+  const { base, root } = await boot(t, 'development');
+  fs.writeFileSync(path.join(root, '.env'), 'SLICE_PUBLIC_DEV=live\n');
+
+  const response = await get(base, '/slice-env.generated.js');
+  assert.equal(response.status, 200);
+  const text = await response.text();
+  assert.match(text, /SLICE_PUBLIC_DEV/);
+  assert.match(text, /live/);
+});
+
 test('start() twice is an error', async (t) => {
   const { start } = await boot(t);
   await assert.rejects(start({ port: 0, signals: false }), /already called/);

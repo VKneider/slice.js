@@ -456,6 +456,23 @@ async function loadConfig() {
    }
 }
 
+// The build emits /slice-env.generated.js (an ESM shim over the shared JSON).
+// Import it directly: no endpoint, no extra JSON-module assumption. Development
+// and older builds fall back to the /slice-env.json endpoint.
+async function loadPublicEnv() {
+   try {
+      const mod = await import('/slice-env.generated.js');
+      return mod.default ?? null;
+   } catch {
+      try {
+         const response = await fetch('/slice-env.json', { cache: 'no-store' });
+         return response.ok ? await response.json() : null;
+      } catch {
+         return null;
+      }
+   }
+}
+
 async function init() {
    const sliceConfig = await loadConfig();
    if (!sliceConfig) {
@@ -464,14 +481,11 @@ async function init() {
       throw new Error('Slice initialization failed: unable to load sliceConfig.json');
    }
 
-    // 1+2. Fetch mode endpoint and bundle config in parallel — both are independent.
-    // In production, /slice-env.json returns 404 (catch is expected and normal).
-    // bundleConfigJson.production serves as a mode fallback when env endpoint is absent.
+    // 1+2. Load the public env and bundle config in parallel — both are independent.
+    // The env import is the build artifact; the fetch is the dev/older-build fallback.
     let frameworkClasses = null;
     const [envResult, configResult] = await Promise.all([
-      fetch('/slice-env.json', { cache: 'no-store' })
-        .then(r => r.ok ? r.json() : null)
-        .catch(error => { console.error('[Slice.js] Error fetching /slice-env.json:', error); return null; }),
+      loadPublicEnv(),
       fetch('/bundles/bundle.config.json', { cache: 'no-store' })
         .then(r => r.ok ? r.json() : null)
         .catch(error => { console.error('[Slice.js] Error fetching bundle.config.json:', error); return null; })
