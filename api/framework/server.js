@@ -457,12 +457,39 @@ export async function prepareSeo(options = {}) {
     return { status: 404, page: notFound.get(activeLocale) || notFound.get(null) };
   };
 
+  const redirects = [];
+  if (translator.enabled && translator.localePrefix) {
+    const seen = new Set();
+    const addRedirect = (from, to, status) => {
+      if (!from || !to || from === to) return;
+      const key = `${from}|${status}`;
+      if (seen.has(key)) return;
+      seen.add(key);
+      redirects.push({ from, to, status });
+    };
+
+    for (const route of routes) {
+      if (/\$\{[^}]+\}/.test(route.path)) continue;
+      if (translator.localePrefix === 'except-default') {
+        // The default locale is the unprefixed URL; the prefixed duplicate is a 301.
+        const from = `/${translator.defaultLocale}${route.path === '/' ? '' : route.path}`;
+        addRedirect(from, route.path, 301);
+      } else if (translator.localePrefix === 'always') {
+        // Every canonical URL carries a locale; unprefixed known paths are a 302.
+        addRedirect(route.path, translator.localize(route.path, translator.defaultLocale), 302);
+      }
+    }
+  }
+
   return {
     origin,
     manifest,
     routes,
     translator,
     prerendered: pages.size,
+    pages,
+    notFound,
+    redirects,
     resolve(pathname) {
       if (!translator.enabled || !translator.localePrefix) {
         return settle(pathname, translator.defaultLocale);

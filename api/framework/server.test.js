@@ -17,6 +17,7 @@ import { once } from 'node:events';
 import { brotliCompressSync } from 'node:zlib';
 import {
   createSliceServer,
+  prepareSeo,
   sliceFallback,
   sliceErrorHandler
 } from './server.js';
@@ -147,6 +148,44 @@ test('development serves a live slice-env.generated.js from .env', async (t) => 
   const text = await response.text();
   assert.match(text, /SLICE_PUBLIC_DEV/);
   assert.match(text, /live/);
+});
+
+test('prepareSeo exposes pages, notFound and locale redirects', async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'slice-seo-'));
+  fs.mkdirSync(path.join(root, 'dist', 'App'), { recursive: true });
+  fs.writeFileSync(path.join(root, 'dist', 'App', 'index.html'), SHELL);
+  fs.writeFileSync(path.join(root, 'dist', 'sliceConfig.json'), JSON.stringify({
+    translator: {
+      enabled: true,
+      defaultLocale: 'en',
+      locales: ['en', 'es'],
+      path: '/locales',
+      localePrefix: 'always'
+    }
+  }));
+  fs.writeFileSync(path.join(root, 'dist', 'routes.js'), "export default [{ path: '/' }, { path: '/about' }];\n");
+  fs.writeFileSync(path.join(root, 'seo.json'), JSON.stringify({
+    origin: 'https://example.test',
+    defaults: { siteName: 'Example' },
+    routes: {
+      '/': { title: 'Home' },
+      '/about': { title: 'About' }
+    }
+  }));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+
+  const seo = await prepareSeo({
+    projectRoot: root,
+    mode: 'production',
+    seo: { manifest: 'seo.json' }
+  });
+
+  assert.ok(seo.pages.has('/en'));
+  assert.ok(seo.pages.has('/es'));
+  assert.ok(seo.pages.has('/en/about'));
+  assert.ok(seo.notFound.size >= 1);
+  assert.ok(seo.redirects.some((rule) => rule.from === '/' && rule.to === '/en' && rule.status === 302));
+  assert.ok(seo.redirects.some((rule) => rule.from === '/about' && rule.to === '/en/about' && rule.status === 302));
 });
 
 test('start() twice is an error', async (t) => {
