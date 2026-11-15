@@ -564,6 +564,35 @@ test('bundles: the plain config and the /dist mirror are no-store as well', asyn
   assert.equal(mirror.headers.get('cache-control'), 'no-cache, no-store, must-revalidate');
 });
 
+test('production does not expose component source, declarations or source maps', async (t) => {
+  const { base, root } = await boot(t, 'production');
+  fs.mkdirSync(path.join(root, 'dist', 'Components', 'Visual', 'Button'), { recursive: true });
+  fs.writeFileSync(path.join(root, 'dist', 'Components', 'Visual', 'Button', 'Button.js'), 'export default class Button {}');
+  fs.writeFileSync(path.join(root, 'dist', 'slice-build.generated.d.ts'), 'export {};');
+  fs.mkdirSync(path.join(root, 'dist', 'bundles'), { recursive: true });
+  fs.writeFileSync(path.join(root, 'dist', 'bundles', 'secret.js.map'), '{}');
+
+  for (const pathname of [
+    '/Components/Visual/Button/Button.js',
+    '/dist/Components/Visual/Button/Button.js',
+    '/dist/slice-build.generated.d.ts',
+    '/dist/sliceConfig.json',
+    '/bundles/secret.js.map',
+    '/dist/bundles/secret.js.map'
+  ]) {
+    const response = await get(base, pathname);
+    assert.ok(
+      response.status === 403 || response.status === 404,
+      `${pathname} should not be served in production (got ${response.status})`
+    );
+  }
+
+  // The bundle mirror itself still works.
+  fs.writeFileSync(path.join(root, 'dist', 'bundles', 'slice-bundle.critical.js'), 'export const x = 1;');
+  const mirror = await get(base, '/dist/bundles/slice-bundle.critical.js');
+  assert.equal(mirror.status, 200);
+});
+
 test('bundles: the no-store policy does not leak into public assets', async (t) => {
   const { base, root } = await boot(t, 'production');
   const publicDir = path.join(root, 'dist', 'public');

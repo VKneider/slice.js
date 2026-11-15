@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- Production (`slice start` / `createSliceServer`) no longer exposes the `/dist` tree. It only mirrors
+  `/dist/bundles/` for legacy assets; `/Components`, declarations, app config and source maps are not
+  served. Requests for `.map`, `.d.ts`, `.env`, `package.json` or `node_modules` are rejected with
+  404/403 before the SPA fallback.
+
 ### Changed
 
 - Server logs are quiet by default. The startup banner is a single line, per-request bundle logs are

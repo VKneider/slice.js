@@ -859,6 +859,24 @@ export function createSliceServer(options = {}) {
     app.use(express.static(path.join(projectRoot, folderDeployed, 'public')));
     app.use(express.static(path.join(projectRoot, folderDeployed)));
   } else {
+    // Production never exposes source maps, type declarations, package manifests
+    // or the source tree. `--sourcemap` / `--no-minify` are opt-in developer
+    // choices, not public output.
+    app.use((req, res, next) => {
+      const requestPath = req.path;
+      if (
+        /\.map$/i.test(requestPath) ||
+        /\.d\.ts$/i.test(requestPath) ||
+        /(?:^|\/)\.env(?:\.|$)/i.test(requestPath) ||
+        /(?:^|\/)package(?:-lock)?\.json$/i.test(requestPath) ||
+        /(?:^|\/)node_modules(?:\/|$)/i.test(requestPath) ||
+        (requestPath.startsWith('/dist/') && !requestPath.startsWith('/dist/bundles/'))
+      ) {
+        return res.status(404).send('Not found');
+      }
+      next();
+    });
+
     // Serve the built public/ assets at the root URL.
     app.use(express.static(path.join(projectRoot, folderDeployed, 'public')));
     app.use('/App', express.static(path.join(projectRoot, folderDeployed, 'App')));
@@ -884,7 +902,9 @@ export function createSliceServer(options = {}) {
       serveStaticFile(req, res, configPath, 'application/json; charset=utf-8', 'sliceConfig.json');
     });
     app.use('/bundles/', express.static(path.join(projectRoot, folderDeployed, 'bundles')));
-    app.use('/dist/', express.static(path.join(projectRoot, 'dist')));
+    // Legacy mirror used by older assets: only the bundle folder, never the whole
+    // dist tree (Components, declarations, source maps, config).
+    app.use('/dist/bundles/', express.static(path.join(projectRoot, folderDeployed, 'bundles')));
   }
 
   // Translator dictionaries (`translator.path`, `/locales` by default): app data copied
