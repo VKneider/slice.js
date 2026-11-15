@@ -593,6 +593,26 @@ test('production does not expose component source, declarations or source maps',
   assert.equal(mirror.status, 200);
 });
 
+test('production rejects percent-encoded sensitive paths', async (t) => {
+  const { base, root } = await boot(t, 'production');
+  fs.mkdirSync(path.join(root, 'dist', 'public'), { recursive: true });
+  fs.writeFileSync(path.join(root, 'dist', 'public', '.env'), 'SECRET=1');
+  fs.writeFileSync(path.join(root, 'dist', 'public', 'secret.js.map'), '{}');
+  fs.writeFileSync(path.join(root, 'dist', 'public', 'public.js'), 'export const x = 1;');
+
+  for (const pathname of ['/%2eenv', '/%2Eenv', '/%2e%65nv', '/%73ecret.js.map']) {
+    const response = await get(base, pathname);
+    assert.ok(
+      response.status === 403 || response.status === 404,
+      `${pathname} should not be served (got ${response.status})`
+    );
+  }
+
+  // A normal public asset still works.
+  const asset = await get(base, '/public.js');
+  assert.equal(asset.status, 200);
+});
+
 test('bundles: the no-store policy does not leak into public assets', async (t) => {
   const { base, root } = await boot(t, 'production');
   const publicDir = path.join(root, 'dist', 'public');

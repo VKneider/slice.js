@@ -4,6 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import compression from 'compression';
 import {
+  decodeRequestPath,
   securityMiddleware,
   sliceFrameworkProtection,
   suspiciousRequestLogger
@@ -863,7 +864,9 @@ export function createSliceServer(options = {}) {
     // or the source tree. `--sourcemap` / `--no-minify` are opt-in developer
     // choices, not public output.
     app.use((req, res, next) => {
-      const requestPath = req.path;
+      // `express.static` decodes percent-encoding; inspect the same path so
+      // `/%2eenv`, `/%2emap` or `/%64ist/...` cannot slip past this guard.
+      const requestPath = decodeRequestPath(req.path);
       if (
         /\.map$/i.test(requestPath) ||
         /\.d\.ts$/i.test(requestPath) ||
