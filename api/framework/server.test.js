@@ -593,6 +593,19 @@ test('production does not expose component source, declarations or source maps',
   assert.equal(mirror.status, 200);
 });
 
+test('production serves the generated event catalog', async (t) => {
+  const { base, root } = await boot(t, 'production');
+  fs.writeFileSync(
+    path.join(root, 'dist', 'slice-events.generated.js'),
+    'export default { events: {} };'
+  );
+
+  const response = await get(base, '/slice-events.generated.js');
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get('content-type'), /javascript/);
+  assert.match(await response.text(), /export default/);
+});
+
 test('production rejects percent-encoded sensitive paths', async (t) => {
   const { base, root } = await boot(t, 'production');
   fs.mkdirSync(path.join(root, 'dist', 'public'), { recursive: true });

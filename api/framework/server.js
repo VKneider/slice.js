@@ -900,6 +900,17 @@ export function createSliceServer(options = {}) {
       const routesPath = path.join(projectRoot, folderDeployed, 'routes.js');
       serveStaticFile(req, res, routesPath, 'application/javascript; charset=utf-8', 'routes.js');
     });
+    // The event debugger dynamically imports this generated catalog. It is
+    // build output, not source; keep Express and the static export in sync.
+    app.get('/slice-events.generated.js', (req, res) => {
+      serveStaticFile(
+        req,
+        res,
+        resolveDeployedFile('slice-events.generated.js'),
+        'application/javascript; charset=utf-8',
+        'slice-events.generated.js'
+      );
+    });
     app.get('/sliceConfig.json', (req, res) => {
       const configPath = path.join(projectRoot, folderDeployed, 'sliceConfig.json');
       serveStaticFile(req, res, configPath, 'application/json; charset=utf-8', 'sliceConfig.json');
