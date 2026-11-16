@@ -17,6 +17,7 @@ import { once } from 'node:events';
 import { brotliCompressSync } from 'node:zlib';
 import {
   createSliceServer,
+  prepareSeo,
   sliceFallback,
   sliceErrorHandler
 } from './server.js';
@@ -102,6 +103,89 @@ test('start() mounts the fallback when the app mounted none', async (t) => {
   const response = await get(base, '/whatever');
   assert.equal(response.status, 200);
   assert.match(await response.text(), /id="app"/);
+});
+
+test('production serves the built slice-env.json instead of resolving .env', async (t) => {
+  const { root, folder } = makeProject('production');
+  fs.writeFileSync(path.join(root, '.env'), 'SLICE_PUBLIC_SOURCE=from-env\n');
+  fs.writeFileSync(
+    path.join(root, folder, 'slice-env.json'),
+    JSON.stringify({ mode: 'production', env: { SLICE_PUBLIC_SOURCE: 'from-build' } })
+  );
+  fs.writeFileSync(
+    path.join(root, folder, 'slice-env.generated.js'),
+    'const env = { mode: "production", env: { SLICE_PUBLIC_SOURCE: "from-build" } };\nexport default env;\n'
+  );
+
+  const instance = createSliceServer({ projectRoot: root, mode: 'production', port: 0 });
+  const server = await instance.start({ port: 0, signals: false });
+  await once(server, 'listening');
+  t.after(() => {
+    server.close();
+    fs.rmSync(root, { recursive: true, force: true });
+  });
+
+  const response = await get(`http://127.0.0.1:${server.address().port}`, '/slice-env.json');
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), {
+    mode: 'production',
+    env: { SLICE_PUBLIC_SOURCE: 'from-build' }
+  });
+
+  const shim = await get(`http://127.0.0.1:${server.address().port}`, '/slice-env.generated.js');
+  assert.equal(shim.status, 200);
+  const shimText = await shim.text();
+  assert.match(shimText, /SLICE_PUBLIC_SOURCE/);
+  assert.match(shimText, /from-build/);
+});
+
+test('development serves a live slice-env.generated.js from .env', async (t) => {
+  const { base, root } = await boot(t, 'development');
+  fs.writeFileSync(path.join(root, '.env'), 'SLICE_PUBLIC_DEV=live\n');
+
+  const response = await get(base, '/slice-env.generated.js');
+  assert.equal(response.status, 200);
+  const text = await response.text();
+  assert.match(text, /SLICE_PUBLIC_DEV/);
+  assert.match(text, /live/);
+});
+
+test('prepareSeo exposes pages, notFound and locale redirects', async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'slice-seo-'));
+  fs.mkdirSync(path.join(root, 'dist', 'App'), { recursive: true });
+  fs.writeFileSync(path.join(root, 'dist', 'App', 'index.html'), SHELL);
+  fs.writeFileSync(path.join(root, 'dist', 'sliceConfig.json'), JSON.stringify({
+    translator: {
+      enabled: true,
+      defaultLocale: 'en',
+      locales: ['en', 'es'],
+      path: '/locales',
+      localePrefix: 'always'
+    }
+  }));
+  fs.writeFileSync(path.join(root, 'dist', 'routes.js'), "export default [{ path: '/' }, { path: '/about' }];\n");
+  fs.writeFileSync(path.join(root, 'seo.json'), JSON.stringify({
+    origin: 'https://example.test',
+    defaults: { siteName: 'Example' },
+    routes: {
+      '/': { title: 'Home' },
+      '/about': { title: 'About' }
+    }
+  }));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+
+  const seo = await prepareSeo({
+    projectRoot: root,
+    mode: 'production',
+    seo: { manifest: 'seo.json' }
+  });
+
+  assert.ok(seo.pages.has('/en'));
+  assert.ok(seo.pages.has('/es'));
+  assert.ok(seo.pages.has('/en/about'));
+  assert.ok(seo.notFound.size >= 1);
+  assert.ok(seo.redirects.some((rule) => rule.from === '/' && rule.to === '/en' && rule.status === 302));
+  assert.ok(seo.redirects.some((rule) => rule.from === '/about' && rule.to === '/en/about' && rule.status === 302));
 });
 
 test('start() twice is an error', async (t) => {
@@ -478,6 +562,90 @@ test('bundles: the plain config and the /dist mirror are no-store as well', asyn
   const mirror = await get(base, '/dist/bundles/slice-bundle.critical.js');
   assert.equal(mirror.status, 200);
   assert.equal(mirror.headers.get('cache-control'), 'no-cache, no-store, must-revalidate');
+});
+
+test('production does not expose component source, declarations or source maps', async (t) => {
+  const { base, root } = await boot(t, 'production');
+  fs.mkdirSync(path.join(root, 'dist', 'Components', 'Visual', 'Button'), { recursive: true });
+  fs.writeFileSync(path.join(root, 'dist', 'Components', 'Visual', 'Button', 'Button.js'), 'export default class Button {}');
+  fs.writeFileSync(path.join(root, 'dist', 'slice-build.generated.d.ts'), 'export {};');
+  fs.mkdirSync(path.join(root, 'dist', 'bundles'), { recursive: true });
+  fs.writeFileSync(path.join(root, 'dist', 'bundles', 'secret.js.map'), '{}');
+
+  for (const pathname of [
+    '/Components/Visual/Button/Button.js',
+    '/dist/Components/Visual/Button/Button.js',
+    '/dist/slice-build.generated.d.ts',
+    '/dist/sliceConfig.json',
+    '/bundles/secret.js.map',
+    '/dist/bundles/secret.js.map'
+  ]) {
+    const response = await get(base, pathname);
+    assert.ok(
+      response.status === 403 || response.status === 404,
+      `${pathname} should not be served in production (got ${response.status})`
+    );
+  }
+
+  // The bundle mirror itself still works.
+  fs.writeFileSync(path.join(root, 'dist', 'bundles', 'slice-bundle.critical.js'), 'export const x = 1;');
+  const mirror = await get(base, '/dist/bundles/slice-bundle.critical.js');
+  assert.equal(mirror.status, 200);
+});
+
+const bootEventCatalog = async (t, uiEnabled) => {
+  const project = makeProject('production');
+  fs.writeFileSync(
+    path.join(project.root, 'dist', 'sliceConfig.json'),
+    JSON.stringify({ events: { enabled: true, ui: { enabled: uiEnabled } } })
+  );
+  fs.writeFileSync(
+    path.join(project.root, 'dist', 'slice-events.generated.js'),
+    'export default { events: {} };'
+  );
+
+  const instance = createSliceServer({ projectRoot: project.root, mode: 'production', port: 0 });
+  const server = await instance.start({ port: 0, signals: false });
+  await once(server, 'listening');
+  t.after(() => {
+    server.close();
+    fs.rmSync(project.root, { recursive: true, force: true });
+  });
+  return { base: `http://127.0.0.1:${server.address().port}` };
+};
+
+test('production serves the generated event catalog when the debugger UI is enabled', async (t) => {
+  const { base } = await bootEventCatalog(t, true);
+  const response = await get(base, '/slice-events.generated.js');
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get('content-type'), /javascript/);
+  assert.match(await response.text(), /export default/);
+});
+
+test('production does not serve the generated event catalog when the debugger UI is disabled', async (t) => {
+  const { base } = await bootEventCatalog(t, false);
+  const response = await get(base, '/slice-events.generated.js');
+  assert.equal(response.status, 404);
+});
+
+test('production rejects percent-encoded sensitive paths', async (t) => {
+  const { base, root } = await boot(t, 'production');
+  fs.mkdirSync(path.join(root, 'dist', 'public'), { recursive: true });
+  fs.writeFileSync(path.join(root, 'dist', 'public', '.env'), 'SECRET=1');
+  fs.writeFileSync(path.join(root, 'dist', 'public', 'secret.js.map'), '{}');
+  fs.writeFileSync(path.join(root, 'dist', 'public', 'public.js'), 'export const x = 1;');
+
+  for (const pathname of ['/%2eenv', '/%2Eenv', '/%2e%65nv', '/%73ecret.js.map']) {
+    const response = await get(base, pathname);
+    assert.ok(
+      response.status === 403 || response.status === 404,
+      `${pathname} should not be served (got ${response.status})`
+    );
+  }
+
+  // A normal public asset still works.
+  const asset = await get(base, '/public.js');
+  assert.equal(asset.status, 200);
 });
 
 test('bundles: the no-store policy does not leak into public assets', async (t) => {

@@ -1,6 +1,28 @@
 // api/framework/securityMiddleware.js
 import path from 'path';
 
+/**
+ * Express exposes `req.path` still percent-encoded, but `express.static` (via
+ * `send`) decodes it before touching the filesystem. A request for `/%2eenv`
+ * therefore bypassed every check written against the raw path and could serve a
+ * `.env` that sat in `public/`. Decode once (and tolerate double encoding) so
+ * the guards inspect the same path the file server will resolve.
+ */
+export function decodeRequestPath(value) {
+  let decoded = String(value || '');
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    let next;
+    try {
+      next = decodeURIComponent(decoded);
+    } catch {
+      break;
+    }
+    if (next === decoded) break;
+    decoded = next;
+  }
+  return decoded.replace(/\\/g, '/');
+}
+
 // Security events are intentionally quiet: `slice dev` should not narrate every
 // probe or every framework module fetched without a referer. Requests are still
 // blocked exactly as before; set SLICE_DEBUG=1 to see the reason. Even then each
@@ -51,7 +73,7 @@ export function securityMiddleware(options = {}) {
   } = options;
 
   return (req, res, next) => {
-    const requestPath = req.path;
+    const requestPath = decodeRequestPath(req.path);
 
     // 1. Bloquear acceso a rutas definitivamente sensibles (configuración, dependencias)
     const isBlockedPath = blockedPaths.some(blocked =>
@@ -119,7 +141,7 @@ export function sliceFrameworkProtection(options = {}) {
   } = options;
 
   return (req, res, next) => {
-    const requestPath = req.path;
+    const requestPath = decodeRequestPath(req.path);
 
     // Rutas del framework que requieren verificación
     const frameworkPaths = [
@@ -197,7 +219,7 @@ export function suspiciousRequestLogger() {
   ];
 
   return (req, res, next) => {
-    const requestPath = req.path;
+    const requestPath = decodeRequestPath(req.path);
 
     const isSuspicious = suspiciousPatterns.some(pattern =>
       pattern.test(requestPath)

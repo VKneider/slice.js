@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.3.0] - 2026-11-16
+
+### Security
+
+- Production (`slice start` / `createSliceServer`) no longer exposes the `/dist` tree. It only mirrors
+  `/dist/bundles/` for legacy assets; `/Components`, declarations, app config and source maps are not
+  served. Requests for `.map`, `.d.ts`, `.env`, `package.json` or `node_modules` are rejected with
+  404/403 before the SPA fallback.
+- Production decodes percent-encoded request paths before the security checks, closing the
+  `/%2eenv` bypass (`express.static` decodes, `req.path` does not). The same decoded path is used by
+  `securityMiddleware`, the framework protection middleware, the suspicious-request logger and the
+  production static guard.
+- Production serves `/slice-events.generated.js` when the build emits it **and**
+  `events.ui.enabled` is true, so the event debugger's dynamic import works in `slice start` and
+  matches the static export. With the debugger UI off the file is not exposed.
+
 ### Changed
 
 - Server logs are quiet by default. The startup banner is a single line, per-request bundle logs are

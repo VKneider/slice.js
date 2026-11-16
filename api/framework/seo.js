@@ -448,7 +448,7 @@ const xmlEscape = (value) => String(value ?? '')
  * @param {any[]} values
  * @returns {string[]}
  */
-function expandPatternPaths(key, values) {
+export function expandPatternPaths(key, values) {
    const names = [...key.matchAll(/\$\{([^}]+)\}/g)].map((match) => match[1]);
    if (names.length === 0 || !Array.isArray(values)) return [];
    const paths = [];
