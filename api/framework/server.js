@@ -123,6 +123,24 @@ function readTranslatorFolder(projectRoot, folderDeployed) {
 }
 
 /**
+ * The generated event catalog only exists for the EventManagerDebugger. When
+ * `events.ui.enabled` is off there is no debugger, so production must not expose
+ * the file (it contains app file paths and line numbers).
+ */
+function readEventsUiEnabled(projectRoot, folderDeployed) {
+  for (const folder of [folderDeployed, 'src']) {
+    const file = path.join(projectRoot, folder, 'sliceConfig.json');
+    if (!fs.existsSync(file)) continue;
+    try {
+      return JSON.parse(fs.readFileSync(file, 'utf8')).events?.ui?.enabled === true;
+    } catch {
+      return false;
+    }
+  }
+  return false;
+}
+
+/**
  * True for `/Components/<Category>/<Name>/<Name>.css` when the component's `.js`
  * exists but it has no stylesheet. JS-only Visual components (MultiRoute,
  * DemoButton…) legitimately ship no CSS, and a 404 there makes `slice.build`
@@ -561,6 +579,7 @@ export function createSliceServer(options = {}) {
   }
 
   const PORT = options.port ?? process.env.PORT ?? sliceConfig.server?.port ?? 3001;
+  const eventsUiEnabled = readEventsUiEnabled(projectRoot, folderDeployed);
 
   const publicEnvProvider = createPublicEnvProvider({
     mode: runMode,
@@ -903,6 +922,8 @@ export function createSliceServer(options = {}) {
     // The event debugger dynamically imports this generated catalog. It is
     // build output, not source; keep Express and the static export in sync.
     app.get('/slice-events.generated.js', (req, res) => {
+      // No debugger UI => no consumer => do not expose the static graph.
+      if (!eventsUiEnabled) return res.status(404).send('Not found');
       serveStaticFile(
         req,
         res,

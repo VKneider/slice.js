@@ -17,8 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `/%2eenv` bypass (`express.static` decodes, `req.path` does not). The same decoded path is used by
   `securityMiddleware`, the framework protection middleware, the suspicious-request logger and the
   production static guard.
-- Production serves `/slice-events.generated.js` when the build emits it, so the event debugger's
-  dynamic import works in `slice start` and matches the static export.
+- Production serves `/slice-events.generated.js` when the build emits it **and**
+  `events.ui.enabled` is true, so the event debugger's dynamic import works in `slice start` and
+  matches the static export. With the debugger UI off the file is not exposed.
 
 ### Changed
 

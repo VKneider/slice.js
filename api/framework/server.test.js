@@ -593,17 +593,39 @@ test('production does not expose component source, declarations or source maps',
   assert.equal(mirror.status, 200);
 });
 
-test('production serves the generated event catalog', async (t) => {
-  const { base, root } = await boot(t, 'production');
+const bootEventCatalog = async (t, uiEnabled) => {
+  const project = makeProject('production');
   fs.writeFileSync(
-    path.join(root, 'dist', 'slice-events.generated.js'),
+    path.join(project.root, 'dist', 'sliceConfig.json'),
+    JSON.stringify({ events: { enabled: true, ui: { enabled: uiEnabled } } })
+  );
+  fs.writeFileSync(
+    path.join(project.root, 'dist', 'slice-events.generated.js'),
     'export default { events: {} };'
   );
 
+  const instance = createSliceServer({ projectRoot: project.root, mode: 'production', port: 0 });
+  const server = await instance.start({ port: 0, signals: false });
+  await once(server, 'listening');
+  t.after(() => {
+    server.close();
+    fs.rmSync(project.root, { recursive: true, force: true });
+  });
+  return { base: `http://127.0.0.1:${server.address().port}` };
+};
+
+test('production serves the generated event catalog when the debugger UI is enabled', async (t) => {
+  const { base } = await bootEventCatalog(t, true);
   const response = await get(base, '/slice-events.generated.js');
   assert.equal(response.status, 200);
   assert.match(response.headers.get('content-type'), /javascript/);
   assert.match(await response.text(), /export default/);
+});
+
+test('production does not serve the generated event catalog when the debugger UI is disabled', async (t) => {
+  const { base } = await bootEventCatalog(t, false);
+  const response = await get(base, '/slice-events.generated.js');
+  assert.equal(response.status, 404);
 });
 
 test('production rejects percent-encoded sensitive paths', async (t) => {
